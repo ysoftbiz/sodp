@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<h1>{% translate "Request demo" %}</h1>
+<br>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <br>
+    <button type="submit" class="btn btn-primary">{% translate "Send request" %}</button>
+  </form>
+{% endblock %}
+
+
