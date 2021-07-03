@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<h1>{% translate "Thanks!" %}</h1>
+
+<form method = "post">
+    {% csrf_token %} {{ form.as_p }}
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <div class="g-recaptcha" data-sitekey="6LfcnXAbAAAAAPWu6uuk9VIu0S6_qvgLu5y8fEMm"></div>
+    <button type="submit" class="btn btn-primary">Post</button>
+</form>"
+
+
+{% endblock %}
