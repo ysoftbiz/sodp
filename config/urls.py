@@ -21,7 +21,7 @@ urlpatterns = [
     path (
         "dashboard/createReport/", TemplateView.as_view(template_name="pages/createReport.html"), name="createReport"
     ),
-
+    
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

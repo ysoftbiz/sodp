@@ -78,11 +78,10 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "sodp.users.apps.UsersConfig",
     "sodp.requestdemo.apps.requestdemoConfig",
-<<<<<<< HEAD
     "sodp.provider.apps.providerconfig",
     "sodp.reports.apps.ReportsConfig",
-=======
->>>>>>> 63936ac... Captcha added when creating a new user and when applying for a demo
+    "sodp.provider.apps.providerconfig",
+
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -103,11 +102,9 @@ AUTHENTICATION_BACKENDS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
-<<<<<<< HEAD
 LOGIN_REDIRECT_URL = "/dashboard"
-=======
 LOGIN_REDIRECT_URL = "users:redirect"
->>>>>>> 63936ac... Captcha added when creating a new user and when applying for a demo
+
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "account_login"
 
