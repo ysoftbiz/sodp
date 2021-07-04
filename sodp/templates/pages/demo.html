@@ -10,7 +10,10 @@
     {% csrf_token %}
     {{ form|crispy }}
     <br>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <div class="g-recaptcha" data-sitekey="6LdFYHEbAAAAAC2V3ns4Y1mbdKcUHH-Q8MSvezj4"></div>
     <button type="submit" class="btn btn-primary">{% translate "Send request" %}</button>
+    {{captcha}}
   </form>
 {% endblock %}
 
