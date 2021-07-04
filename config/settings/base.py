@@ -79,6 +79,7 @@ LOCAL_APPS = [
     "sodp.users.apps.UsersConfig",
     "sodp.requestdemo.apps.requestdemoConfig",
     "sodp.provider.apps.providerconfig",
+    "sodp.reports.apps.ReportsConfig",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

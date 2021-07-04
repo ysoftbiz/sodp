@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<br>
+<h2>{% translate "Enter a new url" %}</h2>
+<br>
+  <form method="post">
+    <p>url: <input type="text" name="url" size="1000"></p>
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" class="btn btn-primary">{% translate "Enter" %}</button>
+  </form>
+{% endblock %}

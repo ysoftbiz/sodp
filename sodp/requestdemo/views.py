@@ -30,3 +30,6 @@ class DemoFormView(FormView):
         
         return super(DemoFormView,self).form_valid(form)
 
+#class LogInView(FormView):
+#    template_name = 'pages/login.html'
+#    success_url = '/dashboard/'
