@@ -22,14 +22,11 @@ class DemoFormView(FormView):
             form.cleaned_data.get('email'),
            to=['calderonpochirene@gmail.com']
         )
-
-
         mail.content_subtype = "html"
         mail.send()
 
         comment = form.save(commit=False)
         comment.save()
         
-        
-        
         return super(DemoFormView,self).form_valid(form)
+
