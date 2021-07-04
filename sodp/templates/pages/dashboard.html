@@ -4,24 +4,20 @@
 
 {% block content %}
 <br>
-<h2>{% translate "Enter a new url" %}</h2>
+<h2>{% translate "List of Reports" %}</h2>
 <br>
     <table class="table">
       <thead>
         <tr>
-          <th scope="col">ID</th>
           <th scope="col">url</th>
-          <th scope="col">fechaDesde</th>
-          <th scope="col">user</th>
+          <th scope="col">fechaCreacion</th>
         </tr>
       </thead>
       <tbody>
         {% for report in reports %}
           <tr>
-            <th scope="row"> {{report.id}} </th>
-            <td>{{report.url}</td>
-            <td>{{report.fechaDesde}}</td>
-            <td>{{report.user}}</td>
+            <th scope="row"> {{report.url}} </th>
+            <td>{{report.fechaCreacion}</td>
           </tr>
        {% endfor %}
 
