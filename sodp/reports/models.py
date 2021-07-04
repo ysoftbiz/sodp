@@ -8,5 +8,4 @@ class report(models.Model):
     fechaDesde = models.DateTimeField()
     fechaHasta = models.DateTimeField()
     user = models.ForeignKey(provider, on_delete=models.CASCADE, verbose_name="user", related_name="user")
-    #provider = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="user")
     providers = models.ManyToManyField('provider.provider')

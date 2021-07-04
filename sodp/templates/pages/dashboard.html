@@ -6,10 +6,28 @@
 <br>
 <h2>{% translate "Enter a new url" %}</h2>
 <br>
-  <form method="post">
-    <p>url: <input type="text" name="url" size="1000"></p>
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit" class="btn btn-primary">{% translate "Enter" %}</button>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">url</th>
+          <th scope="col">fechaDesde</th>
+          <th scope="col">user</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in reports %}
+          <tr>
+            <th scope="row"> {{report.id}} </th>
+            <td>{{report.url}</td>
+            <td>{{report.fechaDesde}}</td>
+            <td>{{report.user}}</td>
+          </tr>
+       {% endfor %}
+
+      </tbody>
+    </table>  
+
+    <button type="submit" class="btn btn-primary">{% translate "Create new report" %}</button>
   </form>
 {% endblock %}
