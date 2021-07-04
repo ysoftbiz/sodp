@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<br>
+<h2>{% translate "List of Reports" %}</h2>
+<br>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">url</th>
+          <th scope="col">fechaCreacion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in reports %}
+          <tr>
+            <th scope="row"> {{report.url}} </th>
+            <td>{{report.fechaCreacion}</td>
+          </tr>
+       {% endfor %}
+
+      </tbody>
+    </table>  
+
+    <button type="submit" class="btn btn-primary">{% translate "Create new report" %}</button>
+  </form>
+{% endblock %}

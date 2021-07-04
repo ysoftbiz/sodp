@@ -29,4 +29,3 @@ class DemoFormView(FormView):
         comment.save()
         
         return super(DemoFormView,self).form_valid(form)
-
