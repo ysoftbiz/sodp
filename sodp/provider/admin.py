@@ -8,6 +8,7 @@ from django import forms
 
 class providerAdmin(admin.ModelAdmin):
     list_display = ['name']
+    ordering=['id']
 
 
 admin.site.register(provider, providerAdmin)

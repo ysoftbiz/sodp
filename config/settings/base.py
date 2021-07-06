@@ -78,7 +78,6 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "sodp.users.apps.UsersConfig",
     "sodp.requestdemo.apps.requestdemoConfig",
-    "sodp.provider.apps.providerconfig",
     "sodp.reports.apps.ReportsConfig",
     "sodp.provider.apps.providerconfig",
 
