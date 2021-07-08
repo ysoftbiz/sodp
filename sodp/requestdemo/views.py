@@ -27,5 +27,6 @@ class DemoFormView(FormView):
 
         comment = form.save(commit=False)
         comment.save()
-        
+       
         return super(DemoFormView,self).form_valid(form)
+
