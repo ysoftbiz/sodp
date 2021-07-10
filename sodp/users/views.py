@@ -14,6 +14,8 @@ class UserDetailView(LoginRequiredMixin, DetailView):
     slug_field = "username"
     slug_url_kwarg = "username"
 
+    def get_object(self,queryset = None):
+        return self.request.user
 
 user_detail_view = UserDetailView.as_view()
 
@@ -35,7 +37,6 @@ user_update_view = UserUpdateView.as_view()
 
 
 class UserRedirectView(LoginRequiredMixin, RedirectView):
-
     permanent = False
 
     def get_redirect_url(self):
@@ -43,3 +44,15 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
 
 
 user_redirect_view = UserRedirectView.as_view()
+
+
+class UserUpdateCredentialsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = User
+    fields = ["ahrefs_token", "google_token"]
+    template_name_suffix = 'credentials'
+    success_message = _("Credentials successfully updated")
+
+    def get_object(self,queryset = None):
+        return self.request.user
+
+user_credentials_view = UserUpdateCredentialsView.as_view()
