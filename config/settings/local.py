@@ -70,4 +70,5 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = False
 
-#DATABASE_URL='postgres://postgres:postgres@127.0.0.1:5432/sodp'
+
+ACCOUNT_EMAIL_VERIFICATION = 'none'

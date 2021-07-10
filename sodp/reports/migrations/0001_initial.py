@@ -17,10 +17,10 @@ class Migration(migrations.Migration):
             name='report',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('fechaCreacion', models.DateTimeField(auto_now_add=True)),
+                ('creationDate', models.DateTimeField(auto_now_add=True)),
                 ('url', models.CharField(max_length=100)),
-                ('fechaDesde', models.DateTimeField(auto_now_add=True)),
-                ('fechaHasta', models.DateTimeField(auto_now_add=True)),
+                ('dateFrom', models.DateTimeField(auto_now_add=True)),
+                ('dateTo', models.DateTimeField(auto_now_add=True)),
                 ('providers', models.ManyToManyField(to='provider.provider')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user', to='provider.provider', verbose_name='user')),
             ],
