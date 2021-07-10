@@ -10,14 +10,14 @@
       <thead>
         <tr>
           <th scope="col">url</th>
-          <th scope="col">fechaCreacion</th>
+          <th scope="col">creationDate</th>
         </tr>
       </thead>
       <tbody>
         {% for report in reports %}
           <tr>
             <th scope="row"> {{report.url}} </th>
-            <td>{{report.fechaCreacion}</td>
+            <td>{{report.creationDate}</td>
           </tr>
        {% endfor %}
 

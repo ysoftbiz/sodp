@@ -12,7 +12,6 @@ class AccountAdapter(DefaultAccountAdapter):
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
 
     def get_login_redirect_url(self, request):
-        print("He entrado en el redirect")
         url = super(AccountAdapter, self).get_login_redirect_url(request)
         user = request.user
         

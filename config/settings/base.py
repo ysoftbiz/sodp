@@ -280,3 +280,5 @@ SOCIALACCOUNT_ADAPTER = "sodp.users.adapters.SocialAccountAdapter"
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+#ACCOUNT_EMAIL_VERIFICATION = 'none'

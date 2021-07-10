@@ -7,6 +7,6 @@ from sodp.reports.models import report
 from django import forms
 
 class reportsAdmin(admin.ModelAdmin):
-    list_display = ['user','fechaCreacion']
+    list_display = ['user','creationDate']
  
 admin.site.register(report, reportsAdmin)

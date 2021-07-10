@@ -12,17 +12,17 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name='report',
-            name='fechaCreacion',
+            name='creationDate',
             field=models.DateTimeField(),
         ),
         migrations.AlterField(
             model_name='report',
-            name='fechaDesde',
+            name='dateFrom',
             field=models.DateTimeField(),
         ),
         migrations.AlterField(
             model_name='report',
-            name='fechaHasta',
+            name='dateTo',
             field=models.DateTimeField(),
         ),
     ]
