@@ -284,3 +284,5 @@ SOCIALACCOUNT_ADAPTER = "sodp.users.adapters.SocialAccountAdapter"
 # ------------------------------------------------------------------------------
 
 #ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+SILENCED_SYSTEM_CHECKS = ['captcha.recaptcha_test_key_error']
