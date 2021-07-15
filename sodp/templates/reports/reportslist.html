@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<h1>{% translate "Reports List" %}</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+      {% if book_list %}
+      <ul>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">url</th>
+              <th scope="col">creationDate</th>
+            </tr>
+          </thead>
+        </table>  
+
+      </ul>
+      {% else %}
+        <p>There are no reports yet</p>
+      {% endif %} 
+    <a href="reportscreate">{% translate "Create new report" %}</a>
+  </form>
+{% endblock %}

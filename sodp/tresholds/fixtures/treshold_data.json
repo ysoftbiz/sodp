@@ -1,0 +1,65 @@
+[
+    {
+      "model": "tresholds.treshold",
+      "pk": 1,
+      "fields": {
+        "title": "AGE",
+        "question": "Is the page older than 6 months?",
+        "default_value": "180"
+      }
+    },
+    {
+        "model": "tresholds.treshold",
+        "pk": 2,
+        "fields": {
+          "title": "VOLUME",
+          "question": "Question2",
+          "default_value": "50"
+        }
+    },
+    {
+        "model": "tresholds.treshold",
+        "pk": 3,
+        "fields": {
+            "title": "WORD COUNT",
+            "question": "Question3",
+            "default_value": "150"
+        }
+    },
+    {
+        "model": "tresholds.treshold",
+        "pk": 4,
+        "fields": {
+          "title": "CONTENT FOCUS",
+          "question": "Is the page's content similar to other content on the site?",
+          "default_value": "95"
+        }
+    },
+    {
+        "model": "tresholds.treshold",
+        "pk": 5,
+        "fields": {
+          "title": "ORGANIC TRAFFIC",
+          "question": "Question5",
+          "default_value": "10"
+        }
+    },
+    {
+        "model": "tresholds.treshold",
+        "pk": 6,
+        "fields": {
+          "title": "TRAFFIC",
+          "question": "Question6",
+          "default_value": "30 "
+        }
+    },
+    {
+        "model": "tresholds.treshold",
+        "pk": 7,
+        "fields": {
+          "title": "BACKLINKS",
+          "question": "Dos it have any external backlinks pointing to it?",
+          "default_value": "10"
+        }
+    }
+  ]
