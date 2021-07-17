@@ -9,6 +9,7 @@ from reports.forms import ReportCreateForm
 
 
 
+
 class ReportListView(generic.ListView):
     model = report
     context_object_name = 'reportsList'
@@ -33,17 +34,7 @@ report_list_view = ReportListView.as_view()
     #    return render(request, 'reports/reportscreate.html', context)
 
   
-    #def get_initial(self):
-    #    super(ReportCreateView, self).get_initial()
-    #    date_format = '%d/%m/%Y'
-  
-    #    auxDateTo = date.today() - timedelta(1)
 
-    #    n = 1
-    #    auxDateFrom = auxDateTo - relativedelta(months=n)
-
-    #    self.initial = {"dateFrom":auxDateFrom.strftime(date_format), "dateTo":auxDateTo.strftime(date_format)}
-    #    return self.initial
 
     #def post(self, request, *args, **kwargs):
         #form = ReportCreateForm(request.POST)
@@ -62,6 +53,40 @@ report_list_view = ReportListView.as_view()
 
 
 class ReportCreateView(CreateView):
-    #model = report
     template_name = 'reports/reportscreate.html'
-    template_name = ReportCreateForm
+    form_class = ReportCreateForm
+
+    def get_initial(self):
+        super(ReportCreateView, self).get_initial()
+        date_format = '%d/%m/%Y'
+  
+        auxDateTo = date.today() - timedelta(1)
+
+        n = 1
+        auxDateFrom = auxDateTo - relativedelta(months=n)
+
+        self.initial = {"dateFrom":auxDateFrom.strftime(date_format), "dateTo":auxDateTo.strftime(date_format)}
+        return self.initial
+
+
+
+    def post(self, request, *args, **kwargs):
+        form = ReportCreateForm(request.POST)
+        if form.is_valid():
+            report = form.save()
+            report.save()
+            return HttpResponseRedirect(reverse_lazy('report:detail', args=[book.id]))
+        return render(request, 'reports/reportscreate.html', {'form': form})
+
+    #def post(self, request, *args, **kwargs):
+        #form = ReportCreateForm(request.POST)
+    #    if form.is_valid():
+        #    report = form.save()
+        #    report.save()
+    #        self.object = form.save(commit=False)
+            #self.object.user_id = self.request.user.id
+    #        self.object.save()
+    #        return super(ReportCreateView, self).form_valid(form)
+
+            #return HttpResponseRedirect(reverse_lazy('report:detail', args=[report.id]))
+        #return render(request, 'reports/reportscreate.html', {'form': form})
