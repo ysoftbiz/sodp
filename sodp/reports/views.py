@@ -1,11 +1,12 @@
 from django.shortcuts import render
 from django.views import generic
 from sodp.reports.models import report
-from sodp.reports.forms import ReportCreateForm
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
+from reports.forms import ReportCreateForm
+
 
 
 class ReportListView(generic.ListView):
@@ -16,12 +17,15 @@ class ReportListView(generic.ListView):
     
 report_list_view = ReportListView.as_view()
 
+    #model = report
+    #template_name = 'reportscreate.html'
+    #fields = ['name','project','dateFrom','dateTo']
 
-class ReportCreateView(CreateView):
-    model = report
-    form_class = ReportCreateForm
-    success_url = '/home/'
-    template_name = 'reports/reportscreate.html'
+
+    #model = report
+    #form_class = ReportCreateForm
+    #success_url = '/home/'
+    #template_name = 'reports/reportscreate.html'
     #fields = ('name','project','dateFrom','dateTo')
 
     #def get(self, request, *args, **kwargs):
@@ -29,27 +33,27 @@ class ReportCreateView(CreateView):
     #    return render(request, 'reports/reportscreate.html', context)
 
   
-    def get_initial(self):
-        super(ReportCreateView, self).get_initial()
-        date_format = '%d/%m/%Y'
+    #def get_initial(self):
+    #    super(ReportCreateView, self).get_initial()
+    #    date_format = '%d/%m/%Y'
   
-        auxDateTo = date.today() - timedelta(1)
+    #    auxDateTo = date.today() - timedelta(1)
 
-        n = 1
-        auxDateFrom = auxDateTo - relativedelta(months=n)
+    #    n = 1
+    #    auxDateFrom = auxDateTo - relativedelta(months=n)
 
-        self.initial = {"dateFrom":auxDateFrom.strftime(date_format), "dateTo":auxDateTo.strftime(date_format)}
-        return self.initial
+    #    self.initial = {"dateFrom":auxDateFrom.strftime(date_format), "dateTo":auxDateTo.strftime(date_format)}
+    #    return self.initial
 
-    def post(self, request, *args, **kwargs):
+    #def post(self, request, *args, **kwargs):
         #form = ReportCreateForm(request.POST)
-        if form.is_valid():
+    #    if form.is_valid():
         #    report = form.save()
         #    report.save()
-            self.object = form.save(commit=False)
+    #        self.object = form.save(commit=False)
             #self.object.user_id = self.request.user.id
-            self.object.save()
-            return super(ReportCreateView, self).form_valid(form)
+    #        self.object.save()
+    #        return super(ReportCreateView, self).form_valid(form)
 
             #return HttpResponseRedirect(reverse_lazy('report:detail', args=[report.id]))
         #return render(request, 'reports/reportscreate.html', {'form': form})
@@ -57,3 +61,7 @@ class ReportCreateView(CreateView):
 
 
 
+class ReportCreateView(CreateView):
+    #model = report
+    template_name = 'reports/reportscreate.html'
+    template_name = ReportCreateForm
