@@ -8,8 +8,8 @@
 
 {% block inner %}
 
-<h1>{% trans "Sign In" %}</h1>
-
+<h1 class="cap">{% trans "Sign In" %}</h1>
+<br>
 {% get_providers as socialaccount_providers %}
 
 {% if socialaccount_providers %}
@@ -23,14 +23,12 @@ for a {{ site_name }} account and sign in below:{% endblocktrans %}</p>
     {% include "socialaccount/snippets/provider_list.html" with process="login" %}
   </ul>
 
-  <div class="login-or">{% trans 'or' %}</div>
-
 </div>
 
 {% include "socialaccount/snippets/login_extra.html" %}
 
 {% else %}
-<p>{% blocktrans %}If you have not created an account yet, then please
+<p class="cont">{% blocktrans %}If you have not created an account yet, then please
 <a href="{{ signup_url }}">sign up</a> first.{% endblocktrans %}</p>
 {% endif %}
 
@@ -41,7 +39,9 @@ for a {{ site_name }} account and sign in below:{% endblocktrans %}</p>
   <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
   {% endif %}
   <a class="button secondaryAction" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
-  <button class="primaryAction btn btn-primary" type="submit">{% trans "Sign In" %}</button>
+  <br>
+  <br>
+  <button class="bot" type="submit">{% trans "Sign In" %}</button>
 </form>
 
 {% endblock %}

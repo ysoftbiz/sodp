@@ -3,17 +3,14 @@
 {% load i18n %}
 
 {% block content %}
-<h1>{% translate "Request demo" %}</h1>
+<h1 class="cap">{% translate "Request demo" %}</h1>
 <br>
 
-  <form method="post">
+  <form method="post" class="bar">
     {% csrf_token %}
     {{ form|crispy }}
     <br>
-    <script src='https://www.google.com/recaptcha/api.js'></script>
-    <div class="g-recaptcha" data-sitekey="6LdFYHEbAAAAAC2V3ns4Y1mbdKcUHH-Q8MSvezj4"></div>
-    <button type="submit" class="btn btn-primary">{% translate "Send request" %}</button>
-    {{captcha}}
+    <button type="submit" class="bot">{% translate "Send request" %}</button>
   </form>
 {% endblock %}
 

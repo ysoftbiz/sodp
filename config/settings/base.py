@@ -81,7 +81,6 @@ LOCAL_APPS = [
     "sodp.requestdemo.apps.requestdemoConfig",
     "sodp.provider.apps.providerconfig",
     "sodp.reports.apps.ReportsConfig",
-    "sodp.tresholds.apps.TresholdsConfig",
 
 
     # Your stuff: custom apps go here
@@ -278,6 +277,7 @@ ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_ADAPTER = "sodp.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "sodp.users.adapters.SocialAccountAdapter"
+
 
 
 # Your stuff...

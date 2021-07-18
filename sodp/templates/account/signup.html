@@ -6,20 +6,17 @@
 {% block head_title %}{% trans "Signup" %}{% endblock %}
 
 {% block inner %}
-<h1>{% trans "Sign Up" %}</h1>
-
+<h1 class="cap">{% trans "Sign Up" %}</h1>
 <p>{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktrans %}</p>
-
+<br>
 <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
   {% csrf_token %}
   {{ form|crispy }}
   {% if redirect_field_value %}
   <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
   {% endif %}
-  <script src='https://www.google.com/recaptcha/api.js'></script>
-<div class="g-recaptcha" data-sitekey="6LdFYHEbAAAAAC2V3ns4Y1mbdKcUHH-Q8MSvezj4"></div>
-  <button class="btn btn-primary" type="submit">{% trans "Sign Up" %} &raquo;</button>
-  {{captcha}}
+  <br>
+  <button class="bot" type="submit">{% trans "Sign Up" %} &raquo;</button>
 </form>
 
 {% endblock %}
