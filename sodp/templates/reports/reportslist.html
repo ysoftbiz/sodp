@@ -16,6 +16,15 @@
               <th scope="col">creationDate</th>
             </tr>
           </thead>
+          <tbody>
+            {% for report in reports %}
+              <tr>
+                <th scope="row"> {{report.url}} </th>
+                <td>{{report.creationDate}</td>
+              </tr>
+          {% endfor %}
+    
+          </tbody>
         </table>  
 
       </ul>
@@ -27,3 +36,4 @@
 
   </form>
 {% endblock %}
+

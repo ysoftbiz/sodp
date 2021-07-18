@@ -23,6 +23,7 @@ class ReportCreateView(CreateView):
     def get_initial(self):
         super(ReportCreateView, self).get_initial()
 
+
         auxDateTo = date.today() - timedelta(1)
 
         n = 1
@@ -40,13 +41,5 @@ class ReportCreateView(CreateView):
             
         return super(ReportCreateView,self).form_valid(form)
 
-
-    #def post(self, request, *args, **kwargs):
-    #    form = ReportCreateForm(request.POST)
-    #    if form.is_valid():
-    #         report = form.save()
-    #        report.save()
-    #         return HttpResponseRedirect(reverse_lazy('report:detail', args=[book.id]))
-    #     return render(request, 'reports/reportscreate.html', {'form': form})
 
 

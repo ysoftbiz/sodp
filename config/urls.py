@@ -18,13 +18,13 @@ urlpatterns = [
     path (
         "reportslist/", TemplateView.as_view(template_name="reports/reportslist.html"), name="reportslist"
     ),
-    path (
+    path(
         "reportscreate/", TemplateView.as_view(template_name="reports/reportscreate.html"), name="reportscreate"
     ),
-    
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
+    path("reports/", include("sodp.reports.urls", namespace="reports")),
     path("users/", include("sodp.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     path("reports/",include("sodp.reports.urls", namespace="reports")),
