@@ -14,4 +14,5 @@ class report(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="user", related_name="user")
 
     def __str__(self):
-        return self
+        return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
+
