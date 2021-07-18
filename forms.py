@@ -13,3 +13,5 @@ def __init__(self, *args, **kwargs):
                 Column('Email', css_class='form-group col-md-6 mb-0'),
             )
         )
+
+

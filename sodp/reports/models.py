@@ -1,11 +1,18 @@
 from django.db import models
-from sodp.provider.models import provider
 from sodp.users.models import User
+from django.db.models import CharField
+from django.utils.translation import gettext_lazy as _
 
 class report(models.Model):
-    fechaCreacion = models.DateTimeField()
-    url = models.CharField(max_length=100)
-    fechaDesde = models.DateTimeField()
-    fechaHasta = models.DateTimeField()
-    user = models.ForeignKey(provider, on_delete=models.CASCADE, verbose_name="user", related_name="user")
-    providers = models.ManyToManyField('provider.provider')
+    creationDate = models.DateTimeField(auto_now_add=True)
+    name = CharField(_("Report name"), blank=True, max_length=100)
+    #name = models.CharField(max_length=100)
+    #project = models.CharField(max_length=255)
+    project = CharField(_("project"), blank=True, max_length=255)
+    dateFrom = models.DateField() 
+    dateTo = models.DateField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="user", related_name="user")
+
+    def __str__(self):
+        return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
+

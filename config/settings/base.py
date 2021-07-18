@@ -103,7 +103,7 @@ AUTHENTICATION_BACKENDS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
-LOGIN_REDIRECT_URL = "/dashboard"
+LOGIN_REDIRECT_URL = "/reportslist"
 LOGIN_REDIRECT_URL = "users:redirect"
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
@@ -282,3 +282,7 @@ SOCIALACCOUNT_ADAPTER = "sodp.users.adapters.SocialAccountAdapter"
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+#ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+SILENCED_SYSTEM_CHECKS = ['captcha.recaptcha_test_key_error']
