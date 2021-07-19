@@ -3,16 +3,16 @@
 {% load i18n %}
 
 {% block content %}
-<h1>{% translate "Reports List" %}</h1>
+<h1>{% trans "Reports List" %}</h1>
 {% if object_list.count == 0 %}
-  <p>There are no reports yet</p>
+  <p>{% trans "There are no reports yet" %}</p>
 {% else %}
   <ul>
     <table class="table">
       <thead>
         <tr>
-          <th scope="col">url</th>
-          <th scope="col">creationDate</th>
+          <th scope="col">{% trans "Report name" %} </th>
+          <th scope="col">{% trans "Creation date" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -28,7 +28,7 @@
   </ul>
   {% endif %} 
   
-  <a href="/reports/reportscreate">{% translate "Create new report" %}</a>
+  <a href="/reports/reportscreate">{% trans "Create new report" %}</a>
   {% endblock %}
 
 
