@@ -4,7 +4,9 @@
 
 {% block content %}
 <h1>{% translate "Reports List" %}</h1>
-  
+{% if object_list.count == 0 %}
+  <p>There are no reports yet</p>
+{% else %}
   <ul>
     <table class="table">
       <thead>
@@ -23,8 +25,8 @@
   
       </tbody>
     </table>  
-  
   </ul>
+  {% endif %} 
   
   <a href="/reports/reportscreate">{% translate "Create new report" %}</a>
   {% endblock %}
