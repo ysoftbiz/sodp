@@ -24,10 +24,9 @@ urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
-    path("reports/", include("sodp.reports.urls", namespace="reports")),
+    path("reports/", include("sodp.reports.urls", namespace = "reports")),
     path("users/", include("sodp.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
-    path("reports/",include("sodp.reports.urls", namespace="reports")),
     # Your stuff: custom urls includes go here
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
