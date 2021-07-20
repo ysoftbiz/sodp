@@ -3,7 +3,9 @@
 {% load i18n %}
 
 {% block content %}
+<br>
 <h1>{% trans "Reports List" %}</h1>
+<br>
 {% if object_list.count == 0 %}
   <p>{% trans "There are no reports yet" %}</p>
 {% else %}
@@ -13,6 +15,7 @@
         <tr>
           <th scope="col">{% trans "Report name" %} </th>
           <th scope="col">{% trans "Creation date" %}</th>
+          <th scope="col">{% trans "Status" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -20,6 +23,7 @@
           <tr>
             <th scope="row"> {{report.project}} </th>
             <td>{{report.creationDate}}</td>
+            <td>{{report.status}}</td>
           </tr>
       {% endfor %}
   
