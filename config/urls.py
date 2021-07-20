@@ -15,6 +15,9 @@ urlpatterns = [
     path(
         "thanks/", TemplateView.as_view(template_name="pages/thanks.html"), name="thanks"
     ),
+    path(
+        "reportcreatedsucessfully/", TemplateView.as_view(template_name="reports/reportcreatedsucessfully.html"), name="reportcreatedsucessfully"
+    ),
     path (
         "reportslist/", TemplateView.as_view(template_name="reports/reportslist.html"), name="reportslist"
     ),
