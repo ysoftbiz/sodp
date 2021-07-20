@@ -1,12 +1,16 @@
 from django.shortcuts import render
 from django.views import generic
 from sodp.reports.models import report
+from sodp.tresholds.models import treshold
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 from reports.forms import ReportCreateForm
 from django.urls import reverse
+from django.core import serializers
+
+
 
 class ReportListView(generic.ListView):
     model = report
@@ -31,7 +35,16 @@ class ReportCreateView(CreateView):
         n = 1
         auxDateFrom = auxDateTo - relativedelta(months=n)
 
-        self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo}
+        tresholds_list = serializers.serialize("json", treshold.objects.all())
+
+        first_list = treshold.objects.all()
+        tresholds_list = {}
+        
+        for item in first_list:
+            tresholds_list.setdefault(item.title, item.default_value)
+
+
+        self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
         return self.initial
 
     def post(self, request, *args, **kwargs):

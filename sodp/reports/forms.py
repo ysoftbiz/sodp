@@ -9,5 +9,5 @@ class DateInput(DateInput):
 class ReportCreateForm(ModelForm):
     class Meta(object):
         model = report
-        fields = ('name','project', 'sitemap', 'dateFrom' ,'dateTo')
+        fields = ('name','project', 'sitemap', 'thresholds', 'dateFrom' ,'dateTo')
         widgets = {'dateFrom' : DateInput() ,'dateTo' : DateInput()}
