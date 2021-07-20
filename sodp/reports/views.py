@@ -21,6 +21,7 @@ report_list_view = ReportListView.as_view()
 class ReportCreateView(CreateView):
     template_name = 'reports/reportscreate.html'
     form_class = ReportCreateForm
+    success_url = '/reportcreatedsucessfully/'
 
     def get_initial(self):
         super(ReportCreateView, self).get_initial()
@@ -42,9 +43,6 @@ class ReportCreateView(CreateView):
             report.save()
             
         return super(ReportCreateView,self).form_valid(form)
-
-    def get_success_url(self):
-        return reverse('reports:reportslist')
 
 
 
