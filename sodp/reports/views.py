@@ -26,7 +26,6 @@ class ReportCreateView(CreateView):
     def get_initial(self):
         super(ReportCreateView, self).get_initial()
 
-
         auxDateTo = date.today() - timedelta(1)
 
         n = 1
