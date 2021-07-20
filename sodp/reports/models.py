@@ -27,6 +27,8 @@ class report(models.Model):
     )
 
 
+    thresholds = models.JSONField(blank=True, null = True)
+
 
     def __str__(self):
         return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
