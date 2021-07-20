@@ -28,6 +28,7 @@ class report(models.Model):
 
 
     thresholds = models.JSONField(blank=True, null = True)
+    sitemap =  CharField(_("sitemap"), blank=True, null=True, max_length=255)
 
 
     def __str__(self):
