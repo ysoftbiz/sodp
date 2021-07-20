@@ -12,10 +12,10 @@ class report(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="user", related_name="user")
  
     STATUS = (
-        ('pending', 'pending'),
-        ('canceled', 'canceled'),
-        ('created', 'created'),
-        ('failed', 'failed'),
+        ('pending', _('pending')),
+        ('canceled', _('canceled')),
+        ('created', _('created')),
+        ('failed', _('failed')),
     )
 
     status = models.CharField(
