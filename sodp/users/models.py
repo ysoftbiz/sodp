@@ -11,9 +11,8 @@ class User(AbstractUser):
     #: First and last name do not cover name patterns around the globe
     name = CharField(_("Name of User"), blank=True, max_length=255)
     ahrefs_token = CharField(_("ahrefs_token"), blank=True, null=True, max_length=255)
-    google_token = CharField(_("google_token"), blank=True, null=True, max_length=255)
-    #ahrefs_token = models.CharField(serializers.CharField(required=False, max_length=255, allow_blank=True))
-    #google_token = models.CharField(.CharField(required=False, max_length=255, allow_blank=True))
+    google_api_token = CharField(_("google_api_token"), blank=True, null=True, max_length=255)
+    google_refresh_token = CharField(_("google_refresh_token"), blank=True, null=True, max_length=255)
     first_name = None  # type: ignore
     last_name = None  # type: ignore
 
