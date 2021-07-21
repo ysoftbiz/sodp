@@ -3,22 +3,6 @@
 {% load i18n %}
 
 {% block content %}
-<<<<<<< HEAD
-<h1 class="cap">{% translate "Reports List" %}</h1>
-  <form method="post" class="cont">
-    {% csrf_token %}
-    {{ form|crispy }}
-      {% if book_list %}
-      <ul>
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">url</th>
-              <th scope="col">creationDate</th>
-            </tr>
-          </thead>
-        </table>  
-=======
 <br>
 <h1>{% trans "Reports List" %}</h1>
 <br>
@@ -48,14 +32,5 @@
   </ul>
   {% endif %} 
   
-  <a href="/reports/reportscreate">{% trans "Create new report" %}</a>
+  <a href="/reports/reportscreate" class="bot">{% trans "Create new report" %}</a>
   {% endblock %}
-
->>>>>>> 036a7e76a90723845bfb4e1cf87f87abc663a95a
-
-
-<<<<<<< HEAD
-    <a class="bot" href="/reports/reportscreate">{% translate "Create new report" %}</a>
-=======
->>>>>>> 036a7e76a90723845bfb4e1cf87f87abc663a95a
-
