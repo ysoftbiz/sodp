@@ -10,8 +10,6 @@ from reports.forms import ReportCreateForm
 from django.urls import reverse
 from django.core import serializers
 
-
-
 class ReportListView(generic.ListView):
     model = report
     context_object_name = 'reportsList'
@@ -29,6 +27,7 @@ class ReportCreateView(CreateView):
 
     def get_initial(self):
         super(ReportCreateView, self).get_initial()
+
 
         auxDateTo = date.today() - timedelta(1)
 

@@ -27,7 +27,6 @@ class report(models.Model):
         help_text='Report status',
     )
 
-
     thresholds = models.JSONField(blank=True, null = True)
     sitemap =  CharField(_("sitemap"), blank=True, null=True, max_length=255)
 
