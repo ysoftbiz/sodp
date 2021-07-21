@@ -6,3 +6,4 @@ class tresholdsAdmin(admin.ModelAdmin):
     list_display = ['title', 'default_value']
 
 admin.site.register(treshold, tresholdsAdmin)
+

@@ -6,3 +6,4 @@ class ReportCreateForm(ModelForm):
         model = report
         fields = ('name','project','dateFrom','dateTo')
         #exclude = ('creationDate', 'user')
+

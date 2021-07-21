@@ -6,22 +6,26 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 from reports.forms import ReportCreateForm
+from django.urls import reverse
 
 class ReportListView(generic.ListView):
     model = report
     context_object_name = 'reportsList'
     template_name = 'reports/reportslist.html'
 
+    def get_queryset(self):
+        return report.objects.filter(user=self.request.user)
     
 report_list_view = ReportListView.as_view()
 
 class ReportCreateView(CreateView):
     template_name = 'reports/reportscreate.html'
     form_class = ReportCreateForm
-    success_url = '../../reportslist'
+    success_url = '/reportcreatedsucessfully/'
 
     def get_initial(self):
         super(ReportCreateView, self).get_initial()
+
 
         auxDateTo = date.today() - timedelta(1)
 
@@ -40,13 +44,5 @@ class ReportCreateView(CreateView):
             
         return super(ReportCreateView,self).form_valid(form)
 
-
-    #def post(self, request, *args, **kwargs):
-    #    form = ReportCreateForm(request.POST)
-    #    if form.is_valid():
-    #         report = form.save()
-    #        report.save()
-    #         return HttpResponseRedirect(reverse_lazy('report:detail', args=[book.id]))
-    #     return render(request, 'reports/reportscreate.html', {'form': form})
 
 
