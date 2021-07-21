@@ -3,8 +3,8 @@
 {% load i18n %}
 
 {% block content %}
-<h1>{% translate "Reports List" %}</h1>
-  <form method="post">
+<h1 class="cap">{% translate "Reports List" %}</h1>
+  <form method="post" class="cont">
     {% csrf_token %}
     {{ form|crispy }}
       {% if book_list %}
@@ -23,7 +23,7 @@
         <p>There are no reports yet</p>
       {% endif %} 
 
-    <a href="/reports/reportscreate">{% translate "Create new report" %}</a>
+    <a class="bot" href="/reports/reportscreate">{% translate "Create new report" %}</a>
 
   </form>
 {% endblock %}
