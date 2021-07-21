@@ -3,6 +3,7 @@ from sodp.users.models import User
 from django.db.models import CharField
 from django.utils.translation import gettext_lazy as _
 
+
 class report(models.Model):
     creationDate = models.DateTimeField(auto_now_add=True)
     name = CharField(_("Report name"), blank=True, max_length=100)
