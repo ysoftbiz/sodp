@@ -16,7 +16,8 @@ class AccountAdapter(DefaultAccountAdapter):
         user = request.user
         
         ahrefs_token = request.user.ahrefs_token
-        google_token = request.user.google_token
+        google_api_token = request.user.google_api_token
+        google_refresh_token = request.user.google_refresh_token
 
         if not ahrefs_token or not google_token:
             url = reverse("users:credentials")
