@@ -35,5 +35,5 @@ class ReportCreateForm(ModelForm):
 
     class Meta(object):
         model = report
-        fields = ('project', 'thresholds', 'dateFrom' ,'dateTo')
+        fields = ('project', 'sitemap', 'thresholds', 'dateFrom' ,'dateTo')
         widgets = {'dateFrom' : DateInput() ,'dateTo' : DateInput(), 'project': Select}

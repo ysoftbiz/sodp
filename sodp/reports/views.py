@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.core import serializers
 
 from sodp.utils import google_utils
+from sodp.reports import tasks
 
 class ReportListView(generic.ListView):
     model = report
@@ -57,6 +58,9 @@ class ReportCreateView(CreateView):
             report = form.save(commit=False)
             report.user = request.user
             report.save()
+
+            # trigger generation task
+            tasks.processReport(report.pk)
             
         return super(ReportCreateView,self).form_valid(form)
 

@@ -3,6 +3,7 @@ import google.oauth2.credentials
 import google_auth_oauthlib.flow
 
 import os
+import pandas as pd
 
 from apiclient.discovery import build
 from pprint import pprint
@@ -10,6 +11,10 @@ from pprint import pprint
 from oauth2client import GOOGLE_REVOKE_URI, GOOGLE_TOKEN_URI, client
 from django.conf import settings
 from django.urls import reverse
+
+DIMS = ['ga:pagePath', 'ga:segment']
+METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
+SEGMENTS = ['gaid::-1','gaid::-5']
 
 def getGoogleConfig(request):
     return {
@@ -96,6 +101,50 @@ def getProjectsFromCredentials(credentials):
   projects = {}
   if accounts.get('items'):
       for item in accounts.get('items'):
-          projects[item["id"]] = item["name"]
+          account_id = item["id"]
+        
+          # now lets retrieve all the views
+          profiles = analytics.management().profiles().list(accountId=account_id,
+                                                  webPropertyId='~all'
+                                                 ).execute()
+
+          for profile in profiles.get('items'):
+              projects[profile["id"]] = item["name"]+" - "+profile["name"]+" - "+profile["websiteUrl"]
 
   return projects
+
+# returns a dump of the desired stats for the specific credentials and view
+def getStatsFromView(credentials, view_id, startDate, endDate):
+    analytics = build('analyticsreporting', 'v4', credentials=credentials)
+
+    data = analytics.reports().batchGet(
+      body={
+        'reportRequests': [
+        {
+          'viewId': view_id,
+          'dateRanges': [{'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}],
+          'metrics':  [{'expression': exp} for exp in METRICS],
+          'dimensions': [{'name': name} for name in DIMS],
+          'segments':  [{"segmentId": segment} for segment in SEGMENTS],   # organic traffic
+        }]
+      }
+    ).execute()
+
+    # embed into a pandas dataset
+    data_dic = {f"{i}": [] for i in DIMS + METRICS}
+    for report in data.get('reports', []):
+        rows = report.get('data', {}).get('rows', [])
+        for row in rows:
+            for i, key in enumerate(DIMS):
+                data_dic[key].append(row.get('dimensions', [])[i]) # Get dimensions
+            dateRangeValues = row.get('metrics', [])
+            for values in dateRangeValues:
+                all_values = values.get('values', []) # Get metric values
+                for i, key in enumerate(METRICS):
+                    data_dic[key].append(all_values[i])
+            
+    df = pd.DataFrame(data=data_dic)
+    df.columns = [col.split(':')[-1] for col in df.columns]
+    df.tail()
+    print(df)
+    return df
