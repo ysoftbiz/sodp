@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 class report(models.Model):
     creationDate = models.DateTimeField(auto_now_add=True)
     name = CharField(_("Report name"), blank=True, max_length=100)
-    project = CharField(_("project"), blank=True, max_length=255)
+    project = CharField(_("project"), max_length=255)
     dateFrom = models.DateField() 
     dateTo = models.DateField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="user", related_name="user")

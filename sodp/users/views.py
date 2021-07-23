@@ -2,7 +2,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, RedirectView, UpdateView, View
@@ -11,7 +12,8 @@ from django.utils.decorators import method_decorator
 from oauth2client import client
 from pprint import pprint
 
-import json, tempfile
+import json, tempfile, pprint
+from utils import google_utils
 
 User = get_user_model()
 
@@ -62,7 +64,11 @@ class UserUpdateCredentialsView(LoginRequiredMixin, SuccessMessageMixin, UpdateV
 
     def get_context_data(self, **kwargs):
         ctx = super(UserUpdateCredentialsView, self).get_context_data(**kwargs)
-        ctx['show_google_login'] = not self.request.user.google_token
+        ctx['show_google_login'] = not self.request.user.google_api_token or not self.request.user.google_refresh_token
+        if ctx['show_google_login']:
+            ctx['google_auth_url'] = google_utils.generateGoogleURL(self.request)
+        else:
+            ctx['google_auth_url'] = "" 
         return ctx
 
     def get_object(self,queryset = None):
@@ -70,43 +76,26 @@ class UserUpdateCredentialsView(LoginRequiredMixin, SuccessMessageMixin, UpdateV
     
 user_credentials_view = UserUpdateCredentialsView.as_view()
 
-@method_decorator(csrf_exempt, name='dispatch')
 class  UserGoogleCredentialsView(LoginRequiredMixin, View):
-    def  post(self, request):
+    def  get(self, request):
         try:
-            authCode = request.POST.get('authCode')
-            if not request.is_ajax():
-                abort(403)
-
-            # write json creds to temporary file
-            with tempfile.NamedTemporaryFile(mode="w+", delete=False) as tfile:
-                json.dump(json.loads(settings.GOOGLE_CLIENT_SECRET), tfile)
-                tfile.flush()
-
-                # Exchange auth code for access token, refresh token, and ID token
-                credentials = client.credentials_from_clientsecrets_and_code(
-                    tfile.name,
-                    ['https://www.googleapis.com/auth/analytics.readonly'],
-                    authCode)
-
-                # Retrieve refresh token and store it
-                refresh_token = credentials.refresh_token
-                if refresh_token:
-                    # store it
-                    self.request.user.google_token = refresh_token
-                    self.request.user.save(update_fields=['google_token'])
-
-                return JsonResponse(
-                    {
-                        'success': True,
-                    }
-                )
+            credentials = google_utils.getUserCredentials(request)
         except Exception as e:
             print(str(e))
-            return JsonResponse(
-                {
-                    'success': False,
-                }
-            )
+            return HttpResponse(status=500)
+
+        if credentials:
+            # store credentials
+            auth_token = credentials.token
+            refresh_token = credentials.refresh_token
+            if auth_token and refresh_token: 
+                # store it
+                self.request.user.google_api_token = auth_token
+                self.request.user.google_refresh_token = refresh_token
+                self.request.user.save(update_fields=['google_api_token', 'google_refresh_token'])
+
+                return redirect(request.build_absolute_uri('/')+"/users/~/")                    
+
+        return HttpResponse(status=500)        
 
 user_google_credentials_view = UserGoogleCredentialsView.as_view()

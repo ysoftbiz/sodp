@@ -31,14 +31,3 @@ class User(AbstractUser):
     def disableGoogleCredential(self):
         self.google_token = None
         self.save(update_fields=['google_token'])
-
-    def getGoogleCredentials(self, google_token):
-        try:
-            cred = client.GoogleCredentials(None, settings.GOOGLE_CLIENT_ID, settings.GOOGLE_CLIENT_SECRET,
-                                            google_token, None, "https://accounts.google.com/o/oauth2/token", None)
-            http = cred.authorize(httplib2.Http())
-            cred.refresh(http)
-
-            return cred
-        except:
-            return False
