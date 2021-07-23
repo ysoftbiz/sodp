@@ -94,7 +94,7 @@ class  UserGoogleCredentialsView(LoginRequiredMixin, View):
                 self.request.user.google_refresh_token = refresh_token
                 self.request.user.save(update_fields=['google_api_token', 'google_refresh_token'])
 
-                return redirect(request.build_absolute_uri('/')+"/users/~/")                    
+                return redirect(request.build_absolute_uri('/')+"users/~/")                    
 
         return HttpResponse(status=500)        
 
