@@ -64,7 +64,7 @@ def getUserCredentials(request):
             client_config=getGoogleConfig(request),
             scopes=getScopes())
         flow.redirect_uri = request.build_absolute_uri('/')+"users/~googlecredentials/"
-        authorization_response = request.build_absolute_uri(request.get_full_path()).replace("http", "https", 1)
+        authorization_response = request.build_absolute_uri(request.get_full_path()).replace("http:", "https:", 1)
         flow.fetch_token(authorization_response=authorization_response)
         credentials = flow.credentials
         return credentials
