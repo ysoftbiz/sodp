@@ -13,7 +13,7 @@ from oauth2client import client
 from pprint import pprint
 
 import json, tempfile, pprint
-from utils import google_utils
+from sodp.utils import google_utils
 
 User = get_user_model()
 

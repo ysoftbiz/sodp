@@ -8,11 +8,11 @@ from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
-from reports.forms import ReportCreateForm
+from sodp.reports.forms import ReportCreateForm
 from django.urls import reverse
 from django.core import serializers
 
-from utils import google_utils
+from sodp.utils import google_utils
 
 class ReportListView(generic.ListView):
     model = report

@@ -2,7 +2,7 @@ from django.forms import ModelForm, DateInput, CharField, Select, ChoiceField
 from django.utils.translation import ugettext_lazy as _
 from sodp.reports.models import report
 
-from utils import google_utils
+from sodp.utils import google_utils
 
 class DateInput(DateInput):
     input_type = 'date'

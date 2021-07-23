@@ -11,7 +11,7 @@ urlpatterns = [
     path(
         "about/", TemplateView.as_view(template_name="pages/about.html"), name="about"
     ),
-    path('demo/', include('requestdemo.urls')),
+    path('demo/', include('sodp.requestdemo.urls')),
     path(
         "thanks/", TemplateView.as_view(template_name="pages/thanks.html"), name="thanks"
     ),

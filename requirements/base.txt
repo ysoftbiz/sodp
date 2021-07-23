@@ -24,3 +24,6 @@ google-auth-httplib2
 oauth2client
 python-dateutil
 httplib2
+celery==4.4.6  # pyup: < 5.0,!=4.4.7  # https://github.com/celery/celery
+django-celery-beat==2.2.0  # https://github.com/celery/django-celery-beat
+redis==3.5.3  # https://github.com/andymccurdy/redis-py

@@ -72,6 +72,7 @@ THIRD_PARTY_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    "django_celery_beat"
 ]
 
 
@@ -81,7 +82,6 @@ LOCAL_APPS = [
     "sodp.provider.apps.providerconfig",
     "sodp.reports.apps.ReportsConfig",
     "sodp.tresholds.apps.TresholdsConfig",
-
 
 
     # Your stuff: custom apps go here
@@ -287,3 +287,14 @@ SOCIALACCOUNT_ADAPTER = "sodp.users.adapters.SocialAccountAdapter"
 #ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 SILENCED_SYSTEM_CHECKS = ['captcha.recaptcha_test_key_error']
+
+# CELERY
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BROKER_URL=env('CELERY_BROKER_URL', default='redis://localhost:6379')
+CELERY_RESULT_BACKEND=env('CELERY_RESULT_BACKEND', default='redis://localhost:6379')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TASK_TIME_LIMIT = 5 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 60
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
