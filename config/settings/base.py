@@ -82,8 +82,7 @@ LOCAL_APPS = [
     "sodp.provider.apps.providerconfig",
     "sodp.reports.apps.ReportsConfig",
     "sodp.tresholds.apps.TresholdsConfig",
-
-
+    "sodp.faqs.apps.FaqsConfig",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

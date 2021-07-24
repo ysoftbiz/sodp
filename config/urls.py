@@ -21,6 +21,9 @@ urlpatterns = [
     path (
         "reportslist/", TemplateView.as_view(template_name="reports/reportslist.html"), name="reportslist"
     ),
+    path (
+        "faqslist/", TemplateView.as_view(template_name="faqs/faqslist.html"), name="faqslist"
+    ),
     path(
         "reportscreate/", TemplateView.as_view(template_name="reports/reportscreate.html"), name="reportscreate"
     ),
@@ -28,6 +31,7 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
     path("reports/", include("sodp.reports.urls", namespace = "reports")),
+    path("faqs/", include("sodp.faqs.urls", namespace = "faqs")),
     path("users/", include("sodp.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
