@@ -9,10 +9,40 @@ from sodp.utils import sitemap as sm
 
 from urllib.parse import urlparse
 
+
 SUFFIXES = ( '.xml', '.pdf', '.doc', '.docx' )
+
+RECOMENDATION_TEXTS = {
+    "100": "Manually review",
+    "200": "Leave as is",
+    "301": "Redirect or update",
+    "404": "Delete"
+}
 
 def setErrorStatus(report, error_code):
     pass
+
+# calculate recomendation based on row data and tresholds
+def calculateRecomendation(row, thresholds):
+
+    # filter by volume and traffic
+    if (row["pageViews"]>=int(thresholds["VOLUME"])):
+        if (row["organicSessions"]>=int(thresholds["TRAFFIC"])):
+            return "200"
+        else:
+            # filter by backlinks
+            if (row["backLinks"]>=int(thresholds["BACKLINKS"])):
+                return "200"
+            else:
+                return "100"    # manually review
+    else:
+        if row["backLinks"]>=int(thresholds["BACKLINKS"]):
+            return "301"
+        else:
+            return "404"
+
+    return "100"
+
 
 @shared_task(name="processReport")
 def processReport(pk):
@@ -54,7 +84,9 @@ def processReport(pk):
         pd_filtered_sm = pd_sitemap.loc[~pd_sitemap['loc'].str.endswith(SUFFIXES)]
         pd_filtered_sm["pageViews"] = 0
         pd_filtered_sm["organicSessions"] = 0
-        pd_filtered_sm["backlinks"] = 0
+        pd_filtered_sm["backLinks"] = 0
+        pd_filtered_sm["recomendationCode"] = ""
+        pd_filtered_sm["recomendationText"] = ""
 
         # iterate over all rows in sitemap and try to find the matching index in google one
         for index, row in pd_filtered_sm.iterrows():
@@ -73,10 +105,16 @@ def processReport(pk):
             # now search for the url in ahrefs and retrieve the dofollow number
             ahrefs_row = ah.loc[ah['url'] == row["loc"]]
             if len(ahrefs_row)>0:
-                pd_filtered_sm.at[index, "backlinks"] = ahrefs_row.iloc[0]['dofollow']
+                pd_filtered_sm.at[index, "backLinks"] = ahrefs_row.iloc[0]['dofollow']
+
+            # finally execute the calculation
+            recomendation_code = calculateRecomendation(pd_filtered_sm.iloc[index], obj.thresholds)
+            recomendation_text = RECOMENDATION_TEXTS[recomendation_code]
+
+            pd_filtered_sm.at[index, "recomendationCode"] = recomendation_code
+            pd_filtered_sm.at[index, "recomendationText"] = recomendation_text
 
         print(pd_filtered_sm)
-
     else:
         print("Report not pending")
         return False
