@@ -26,12 +26,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='report',
             name='processingEndDate',
-            field=models.DateTimeField(default=datetime.datetime(2016, 11, 1, 7, 15, 12, 655838)),
+            field=models.DateTimeField(blank=True, null=True),
         ),
-            #preserve_default=False,
         migrations.AddField(
             model_name='report',
             name='processingStartDate',
-            field=models.DateTimeField(default=datetime.datetime(2016, 11, 1, 7, 15, 12, 655838)),
+            field=models.DateTimeField(blank=True, null=True),
         ),
     ]
