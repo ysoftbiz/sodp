@@ -29,5 +29,7 @@ class User(AbstractUser):
         return reverse("users:detail", kwargs={"username": self.username})
 
     def disableGoogleCredential(self):
-        self.google_token = None
-        self.save(update_fields=['google_token'])
+        self.google_api_token = None
+        self.google_refresh_token = None
+        
+        self.save(update_fields=['google_api_token', 'google_refresh_token'])

@@ -2,6 +2,7 @@ from django.forms import ModelForm, DateInput, CharField, Select, ChoiceField
 from django.utils.translation import ugettext_lazy as _
 from sodp.reports.models import report
 
+
 from sodp.utils import google_utils
 
 class DateInput(DateInput):
@@ -16,20 +17,19 @@ class ReportCreateForm(ModelForm):
             self.fields['project'] =  CharField(required=True, widget=Select(choices = self.getProjects(request)))
 
     def getProjects(self, request):
-        credentials = google_utils.getOfflineCredentials(request.user.google_api_token, request.user.google_refresh_token)
-        if not credentials:
-            request.user.disableGoogleCredential()
-            return redirect(request.build_absolute_uri('/')+"/users/~/")
-
-        # get list of projects from user
-        google_projects = google_utils.getProjectsFromCredentials(credentials)
-
         choices = []
         choices.append(("", _("Select project")))
 
-        if google_projects:
-            project_tuples = list(item for item in google_projects.items())
-            choices = choices + list(project_tuples)
+        credentials = google_utils.getOfflineCredentials(request.user.google_api_token, request.user.google_refresh_token)
+        if not credentials:
+            request.user.disableGoogleCredential()
+        else:
+            # get list of projects from user
+            google_projects = google_utils.getProjectsFromCredentials(credentials)
+
+            if google_projects:
+                project_tuples = list(item for item in google_projects.items())
+                choices = choices + list(project_tuples)
 
         return choices
 

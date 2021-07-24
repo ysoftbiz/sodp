@@ -15,6 +15,7 @@ from django.urls import reverse
 DIMS = ['ga:pagePath', 'ga:segment']
 METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
 SEGMENTS = ['gaid::-1','gaid::-5']
+PAGESIZE = 5000
 
 def getGoogleConfig(request):
     return {
@@ -74,7 +75,6 @@ def getUserCredentials(request):
         credentials = flow.credentials
         return credentials
     except Exception as e:
-        print(str(e))
         return False
 
 def getOfflineCredentials(auth_token, refresh_token):
@@ -90,7 +90,6 @@ def getOfflineCredentials(auth_token, refresh_token):
             revoke_uri=GOOGLE_REVOKE_URI)
         return credentials       
     except Exception as e:
-        print(str(e))
         return False        
 
 # get all the projects that the user has with that credentials
@@ -122,6 +121,7 @@ def getStatsFromView(credentials, view_id, startDate, endDate):
         'reportRequests': [
         {
           'viewId': view_id,
+          'pageSize': PAGESIZE,
           'dateRanges': [{'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}],
           'metrics':  [{'expression': exp} for exp in METRICS],
           'dimensions': [{'name': name} for name in DIMS],
@@ -146,5 +146,4 @@ def getStatsFromView(credentials, view_id, startDate, endDate):
     df = pd.DataFrame(data=data_dic)
     df.columns = [col.split(':')[-1] for col in df.columns]
     df.tail()
-    print(df)
     return df
