@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<br>
+<h1>{% trans "FAQS" %}</h1>
+<br>
+{% if object_list.count == 0 %}
+  <p>{% trans "Sorry ... we are still working on it" %}</p>
+{% else %}
+  <ul>
+        {% for faq in object_list %}  
+          <tr>
+            <th scope="row"> {{faq.question}} </th>
+            <br>
+            <td>{{faq.answer}}</td>
+            <br>
+          </tr>
+      {% endfor %}
+
+  </ul>
+  {% endif %} 
+{% endblock %}
