@@ -10,9 +10,10 @@ def getAhrefsInfo(token, domain):
     token=token, domain=domain, limit=LIMIT)
 
     try:
-        r = requests.get(ahrefs_url).content
-        data = json.loads(r)
-        df = pd.json_normalize(data)
+        r = requests.get(ahrefs_url)
+        data = json.loads(r.content.decode('utf-8'))
+        df = pd.json_normalize(data, 'pages')
+
         return df
     except Exception as e:
         print(str(e))
