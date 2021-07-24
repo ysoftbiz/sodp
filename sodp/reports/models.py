@@ -1,8 +1,8 @@
 from django.db import models
 from sodp.users.models import User
-from django.db.models import CharField
+from django.db.models import CharField, IntegerField
 from django.utils.translation import gettext_lazy as _
-
+import datetime
 
 class report(models.Model):
     creationDate = models.DateTimeField(auto_now_add=True)
@@ -30,6 +30,16 @@ class report(models.Model):
 
     thresholds = models.JSONField(blank=True, null = True)
     sitemap =  CharField(_("sitemap"), blank=True, null=True, max_length=255)
+    processingStartDate = models.DateTimeField(null=True, blank=True)
+    processingEndDate = models.DateTimeField(null=True, blank=True)
+    numRetries = IntegerField(null = True)
+    errorDescription = CharField(_("error description"), blank=True, null=True, max_length=255)
+    path = CharField(_("path"), blank=True, null=True, max_length=255)
+    key = CharField(_("key"), blank=True, null=True, max_length=255)
+
+
+
+
 
     def __str__(self):
         return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
