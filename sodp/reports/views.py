@@ -16,6 +16,9 @@ from django.core import serializers
 from sodp.utils import google_utils
 from sodp.reports import tasks
 
+from datetime import date
+from django.core.exceptions import ValidationError
+
 class ReportListView(generic.ListView):
     model = report
     context_object_name = 'reportsList'
@@ -55,11 +58,20 @@ class ReportCreateView(CreateView):
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
+        if self.object.dateFrom < date.today():
+            raise ValidationError("The start date has to be greater than or equal to the current date")  
+
+        if self.object.dateTo < date.today():
+            raise ValidationError("The end date has to be greater than or equal to the current date")
+        else: 
+            if self.object.dateTo < self.object.dateFrom:
+                raise ValidationError( "The end date has to be greater than or equal to the start date")
+
         self.object.user = self.request.user
         super(ReportCreateView, self).form_valid(form)
         self.object.save()
 
         # trigger generation task
-        tasks.processReport.apply_async(args=[self.object.pk])
+        #tasks.processReport.apply_async(args=[self.object.pk])
 
         return HttpResponseRedirect(self.get_success_url())
