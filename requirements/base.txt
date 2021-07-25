@@ -32,4 +32,5 @@ beautifulsoup4
 lxml
 django-static-jquery3
 bootstrap4
+django-bootstrap4
 django-bootstrap-datepicker-plus
