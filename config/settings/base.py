@@ -4,6 +4,7 @@ Base settings to build other settings files upon.
 from pathlib import Path
 
 import environ
+import os
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # sodp/
@@ -235,6 +236,11 @@ EMAIL_BACKEND = env(
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
+
+EMAIL_HOST = os.environ.get('MAILGUN_SMTP_SERVER', '')
+EMAIL_PORT = os.environ.get('MAILGUN_SMTP_PORT', '')
+EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_LOGIN', '')
+EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD', '')
 
 # ADMIN
 # ------------------------------------------------------------------------------
