@@ -28,6 +28,10 @@ class ReportCreateForm(ModelForm):
                 project_tuples = list(item for item in google_projects.items())
                 choices = choices + list(project_tuples)
 
+                # add projects to session
+                request.session['projects'] = google_projects
+
+
         return choices
 
     class Meta(object):

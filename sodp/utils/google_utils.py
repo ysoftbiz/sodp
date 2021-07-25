@@ -94,23 +94,30 @@ def getOfflineCredentials(auth_token, refresh_token):
 
 # get all the projects that the user has with that credentials
 def getProjectsFromCredentials(credentials):
-  analytics = build('analytics', 'v3', credentials=credentials)
-  accounts = analytics.management().accounts().list().execute()
+    if settings.USE_DUMMY_GOOGLE_DATA:
+        projects = {
+            "1": "Account 1 - Project 1 - http://sodp-test.herokuapp.com",
+            "2": "Account 1 - Project 2 - http://www.ysoft.biz",
+            "3": "Account 2 - Project 1 - http://www.google.com",
+        }
+    else:
+        analytics = build('analytics', 'v3', credentials=credentials)
+        accounts = analytics.management().accounts().list().execute()
 
-  projects = {}
-  if accounts.get('items'):
-      for item in accounts.get('items'):
-          account_id = item["id"]
-        
-          # now lets retrieve all the views
-          profiles = analytics.management().profiles().list(accountId=account_id,
-                                                  webPropertyId='~all'
-                                                 ).execute()
+        projects = {}
+        if accounts.get('items'):
+            for item in accounts.get('items'):
+                account_id = item["id"]
+                
+                # now lets retrieve all the views
+                profiles = analytics.management().profiles().list(accountId=account_id,
+                                                        webPropertyId='~all'
+                                                        ).execute()
 
-          for profile in profiles.get('items'):
-              projects[profile["id"]] = item["name"]+" - "+profile["name"]+" - "+profile["websiteUrl"]
+                for profile in profiles.get('items'):
+                    projects[profile["id"]] = item["name"]+" - "+profile["name"]+" - "+profile["websiteUrl"]
 
-  return projects
+    return projects
 
 # returns a dump of the desired stats for the specific credentials and view
 def getStatsFromView(credentials, view_id, startDate, endDate):
