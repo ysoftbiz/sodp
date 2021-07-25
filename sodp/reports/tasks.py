@@ -99,7 +99,7 @@ def uploadExcelFile(report, dataframe):
 
     return False, False
 
-@shared_task(name="processReport")
+@shared_task(name="sodp.reports.tasks.processReport")
 def processReport(pk):
     # get report data with that PK
     obj = report.objects.get(pk=pk)
