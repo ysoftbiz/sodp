@@ -30,3 +30,6 @@ redis==3.5.3  # https://github.com/andymccurdy/redis-py
 pandas
 beautifulsoup4
 lxml
+django-static-jquery3
+bootstrap4
+django-bootstrap-datepicker-plus

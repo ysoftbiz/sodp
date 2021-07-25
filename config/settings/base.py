@@ -73,8 +73,14 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "django_celery_beat",
+    "django_static_jquery3",
+    "bootstrap4",
+    "bootstrap_datepicker_plus"
 ]
 
+BOOTSTRAP4 = {
+    'include_jquery': True,
+}
 
 LOCAL_APPS = [
     "sodp.users.apps.UsersConfig",

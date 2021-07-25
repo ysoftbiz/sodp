@@ -19,10 +19,8 @@ class AccountAdapter(DefaultAccountAdapter):
         google_api_token = request.user.google_api_token
         google_refresh_token = request.user.google_refresh_token
 
-        if not ahrefs_token or not google_token:
+        if not ahrefs_token or not google_api_token or not google_refresh_token:
             url = reverse("users:credentials")
-
-
         else:
             url = reverse("users:detail", kwargs={"username": self.request.user.username})
         return url

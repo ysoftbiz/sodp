@@ -2,12 +2,9 @@ from django.forms import ModelForm, DateInput, CharField, Select, ChoiceField
 from django.utils.translation import ugettext_lazy as _
 from sodp.reports.models import report
 
+from bootstrap_datepicker_plus import DatePickerInput
 
 from sodp.utils import google_utils
-
-class DateInput(DateInput):
-    input_type = 'date'
-
 
 class ReportCreateForm(ModelForm):
     def __init__(self, *args, **kwargs):
@@ -36,4 +33,5 @@ class ReportCreateForm(ModelForm):
     class Meta(object):
         model = report
         fields = ('project', 'sitemap', 'thresholds', 'dateFrom' ,'dateTo')
-        widgets = {'dateFrom' : DateInput() ,'dateTo' : DateInput(), 'project': Select}
+        widgets = { 'dateFrom' : DatePickerInput(format='%m-%d-%Y') ,
+                    'dateTo' : DatePickerInput(format='%m-%d-%Y'), 'project': Select}
