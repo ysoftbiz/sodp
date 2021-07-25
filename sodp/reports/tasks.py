@@ -105,10 +105,10 @@ def processReport(pk):
     obj = report.objects.get(pk=pk)
     if obj:
         # check if report is pending
-        #if obj.status == 'pending':
-        #    # set to processing
-        #    obj.status='process'
-        #    obj.save(update_fields=["status"])
+        if obj.status == 'pending':
+            # set to processing
+            obj.status='process'
+            obj.save(update_fields=["status"])
 
         # retrieve url sitemap
         pd_sitemap = sm.parseSitemap(obj.sitemap, ["loc",])
