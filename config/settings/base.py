@@ -324,3 +324,6 @@ AWS_S3_ADDRESSING_STYLE = 'virtual'
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = 'private'
 AWS_S3_VERIFY = True
+
+# google
+USE_DUMMY_GOOGLE_DATA = env('USE_DUMMY_GOOGLE_DATA', default=False)
