@@ -1,3 +1,8 @@
+import io
+import os
+import pandas as pd
+import xlsxwriter 
+
 from config import celery_app
 from celery import shared_task
 from celery.contrib import rdb
@@ -7,8 +12,15 @@ from sodp.reports.models import report
 from sodp.utils import google_utils, ahrefs
 from sodp.utils import sitemap as sm
 
+from datetime import datetime
 from urllib.parse import urlparse
 
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.core.mail import EmailMessage
+from django.template.loader import get_template
+from django.utils.translation import gettext as _
 
 SUFFIXES = ( '.xml', '.pdf', '.doc', '.docx' )
 
@@ -21,6 +33,28 @@ RECOMENDATION_TEXTS = {
 
 def setErrorStatus(report, error_code):
     pass
+
+def setStatusComplete(report, path):
+    report.path = path
+    report.status = 'complete'
+    report.processingEndDate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    report.save(update_fields=["path", "status", "processingEndDate"])
+
+# sends an email to the user with the report URL
+def sendReportCompletedEmail(report, url):
+    message = get_template("emails/reportCompleted.html").render({
+        'url': url
+    })
+    mail = EmailMessage(
+        _("SODP - Report completed"),
+        message,
+        settings.EMAIL_FROM,
+        to=[report.user.email]
+    )
+    mail.content_subtype = "html"
+    mail.send()
+
+
 
 # calculate recomendation based on row data and tresholds
 def calculateRecomendation(row, thresholds):
@@ -43,6 +77,27 @@ def calculateRecomendation(row, thresholds):
 
     return "100"
 
+# uploads file to s3 and returns url
+def uploadExcelFile(report, dataframe):    
+    file_directory_within_bucket = 'reports/{username}'.format(username=report.user.pk)
+    dt_string = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    file_path = "report_{report_id}_{timestamp}.xls".format(report_id=report.pk, timestamp=dt_string)
+    final_path = file_directory_within_bucket+"/"+file_path
+
+    # write to excel
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        dataframe.to_excel(writer, 'sheet_name')
+    data = output.getvalue()    
+
+    if not default_storage.exists(final_path): # avoid overwriting existing file
+        default_storage.save(final_path, ContentFile(data))
+        file_url = default_storage.url(final_path)
+        print(file_url)
+        return file_path, file_url
+
+    return False, False
 
 @shared_task(name="processReport")
 def processReport(pk):
@@ -114,7 +169,16 @@ def processReport(pk):
             pd_filtered_sm.at[index, "recomendationCode"] = recomendation_code
             pd_filtered_sm.at[index, "recomendationText"] = recomendation_text
 
-        print(pd_filtered_sm)
+        # upload dataframe to storage
+        path, url = uploadExcelFile(obj, pd_filtered_sm)
+        if path and url:
+            sendReportCompletedEmail(obj, url)
+
+            # update as completed with path
+            setStatusComplete(obj, path)
+        else:
+            setErrorStatus(obj, "ERROR_SAVING")
+           
     else:
         print("Report not pending")
         return False
