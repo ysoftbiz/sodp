@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+  
+<br><h1>Name: {{ report.name }}</h1><br>
+
+<p><strong>Date from:</strong> {{ report.dateFrom }}</p>
+<p><strong>Date to:</strong> {{ report.dateTo }}</p>
+<p><strong>Creation date:</strong> {{ report.creationDate }}</p>
+<p><strong>Status:</strong> {{ report.status }}</p>
+<p><strong>Error description:</strong> {{ report.errorDescription }}</p>
+
+{% endblock %}

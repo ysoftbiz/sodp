@@ -15,6 +15,10 @@ from django.core import serializers
 from sodp.utils import google_utils
 from sodp.reports import tasks
 
+#Detail view
+from django.shortcuts import get_object_or_404
+from django.views.generic.detail import DetailView
+
 class ReportListView(generic.ListView):
     model = report
     context_object_name = 'reportsList'
@@ -52,6 +56,17 @@ class ReportCreateView(CreateView):
         self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
         return self.initial
 
+    #def clean_dateFrom(self):
+    #    if self.dateFrom < self.creationDate:
+    #        raise ValidationError("The start date has to be greater than or equal to the current date")
+
+    #def clean_dateTo(self):
+    #    if self.dateTo < self.creationDate:
+    #        raise ValidationError("The end date has to be greater than or equal to the current date")
+    #    else: 
+    #        if self.dateTo < self.clean_dateFrom:
+    #            raise ValidationError( "The end date has to be greater than or equal to the start date")
+
     def post(self, request, *args, **kwargs):
         form = ReportCreateForm(request.POST)
         if form.is_valid():
@@ -63,6 +78,19 @@ class ReportCreateView(CreateView):
             tasks.processReport(report.pk)
             
         return super(ReportCreateView,self).form_valid(form)
+
+class ReportDetailView(generic.DetailView):
+    model = report
+    template_name = 'reports/detailview.html'
+
+
+    def report_detail_view(request, primary_key):
+        try:
+            report = report.objects.get(pk=primary_key)
+        except report.DoesNotExist:
+            raise Http404('Book does not exist')
+
+        return render(request, 'detailview.html', context={'report': report})
 
 
 
