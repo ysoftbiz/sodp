@@ -56,9 +56,9 @@ class ReportCreateView(CreateView):
         self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
         return self.initial
 
-    #def clean_dateFrom(self):
-    #    if self.dateFrom < self.creationDate:
-    #        raise ValidationError("The start date has to be greater than or equal to the current date")
+    def clean_dateFrom(self):
+        if self.dateFrom < self.creationDate:
+             raise ValidationError("The start date has to be greater than or equal to the current date")
 
     #def clean_dateTo(self):
     #    if self.dateTo < self.creationDate:

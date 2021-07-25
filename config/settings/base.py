@@ -313,3 +313,6 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 
 DATE_FORMAT = 'm-d-Y'
+
+
+USE_DUMMY_GOOGLE_DATA = True
