@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import xlsxwriter 
 
-from config import celery_app
 from celery import shared_task
 from celery.contrib import rdb
 from pprint import pprint
