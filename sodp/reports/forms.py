@@ -3,6 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from sodp.reports.models import report
 
 from bootstrap_datepicker_plus import DatePickerInput
+from pprint import pprint
 
 from sodp.utils import google_utils
 
@@ -30,12 +31,10 @@ class ReportCreateForm(ModelForm):
 
                 # add projects to session
                 request.session['projects'] = google_projects
-
-
         return choices
 
     class Meta(object):
         model = report
         fields = ('project', 'sitemap', 'thresholds', 'dateFrom' ,'dateTo')
-        widgets = { 'dateFrom' : DatePickerInput(format='%m-%d-%Y') ,
-                    'dateTo' : DatePickerInput(format='%m-%d-%Y'), 'project': Select}
+        widgets = { 'dateFrom' : DatePickerInput(format='%Y-%m-%d') ,
+                    'dateTo' : DatePickerInput(format='%Y-%m-%d'), 'project': Select}

@@ -43,7 +43,7 @@ LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
 DATABASES = {
-    "default": env.db("DATABASE_URL", default="postgres:///sodp"),
+    "default": env.db("DATABASE_URL", default="postgres://postgres@localhost:5432/sodp"),
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
@@ -76,7 +76,8 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "django_static_jquery3",
     "bootstrap4",
-    "bootstrap_datepicker_plus"
+    "bootstrap_datepicker_plus",
+    "storages"
 ]
 
 BOOTSTRAP4 = {
@@ -241,6 +242,7 @@ EMAIL_HOST = os.environ.get('MAILGUN_SMTP_SERVER', '')
 EMAIL_PORT = os.environ.get('MAILGUN_SMTP_PORT', '')
 EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_LOGIN', '')
 EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD', '')
+EMAIL_FROM = os.environ.get('EMAIL_FROM', 'info@sodp.com')
 
 # ADMIN
 # ------------------------------------------------------------------------------
@@ -310,6 +312,18 @@ CELERY_TASK_TIME_LIMIT = 5 * 60
 CELERY_TASK_SOFT_TIME_LIMIT = 60
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
-
-
 DATE_FORMAT = 'm-d-Y'
+
+# storage
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID', default='')
+AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY', default='')
+AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME', default='')
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_ADDRESSING_STYLE = 'virtual'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = 'private'
+AWS_S3_VERIFY = True
+
+# google
+USE_DUMMY_GOOGLE_DATA = env('USE_DUMMY_GOOGLE_DATA', default=False)

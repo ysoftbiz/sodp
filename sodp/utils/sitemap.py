@@ -55,5 +55,8 @@ def parseSitemap( url, headers):
     if not panda_out_total.empty:
         panda_out = pd.concat([panda_out, panda_out_total], ignore_index=True)
 
+    # remove Source column from dataframe
+    panda_out = panda_out.drop("Source", axis=1)
+
     #returns the dataframe
     return panda_out

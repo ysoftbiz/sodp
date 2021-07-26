@@ -3,6 +3,7 @@ from django.views import generic
 from sodp.reports.models import report
 from sodp.tresholds.models import treshold
 
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -32,7 +33,7 @@ report_list_view = ReportListView.as_view()
 class ReportCreateView(CreateView):
     template_name = 'reports/reportscreate.html'
     form_class = ReportCreateForm
-    success_url = '/reportcreatedsucessfully/'
+    success_url = '/reportcreatedsucessfully'
 
     def get_form_kwargs(self, **kwargs):
         form_kwargs = super(ReportCreateView, self).get_form_kwargs(**kwargs)
@@ -55,30 +56,19 @@ class ReportCreateView(CreateView):
 
         self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
         return self.initial
+      
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.user = self.request.user
+        super(ReportCreateView, self).form_valid(form)
+        self.object.save()
 
-    #def clean_dateFrom(self):
-    #    if self.dateFrom < self.creationDate:
-    #        raise ValidationError("The start date has to be greater than or equal to the current date")
+        # trigger generation task
+        tasks.processReport.apply_async(args=[self.object.pk])
 
-    #def clean_dateTo(self):
-    #    if self.dateTo < self.creationDate:
-    #        raise ValidationError("The end date has to be greater than or equal to the current date")
-    #    else: 
-    #        if self.dateTo < self.clean_dateFrom:
-    #            raise ValidationError( "The end date has to be greater than or equal to the start date")
+        return HttpResponseRedirect(self.get_success_url())
 
-    def post(self, request, *args, **kwargs):
-        form = ReportCreateForm(request.POST)
-        if form.is_valid():
-            report = form.save(commit=False)
-            report.user = request.user
-            report.save()
-
-            # trigger generation task
-            tasks.processReport(report.pk)
-            
-        return super(ReportCreateView,self).form_valid(form)
-
+      
 class ReportDetailView(generic.DetailView):
     model = report
     template_name = 'reports/detailview.html'
@@ -91,6 +81,4 @@ class ReportDetailView(generic.DetailView):
             raise Http404('Book does not exist')
 
         return render(request, 'detailview.html', context={'report': report})
-
-
 
