@@ -25,6 +25,7 @@ from django.views.generic.detail import DetailView
 import pandas as pd
 from django.core.exceptions import ValidationError
 
+
 class ReportListView(generic.ListView):
     model = report
     context_object_name = 'reportsList'
