@@ -37,3 +37,4 @@ django-bootstrap-datepicker-plus
 boto3
 django-storages
 xlsxwriter
+openpyxl
