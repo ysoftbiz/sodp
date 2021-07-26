@@ -18,6 +18,8 @@ from sodp.reports import tasks
 
 from datetime import date
 from django.core.exceptions import ValidationError
+import pprint
+
 
 class ReportListView(generic.ListView):
     model = report
@@ -68,6 +70,23 @@ class ReportCreateView(CreateView):
                 raise ValidationError( "The end date has to be greater than or equal to the start date")
 
         self.object.user = self.request.user
+        #id = self.object.project
+        #print(id)
+        #for key, value in self.request.session.items():
+            #print(value[1])
+
+
+        #print (self.request.session.items[self.object.project])
+        #id = self.object.project
+        #print(id)
+
+        #project = self.request.session.items()[id]
+        #print(project)
+
+
+        #pprint(self.request.session)
+        nameAux =  ' (' + self.object.dateFrom.strftime("%d %m %Y ")  + '- ' + self.object.dateTo.strftime("%d %m %Y ") + ')'
+        self.object.name = nameAux
         super(ReportCreateView, self).form_valid(form)
         self.object.save()
 
