@@ -19,6 +19,7 @@ from sodp.reports import tasks
 from datetime import date
 from django.core.exceptions import ValidationError
 
+
 class ReportListView(generic.ListView):
     model = report
     context_object_name = 'reportsList'
@@ -55,11 +56,23 @@ class ReportCreateView(CreateView):
 
         self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
         return self.initial
+    def clean_dateFrom(self):
+        if self.dateFrom < self.creationDate:
+             raise ValidationError("The start date has to be greater than or equal to the current date")
 
-    def form_valid(self, form):
-        self.object = form.save(commit=False)
-        if self.object.dateFrom < date.today():
-            raise ValidationError("The start date has to be greater than or equal to the current date")  
+    #def clean_dateTo(self):
+    #    if self.dateTo < self.creationDate:
+    #        raise ValidationError("The end date has to be greater than or equal to the current date")
+    #    else: 
+    #        if self.dateTo < self.clean_dateFrom:
+    #            raise ValidationError( "The end date has to be greater than or equal to the start date")
+
+    def post(self, request, *args, **kwargs):
+        form = ReportCreateForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.user = request.user
+            report.save()
 
         if self.object.dateTo < date.today():
             raise ValidationError("The end date has to be greater than or equal to the current date")
@@ -67,9 +80,19 @@ class ReportCreateView(CreateView):
             if self.object.dateTo < self.object.dateFrom:
                 raise ValidationError( "The end date has to be greater than or equal to the start date")
 
-        self.object.user = self.request.user
-        super(ReportCreateView, self).form_valid(form)
-        self.object.save()
+
+class ReportDetailView(generic.DetailView):
+    model = report
+    template_name = 'reports/detailview.html'
+
+
+    def report_detail_view(request, primary_key):
+        try:
+            report = report.objects.get(pk=primary_key)
+        except report.DoesNotExist:
+            raise Http404('Book does not exist')
+
+        return render(request, 'detailview.html', context={'report': report})
 
         # trigger generation task
         #tasks.processReport.apply_async(args=[self.object.pk])
