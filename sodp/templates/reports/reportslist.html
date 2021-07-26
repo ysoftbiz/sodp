@@ -4,25 +4,27 @@
 
 {% block content %}
 <br>
-<h1>{% trans "Reports List" %}</h1>
+<h1 class="cap">{% trans "Reports List" %}</h1>
 <br>
+ <a href="/reports/reportscreate" class="bot">{% trans "Create new report" %}</a>
 {% if object_list.count == 0 %}
   <p>{% trans "There are no reports yet" %}</p>
 {% else %}
   <ul>
     <table class="table">
       <thead>
-        <tr>
+        <tr class="tit">
           <th scope="col">{% trans "Report name" %} </th>
           <th scope="col">{% trans "Creation date" %}</th>
           <th scope="col">{% trans "Status" %}</th>
         </tr>
       </thead>
+      <br>
       <tbody>
         {% for report in object_list %}  
-          <tr>
-            <th scope="row"> {{report.project}} </th>
-            <td>{{report.creationDate}}</td>
+          <tr class="lis">
+            <th scope="row" > {{report.project}} </th>
+            <td class="sir">{{report.creationDate}}</td>
             <td>{{report.status}}</td>
           </tr>
       {% endfor %}
@@ -32,5 +34,5 @@
   </ul>
   {% endif %} 
   
-  <a href="/reports/reportscreate" class="bot">{% trans "Create new report" %}</a>
+ 
   {% endblock %}
