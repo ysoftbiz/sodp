@@ -81,7 +81,6 @@ class ReportDetailView(generic.DetailView):
     model = report
     template_name = 'reports/detailview.html'
 
-
     def report_detail_view(request, primary_key):
         try:
             report = report.objects.get(pk=primary_key)
