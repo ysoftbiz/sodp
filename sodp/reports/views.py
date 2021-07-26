@@ -1,9 +1,10 @@
+from django.core.files.storage import default_storage
 from django.shortcuts import render
-from django.views import generic
+from django.views import generic, View
 from sodp.reports.models import report
 from sodp.tresholds.models import treshold
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -13,12 +14,14 @@ from sodp.reports.forms import ReportCreateForm
 from django.urls import reverse
 from django.core import serializers
 
-from sodp.utils import google_utils
+from sodp.utils import google_utils, pandas_utils
 from sodp.reports import tasks
 
 #Detail view
 from django.shortcuts import get_object_or_404
 from django.views.generic.detail import DetailView
+
+import pandas as pd
 
 class ReportListView(generic.ListView):
     model = report
@@ -82,3 +85,34 @@ class ReportDetailView(generic.DetailView):
 
         return render(request, 'detailview.html', context={'report': report})
 
+class ReportFrameView(generic.DetailView):
+    model = report
+    template_name = 'reports/frameview.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['id'] = self.kwargs['pk']
+        return context
+
+class AjaxView(View):
+    def get(self, request, **kwargs):
+        pk = kwargs['pk']
+        
+        data = []
+        try:
+            obj = report.objects.get(pk=kwargs['pk'], user=self.request.user)
+            if obj.path:
+                # open from aws storage
+                report_path = "reports/{user_id}/{report_name}".format(user_id=self.request.user.pk, report_name=obj.path)
+                if (default_storage.exists(report_path)):
+                    # read object
+                    with default_storage.open(report_path) as handle:
+                        df = pd.read_excel(handle, sheet_name=0) 
+                        if not df.empty:
+                            data = pandas_utils.convert_excel_to_json(df)
+                            return JsonResponse({"data": data}, status=200, safe=False)                                    
+        except Exception as e:
+            pass
+
+        return JsonResponse(data, status=500, safe=False)        

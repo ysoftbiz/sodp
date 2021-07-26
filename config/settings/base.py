@@ -77,7 +77,7 @@ THIRD_PARTY_APPS = [
     "django_static_jquery3",
     "bootstrap4",
     "bootstrap_datepicker_plus",
-    "storages"
+    "storages",
 ]
 
 BOOTSTRAP4 = {
@@ -182,7 +182,7 @@ TEMPLATES = [
         # https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-TEMPLATES-BACKEND
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         # https://docs.djangoproject.com/en/dev/ref/settings/#template-dirs
-        "DIRS": [str(APPS_DIR / "templates")],
+        "DIRS": [str(APPS_DIR), str(APPS_DIR / "templates")],
         "OPTIONS": {
             # https://docs.djangoproject.com/en/dev/ref/settings/#template-loaders
             # https://docs.djangoproject.com/en/dev/ref/templates/api/#loader-types
@@ -203,7 +203,7 @@ TEMPLATES = [
                 "sodp.utils.context_processors.settings_context",
             ],
         },
-    }
+    },
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#form-renderer
