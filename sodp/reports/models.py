@@ -1,5 +1,6 @@
 from django.db import models
 from sodp.users.models import User
+from sodp.views.models import view
 from django.db.models import CharField, IntegerField
 from django.utils.translation import gettext_lazy as _
 import datetime
@@ -11,7 +12,8 @@ class report(models.Model):
     dateFrom = models.DateField() 
     dateTo = models.DateField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="user", related_name="user")
- 
+    viewId = models.ForeignKey(view, on_delete=models.CASCADE, verbose_name="view", related_name="view")
+
     STATUS = (
         ('pending', _('Pending')),
         ('process', _('Processing')),
@@ -36,6 +38,7 @@ class report(models.Model):
     errorDescription = CharField(_("error description"), blank=True, null=True, max_length=255)
     path = CharField(_("path"), blank=True, null=True, max_length=255)
     key = CharField(_("key"), blank=True, null=True, max_length=255)
+
 
 
 
