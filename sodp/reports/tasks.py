@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import xlsxwriter 
 
-from config import celery_app
 from celery import shared_task
 from celery.contrib import rdb
 from pprint import pprint
@@ -99,16 +98,16 @@ def uploadExcelFile(report, dataframe):
 
     return False, False
 
-@shared_task(name="processReport")
+@shared_task(name="sodp.reports.tasks.processReport")
 def processReport(pk):
     # get report data with that PK
     obj = report.objects.get(pk=pk)
     if obj:
         # check if report is pending
-        #if obj.status == 'pending':
-        #    # set to processing
-        #    obj.status='process'
-        #    obj.save(update_fields=["status"])
+        if obj.status == 'pending':
+            # set to processing
+            obj.status='process'
+            obj.save(update_fields=["status"])
 
         # retrieve url sitemap
         pd_sitemap = sm.parseSitemap(obj.sitemap, ["loc",])

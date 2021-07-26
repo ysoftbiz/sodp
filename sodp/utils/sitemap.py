@@ -56,7 +56,7 @@ def parseSitemap( url, headers):
         panda_out = pd.concat([panda_out, panda_out_total], ignore_index=True)
 
     # remove Source column from dataframe
-    panda_out.drop("Source", axis=1)
+    panda_out = panda_out.drop("Source", axis=1)
 
     #returns the dataframe
     return panda_out
