@@ -65,10 +65,10 @@ class ReportCreateView(CreateView):
       
     def form_valid(self, form):
         self.object = form.save(commit=False)
-        if self.object.dateFrom < date.today():
+        if self.object.dateFrom >= date.today():
             raise ValidationError(_("The start date has to be lower than today"))  
 
-        if self.object.dateTo < date.today():
+        if self.object.dateTo >= date.today():
             raise ValidationError(_("The end date has to be lower than today"))
         else: 
             if self.object.dateTo < self.object.dateFrom:

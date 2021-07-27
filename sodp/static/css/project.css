@@ -72,13 +72,11 @@
 
 .lis{
 
-	background-color: #9D6498;
-	color:#ffffff;
+	background-color: #eeeeee;
 	width: 50px;
 }
 .lis:hover{
-	background-color: #9c3c94;
-	color:#ffffff;
+	background-color: #cfc2ce;
 	font-weight: 600;
 }
 .cont{
