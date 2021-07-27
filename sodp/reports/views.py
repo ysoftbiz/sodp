@@ -24,6 +24,8 @@ from django.core.exceptions import ValidationError
 import pandas as pd
 from django.core.exceptions import ValidationError
 
+from sodp.views.models import view
+
 
 class ReportListView(generic.ListView):
     model = report
@@ -51,10 +53,11 @@ class ReportCreateView(CreateView):
         auxDateTo = date.today() - timedelta(1)
         n = 1
         auxDateFrom = auxDateTo - relativedelta(months=n)
-        tresholds_list = serializers.serialize("json", treshold.objects.all())
 
+        tresholds_list = serializers.serialize("json", treshold.objects.all())
         first_list = treshold.objects.all()
         tresholds_list = {}
+
         
         for item in first_list:
             tresholds_list.setdefault(item.title, item.default_value)
