@@ -20,6 +20,7 @@ class report(models.Model):
         ('canceled', _('Canceled')),
         ('created', _('Created')),
         ('failed', _('Failed')),
+        ('complete', _('Completed')) 
     )
 
     status = models.CharField(

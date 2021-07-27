@@ -73,10 +73,10 @@ class UserUpdateCredentialsView(LoginRequiredMixin, SuccessMessageMixin, UpdateV
 
     def get_object(self,queryset = None):
         return self.request.user
-    
 user_credentials_view = UserUpdateCredentialsView.as_view()
 
 class  UserGoogleCredentialsView(LoginRequiredMixin, View):
+
     def  get(self, request):
         try:
             credentials = google_utils.getUserCredentials(request)
@@ -94,8 +94,23 @@ class  UserGoogleCredentialsView(LoginRequiredMixin, View):
                 self.request.user.google_refresh_token = refresh_token
                 self.request.user.save(update_fields=['google_api_token', 'google_refresh_token'])
 
+                # and generate views
+                projects = google_utils.getProjectsFromCredentials(credentials)
+                if projects:
+                    # fill views
+                    google_utils.fillViews(projects, self.request.user)
+
                 return redirect(request.build_absolute_uri('/')+"users/~/")                    
 
         return HttpResponse(status=500)        
 
 user_google_credentials_view = UserGoogleCredentialsView.as_view()
+
+class  UserGoogleLogoutView(LoginRequiredMixin, View):
+    def  get(self, request):
+        # just remove google credentials
+        request.user.disableGoogleCredential()
+        return JsonResponse({}, status=200)        
+
+
+user_google_logout_view = UserGoogleLogoutView.as_view()
