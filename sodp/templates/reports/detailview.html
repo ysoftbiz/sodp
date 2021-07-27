@@ -1,4 +1,19 @@
 {% extends 'base.html' %}
+{% load static i18n %}
+
+{% block css %}
+{{ block.super}}
+<link href="//cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css" />
+
+{% endblock %}
+
+{% block javascript %}
+{{ block.super}}
+
+<script src="//cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
+
 {% block content %}
 {% load i18n %}
 
@@ -11,4 +26,28 @@
     <p><strong>{% trans "Status:" %}</strong> {{ report.status }}</p>
     <p><strong>{% trans "Error description:" %}</strong> {{ report.errorDescription }}</p>
 
+    {% if report.status == "complete" %}
+    <p><a class="open-report-detail bot" href="/reports/detail/{{ report.pk }}/"
+        data-popup-url="/reports/detail/{{ report.pk }}/" >{%trans "View detail" %}</a></p>
+    {% endif %}
+
+
+{% endblock %}
+
+{% block modal %}
+{% include "reports/detailmodal.html" %}
+{% endblock %}
+
+{% block inline_javascript %}
+<script>
+    $(document).on("click", ".open-report-detail", function (e) {
+      e.preventDefault();
+      var $popup = $("#popup");
+      var popup_url = $(this).data("popup-url");
+      $(".modal-body", $popup).load(popup_url, function () {
+        $popup.modal("show");
+        return false;
+      });
+    });
+  </script>
 {% endblock %}

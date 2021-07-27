@@ -1,9 +1,11 @@
+from django.core.files.storage import default_storage
 from django.shortcuts import render
-from django.views import generic
+from django.views import generic, View
 from sodp.reports.models import report
 from sodp.tresholds.models import treshold
 
-from django.http import HttpResponseRedirect
+from django.utils.translation import ugettext_lazy as _
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -13,11 +15,15 @@ from sodp.reports.forms import ReportCreateForm
 from django.urls import reverse
 from django.core import serializers
 
-from sodp.utils import google_utils
+from sodp.utils import google_utils, pandas_utils
 from sodp.reports import tasks
 
 from datetime import date
 from django.core.exceptions import ValidationError
+
+import pandas as pd
+from django.core.exceptions import ValidationError
+
 
 class ReportListView(generic.ListView):
     model = report
@@ -59,13 +65,13 @@ class ReportCreateView(CreateView):
     def form_valid(self, form):
         self.object = form.save(commit=False)
         if self.object.dateFrom < date.today():
-            raise ValidationError("The start date has to be greater than or equal to the current date")  
+            raise ValidationError(_("The start date has to be lower than today"))  
 
         if self.object.dateTo < date.today():
-            raise ValidationError("The end date has to be greater than or equal to the current date")
+            raise ValidationError(_("The end date has to be lower than today"))
         else: 
             if self.object.dateTo < self.object.dateFrom:
-                raise ValidationError( "The end date has to be greater than or equal to the start date")
+                raise ValidationError(_("The end date has to be greater than or equal to the start date"))
 
         self.object.user = self.request.user
         super(ReportCreateView, self).form_valid(form)
@@ -81,7 +87,6 @@ class ReportDetailView(generic.DetailView):
     model = report
     template_name = 'reports/detailview.html'
 
-
     def report_detail_view(request, primary_key):
         try:
             report = report.objects.get(pk=primary_key)
@@ -90,8 +95,44 @@ class ReportDetailView(generic.DetailView):
 
         return render(request, 'detailview.html', context={'report': report})
 
-        # trigger generation task
-        #tasks.processReport.apply_async(args=[self.object.pk])
 
-        return HttpResponseRedirect(self.get_success_url())
+class ReportFrameView(generic.DetailView):
+    model = report
+    template_name = 'reports/frameview.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['id'] = self.kwargs['pk']
+
+        obj = report.objects.get(pk=context['id'], user=self.request.user)
+        if obj.path:
+            # open from aws storage
+            report_path = "reports/{user_id}/{report_name}".format(user_id=self.request.user.pk, report_name=obj.path)
+            if (default_storage.exists(report_path)):
+                # read object
+                context['report_url'] = default_storage.url(report_path)
+
+        return context
+
+class AjaxView(View):
+    def get(self, request, **kwargs):
+        pk = kwargs['pk']
+        
+        data = []
+        try:
+            obj = report.objects.get(pk=kwargs['pk'], user=self.request.user)
+            if obj.path:
+                # open from aws storage
+                report_path = "reports/{user_id}/{report_name}".format(user_id=self.request.user.pk, report_name=obj.path)
+                if (default_storage.exists(report_path)):
+                    # read object
+                    with default_storage.open(report_path) as handle:
+                        df = pd.read_excel(handle, sheet_name=0) 
+                        if not df.empty:
+                            data = pandas_utils.convert_excel_to_json(df)
+                            return JsonResponse({"data": data}, status=200, safe=False)                                    
+        except Exception as e:
+            pass
+
+        return JsonResponse(data, status=500, safe=False)        

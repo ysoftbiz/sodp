@@ -77,7 +77,7 @@ THIRD_PARTY_APPS = [
     "django_static_jquery3",
     "bootstrap4",
     "bootstrap_datepicker_plus",
-    "storages"
+    "storages",
 ]
 
 BOOTSTRAP4 = {
@@ -91,6 +91,8 @@ LOCAL_APPS = [
     "sodp.reports.apps.ReportsConfig",
     "sodp.tresholds.apps.TresholdsConfig",
     "sodp.faqs.apps.FaqsConfig",
+    "sodp.views.apps.ViewsConfig",
+
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -182,7 +184,7 @@ TEMPLATES = [
         # https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-TEMPLATES-BACKEND
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         # https://docs.djangoproject.com/en/dev/ref/settings/#template-dirs
-        "DIRS": [str(APPS_DIR / "templates")],
+        "DIRS": [str(APPS_DIR), str(APPS_DIR / "templates")],
         "OPTIONS": {
             # https://docs.djangoproject.com/en/dev/ref/settings/#template-loaders
             # https://docs.djangoproject.com/en/dev/ref/templates/api/#loader-types
@@ -203,7 +205,7 @@ TEMPLATES = [
                 "sodp.utils.context_processors.settings_context",
             ],
         },
-    }
+    },
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#form-renderer
@@ -326,4 +328,5 @@ AWS_DEFAULT_ACL = 'private'
 AWS_S3_VERIFY = True
 
 # google
-USE_DUMMY_GOOGLE_DATA = env('USE_DUMMY_GOOGLE_DATA', default=True)
+USE_DUMMY_GOOGLE_DATA = env('USE_DUMMY_GOOGLE_DATA', default=False)
+
