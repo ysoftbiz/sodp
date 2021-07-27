@@ -12,6 +12,9 @@ from oauth2client import GOOGLE_REVOKE_URI, GOOGLE_TOKEN_URI, client
 from django.conf import settings
 from django.urls import reverse
 
+from sodp.views.models import view as modelview
+
+
 DIMS = ['ga:pagePath', 'ga:segment']
 METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
 SEGMENTS = ['gaid::-1','gaid::-5']
@@ -96,9 +99,9 @@ def getOfflineCredentials(auth_token, refresh_token):
 def getProjectsFromCredentials(credentials):
     if settings.USE_DUMMY_GOOGLE_DATA:
         projects = {
-            "1": "Account 1 - Project 1 - http://sodp-test.herokuapp.com",
-            "2": "Account 1 - Project 2 - http://www.ysoft.biz",
-            "3": "Account 2 - Project 1 - http://www.google.com",
+            "1": { "name": "Account 1 - Project 1", "url": "http://sodp-test.herokuapp.com"},
+            "2": { "name": "Account 1 - Project 2", "url": "http://www.google.com"},
+            "3": { "name": "Account 2 - Project 1", "url": "http://www.ysoft.biz"},
         }
     else:
         analytics = build('analytics', 'v3', credentials=credentials)
@@ -115,7 +118,7 @@ def getProjectsFromCredentials(credentials):
                                                         ).execute()
 
                 for profile in profiles.get('items'):
-                    projects[profile["id"]] = item["name"]+" - "+profile["name"]+" - "+profile["websiteUrl"]
+                    projects[profile["id"]] = { "name": item["name"]+" - "+profile["name"], "url": profile["websiteUrl"] }
 
     return projects
 
@@ -154,3 +157,10 @@ def getStatsFromView(credentials, view_id, startDate, endDate):
     df.columns = [col.split(':')[-1] for col in df.columns]
     df.tail()
     return df
+
+# fills views table
+def fillViews(projects, user):
+    for project in projects.items():
+        # create entry for each project if it does not exist
+        if not modelview.objects.filter(id = project[0]).filter( user=user):
+            modelview.objects.create(id=project[0], user=user, name=project[1]["name"], url=project[1]["url"])
