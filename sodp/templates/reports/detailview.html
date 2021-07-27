@@ -27,8 +27,8 @@
     <p><strong>{% trans "Error description:" %}</strong> {{ report.errorDescription }}</p>
 
     {% if report.status == "complete" %}
-    <h4><a class="open-report-detail" href="/reports/detail/{{ report.pk }}/"
-        data-popup-url="/reports/detail/{{ report.pk }}/" >{%trans "View detail" %}</a></h4>
+    <p></p><a class="open-report-detail bot" href="/reports/detail/{{ report.pk }}/"
+        data-popup-url="/reports/detail/{{ report.pk }}/" >{%trans "View detail" %}</a></p>
     {% endif %}
 
 
