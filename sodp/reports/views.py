@@ -4,6 +4,7 @@ from django.views import generic, View
 from sodp.reports.models import report
 from sodp.tresholds.models import treshold
 
+from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.views.generic.edit import CreateView
@@ -22,6 +23,7 @@ from django.shortcuts import get_object_or_404
 from django.views.generic.detail import DetailView
 
 import pandas as pd
+from django.core.exceptions import ValidationError
 
 class ReportListView(generic.ListView):
     model = report
@@ -62,6 +64,15 @@ class ReportCreateView(CreateView):
       
     def form_valid(self, form):
         self.object = form.save(commit=False)
+        if self.object.dateFrom < date.today():
+            raise ValidationError(_("The start date has to be lower than today"))  
+
+        if self.object.dateTo < date.today():
+            raise ValidationError(_("The end date has to be lower than today"))
+        else: 
+            if self.object.dateTo < self.object.dateFrom:
+                raise ValidationError(_("The end date has to be greater than or equal to the start date"))
+
         self.object.user = self.request.user
         super(ReportCreateView, self).form_valid(form)
         self.object.save()
@@ -75,7 +86,6 @@ class ReportCreateView(CreateView):
 class ReportDetailView(generic.DetailView):
     model = report
     template_name = 'reports/detailview.html'
-
 
     def report_detail_view(request, primary_key):
         try:
