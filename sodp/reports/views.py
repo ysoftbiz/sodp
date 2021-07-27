@@ -62,7 +62,6 @@ class ReportCreateView(CreateView):
         first_list = treshold.objects.all()
         tresholds_list = {}
 
-        
         for item in first_list:
             tresholds_list.setdefault(item.title, item.default_value)
 
