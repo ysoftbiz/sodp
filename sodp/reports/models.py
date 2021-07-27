@@ -12,7 +12,7 @@ class report(models.Model):
     dateFrom = models.DateField() 
     dateTo = models.DateField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="user", related_name="user")
-    viewId = models.ForeignKey(view, on_delete=models.CASCADE, verbose_name="view", related_name="view")
+    #viewId = models.ForeignKey(view, on_delete=models.CASCADE, verbose_name="view", related_name="view")
 
     STATUS = (
         ('pending', _('Pending')),

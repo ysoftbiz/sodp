@@ -25,7 +25,8 @@ import pandas as pd
 from django.core.exceptions import ValidationError
 
 from sodp.views.models import view
-
+from django.contrib import messages
+from django import forms
 
 class ReportListView(generic.ListView):
     model = report
@@ -68,20 +69,20 @@ class ReportCreateView(CreateView):
     def form_valid(self, form):
         self.object = form.save(commit=False)
         if self.object.dateFrom >= date.today():
-            raise ValidationError(_("The start date has to be lower than today"))  
+            messages.error(self.request,_("The start date has to be lower than today") )
+            return redirect('/../reports/reportscreate')
 
         if self.object.dateTo >= date.today():
-            raise ValidationError(_("The end date has to be lower than today"))
+            messages.error(self.request,_("The end date has to be lower than today") )
+            return redirect('/../reports/reportscreate')
         else: 
             if self.object.dateTo < self.object.dateFrom:
-                raise ValidationError(_("The end date has to be greater than or equal to the start date"))
+                messages.error(self.request,_("The end date has to be greater than or equal to the start date") )
+                return redirect('/../reports/reportscreate')
 
         self.object.user = self.request.user
         super(ReportCreateView, self).form_valid(form)
         self.object.save()
-
-        # trigger generation task
-        #tasks.processReport.apply_async(args=[self.object.pk])
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -94,7 +95,7 @@ class ReportDetailView(generic.DetailView):
         try:
             report = report.objects.get(pk=primary_key)
         except report.DoesNotExist:
-            raise Http404('Book does not exist')
+            raise Http404('Reoport does not exist')
 
         return render(request, 'detailview.html', context={'report': report})
 
