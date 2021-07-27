@@ -32,7 +32,7 @@ class report(models.Model):
     )
 
     thresholds = models.JSONField(blank=True, null = True)
-    sitemap =  CharField(_("sitemap"), blank=True, null=True, max_length=255)
+    sitemap =  models.URLField(max_length=255, null = True, blank=True)
     processingStartDate = models.DateTimeField(null=True, blank=True)
     processingEndDate = models.DateTimeField(null=True, blank=True)
     numRetries = IntegerField(null = True)
