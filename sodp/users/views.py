@@ -14,15 +14,38 @@ from pprint import pprint
 
 import json, tempfile, pprint
 from sodp.utils import google_utils
+from sodp.reports.models import report as reportmodel
+from sodp.views.models import view as viewmodel
+
 
 User = get_user_model()
 
+def getDashboardData(user):
+    data = {}
+    data["reportCount"] = reportmodel.objects.filter(user=user).count()
+    data["reportCompleteCount"] = reportmodel.objects.filter(user=user).filter(status="complete").count()
+    
+    # now retrieve all views for an user
+    data["views"] = []
+    views = viewmodel.objects.filter(user=user)
+    for view in views:
+        # check if we have reports for that view
+        view_reports = reportmodel.objects.filter(user=user).filter(project=view.pk)
+        if len(view_reports)>0:
+            data["views"].append({'name': view.name, 'url': view.url, 'totalReports': len(view_reports)})
+    return data
 
 class UserDetailView(LoginRequiredMixin, DetailView):
 
     model = User
     slug_field = "username"
     slug_url_kwarg = "username"
+
+    def get_context_data(self, **kwargs):
+        ctx = super(UserDetailView, self).get_context_data(**kwargs)
+        reportData = getDashboardData(self.request.user)
+
+        return  {**ctx, **reportData}
 
     def get_object(self,queryset = None):
         return self.request.user

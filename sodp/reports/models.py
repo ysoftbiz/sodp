@@ -38,11 +38,5 @@ class report(models.Model):
     path = CharField(_("path"), blank=True, null=True, max_length=255)
     key = CharField(_("key"), blank=True, null=True, max_length=255)
 
-
-
-
-
     def __str__(self):
         return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
-
-
