@@ -93,6 +93,15 @@ class ReportFrameView(generic.DetailView):
         context = super().get_context_data(**kwargs)
 
         context['id'] = self.kwargs['pk']
+
+        obj = report.objects.get(pk=context['id'], user=self.request.user)
+        if obj.path:
+            # open from aws storage
+            report_path = "reports/{user_id}/{report_name}".format(user_id=self.request.user.pk, report_name=obj.path)
+            if (default_storage.exists(report_path)):
+                # read object
+                context['report_url'] = default_storage.url(report_path)
+
         return context
 
 class AjaxView(View):

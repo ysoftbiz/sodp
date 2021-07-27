@@ -1,4 +1,5 @@
 {% load static i18n %}
+<div><a href="{{ report_url }}">{% trans "Export to Excel" %}</a></div>
 <div class="table-responsive">
     <table id="datatable_excel" width="100%" class="table table-striped table-bordered dt-responsive compact nowrap">
         <thead>
@@ -25,7 +26,7 @@ $(document).ready( function () {
             { "data": "backLinks" },
             { "data": "recomendationText" },
             { "data": "recomendationCode" }
-        ]   
+        ]
     });
 } );
 </script>
