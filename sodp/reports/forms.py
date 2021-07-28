@@ -1,6 +1,7 @@
 from django.forms import ModelForm, DateInput, CharField, Select, ChoiceField
 from django.utils.translation import ugettext_lazy as _
 from sodp.reports.models import report
+from sodp.views.models import view
 
 from bootstrap_datepicker_plus import DatePickerInput
 from pprint import pprint
@@ -12,7 +13,8 @@ class ReportCreateForm(ModelForm):
         request = kwargs.pop('request', None)
         super(ReportCreateForm, self).__init__(*args, **kwargs)
         if request:
-            self.fields['project'] =  CharField(required=True, widget=Select(choices = self.getProjects(request)))
+            choices = [(choice.pk, choice) for choice in view.objects.filter(user=request.user)]
+            self.fields['project'] = CharField(required=True, widget=Select(choices=choices))
 
     def getProjects(self, request):
         choices = []
