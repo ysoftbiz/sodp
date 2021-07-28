@@ -24,13 +24,15 @@
     <p><strong>{% trans "Date to:" %}</strong> {{ report.dateTo }}</p>
     <p><strong>{% trans "Creation date:" %}</strong> {{ report.creationDate }}</p>
     <p><strong>{% trans "Status:" %}</strong> {{ report.status }}</p>
-    <p><strong>{% trans "Error description:" %}</strong> {{ report.errorDescription }}</p>
+
+    {% if report.status == "failed" %}
+      <p><strong>{% trans "Error description:" %}</strong> {{ report.errorDescription }}</p>
+    {% endif %}
 
     {% if report.status == "complete" %}
     <p><a class="open-report-detail bot" href="/reports/detail/{{ report.pk }}/"
         data-popup-url="/reports/detail/{{ report.pk }}/" >{%trans "View detail" %}</a></p>
     {% endif %}
-
 
 {% endblock %}
 
