@@ -5,6 +5,18 @@ from django.utils.translation import gettext_lazy as _
 import datetime
 
 class report(models.Model):
+    class Meta:
+            indexes = (
+                models.Index(
+                    name='reports_user_index',
+                    fields=('user',),
+                ),
+                models.Index(
+                    name='reports_project_index',
+                    fields=('user', 'project'),
+                )
+            )
+
     creationDate = models.DateTimeField(auto_now_add=True)
     name = CharField(_("Report name"), blank=True, max_length=100)
     project = CharField(_("project"), max_length=255)
