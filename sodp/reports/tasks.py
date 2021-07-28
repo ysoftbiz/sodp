@@ -8,6 +8,7 @@ from celery.contrib import rdb
 from pprint import pprint
 
 from sodp.reports.models import report
+from sodp.views.models import stats as statsmodel, view as viewmodel
 from sodp.utils import google_utils, ahrefs
 from sodp.utils import sitemap as sm
 
@@ -93,10 +94,22 @@ def uploadExcelFile(report, dataframe):
     if not default_storage.exists(final_path): # avoid overwriting existing file
         default_storage.save(final_path, ContentFile(data))
         file_url = default_storage.url(final_path)
-        print(file_url)
         return file_path, file_url
 
     return False, False
+
+def generateReportStats(obj, dataframe):
+    for index, row in dataframe.iterrows():
+        # get view with that id
+        view_obj = viewmodel.objects.get(id=obj.project)
+        if view_obj:
+            statsmodel.objects.update_or_create(
+                view=view_obj,
+                url = row["loc"],
+                dateFrom = obj.dateFrom,
+                dateTo = obj.dateTo,
+                sessions = int(row["organicSessions"])
+            )
 
 @shared_task(name="sodp.reports.tasks.processReport")
 def processReport(pk):
@@ -167,6 +180,9 @@ def processReport(pk):
 
             pd_filtered_sm.at[index, "recomendationCode"] = recomendation_code
             pd_filtered_sm.at[index, "recomendationText"] = recomendation_text
+
+        # generate stats
+        generateReportStats(obj, pd_filtered_sm)
 
         # upload dataframe to storage
         path, url = uploadExcelFile(obj, pd_filtered_sm)
