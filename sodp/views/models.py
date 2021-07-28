@@ -11,4 +11,14 @@ class view(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="viewUser", related_name="viewUser")
 
     def __str__(self):
-        return "%s %s %s %s" % (self.id, self.name, self.name, self.url, self.user)
+        return "%s - %s" % (self.name, self.url)
+
+class stats(models.Model):
+    view = models.ForeignKey(view, on_delete=models.CASCADE, verbose_name="statsReport", related_name="statsReport")
+    url = CharField(_("url"), max_length=255)
+    dateFrom = models.DateField() 
+    dateTo = models.DateField()
+    sessions =  models.IntegerField()
+
+    def __str__(self):
+        return "%s %s %s %s" % (self.view, self.url, self.dateFrom, self.dateTo, self.sessions)
