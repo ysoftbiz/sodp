@@ -329,3 +329,4 @@ AWS_S3_VERIFY = True
 
 # google
 USE_DUMMY_GOOGLE_DATA = env('USE_DUMMY_GOOGLE_DATA', default=False)
+

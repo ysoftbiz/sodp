@@ -18,12 +18,13 @@ from django.core import serializers
 from sodp.utils import google_utils, pandas_utils
 from sodp.reports import tasks
 
-#Detail view
-from django.shortcuts import get_object_or_404
-from django.views.generic.detail import DetailView
+from datetime import date
+from django.core.exceptions import ValidationError
 
 import pandas as pd
 from django.core.exceptions import ValidationError
+
+from sodp.views.models import view
 
 
 class ReportListView(generic.ListView):
@@ -52,35 +53,23 @@ class ReportCreateView(CreateView):
         auxDateTo = date.today() - timedelta(1)
         n = 1
         auxDateFrom = auxDateTo - relativedelta(months=n)
-        tresholds_list = serializers.serialize("json", treshold.objects.all())
 
+        tresholds_list = serializers.serialize("json", treshold.objects.all())
         first_list = treshold.objects.all()
         tresholds_list = {}
+
         
         for item in first_list:
             tresholds_list.setdefault(item.title, item.default_value)
 
         self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
         return self.initial
-      
+
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        if self.object.dateFrom >= date.today():
-            raise ValidationError(_("The start date has to be lower than today"))  
-
-        if self.object.dateTo >= date.today():
-            raise ValidationError(_("The end date has to be lower than today"))
-        else: 
-            if self.object.dateTo < self.object.dateFrom:
-                raise ValidationError(_("The end date has to be greater than or equal to the start date"))
-
+        self.object = form.save(commit=False)   
         self.object.user = self.request.user
         super(ReportCreateView, self).form_valid(form)
         self.object.save()
-
-        # trigger generation task
-        tasks.processReport.apply_async(args=[self.object.pk])
-
         return HttpResponseRedirect(self.get_success_url())
 
       
@@ -95,6 +84,7 @@ class ReportDetailView(generic.DetailView):
             raise Http404('Book does not exist')
 
         return render(request, 'detailview.html', context={'report': report})
+
 
 class ReportFrameView(generic.DetailView):
     model = report
