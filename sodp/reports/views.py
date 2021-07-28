@@ -66,23 +66,10 @@ class ReportCreateView(CreateView):
         return self.initial
 
     def form_valid(self, form):
-        self.object = form.save(commit=False)
-        if self.object.dateFrom >= date.today():
-            raise ValidationError(_("The start date has to be lower than today"))  
-
-        if self.object.dateTo >= date.today():
-            raise ValidationError(_("The end date has to be lower than today"))
-        else: 
-            if self.object.dateTo < self.object.dateFrom:
-                raise ValidationError(_("The end date has to be greater than or equal to the start date"))
-
+        self.object = form.save(commit=False)   
         self.object.user = self.request.user
         super(ReportCreateView, self).form_valid(form)
         self.object.save()
-
-        # trigger generation task
-        #tasks.processReport.apply_async(args=[self.object.pk])
-
         return HttpResponseRedirect(self.get_success_url())
 
       

@@ -33,6 +33,20 @@ class ReportCreateForm(ModelForm):
                 request.session['projects'] = google_projects
         return choices
 
+    def clean(self):
+        cleaned_data = super().clean()
+        date_from = cleaned_data.get("dateFrom")
+        date_to = cleaned_data.get("dateTo")
+
+        if date_from >= date.today():
+            self.add_error('dateFrom', _("The start date has to be lower than today"))
+
+        if date_to >= date.today():
+            self.add_error('dateTo', _("The end date has to be lower than today"))
+
+        if date_to < date_from :
+            self.add_error('dateTo',_("The end date has to be greater than or equal to the start date")) 
+            
     class Meta(object):
         model = report
         fields = ('project', 'sitemap', 'thresholds', 'dateFrom' ,'dateTo')
