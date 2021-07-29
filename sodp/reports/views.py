@@ -4,6 +4,7 @@ from django.views import generic, View
 from sodp.reports.models import report
 from sodp.tresholds.models import treshold
 
+from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.views.generic.edit import CreateView
@@ -17,11 +18,14 @@ from django.core import serializers
 from sodp.utils import google_utils, pandas_utils
 from sodp.reports import tasks
 
-#Detail view
-from django.shortcuts import get_object_or_404
-from django.views.generic.detail import DetailView
+from datetime import date
+from django.core.exceptions import ValidationError
 
 import pandas as pd
+from django.core.exceptions import ValidationError
+
+from sodp.views.models import view
+
 
 class ReportListView(generic.ListView):
     model = report
@@ -49,33 +53,29 @@ class ReportCreateView(CreateView):
         auxDateTo = date.today() - timedelta(1)
         n = 1
         auxDateFrom = auxDateTo - relativedelta(months=n)
-        tresholds_list = serializers.serialize("json", treshold.objects.all())
 
+        tresholds_list = serializers.serialize("json", treshold.objects.all())
         first_list = treshold.objects.all()
         tresholds_list = {}
+
         
         for item in first_list:
             tresholds_list.setdefault(item.title, item.default_value)
 
         self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
         return self.initial
-      
+
     def form_valid(self, form):
-        self.object = form.save(commit=False)
+        self.object = form.save(commit=False)   
         self.object.user = self.request.user
         super(ReportCreateView, self).form_valid(form)
         self.object.save()
-
-        # trigger generation task
-        tasks.processReport.apply_async(args=[self.object.pk])
-
         return HttpResponseRedirect(self.get_success_url())
 
       
 class ReportDetailView(generic.DetailView):
     model = report
     template_name = 'reports/detailview.html'
-
 
     def report_detail_view(request, primary_key):
         try:
@@ -85,6 +85,7 @@ class ReportDetailView(generic.DetailView):
 
         return render(request, 'detailview.html', context={'report': report})
 
+
 class ReportFrameView(generic.DetailView):
     model = report
     template_name = 'reports/frameview.html'
@@ -93,6 +94,15 @@ class ReportFrameView(generic.DetailView):
         context = super().get_context_data(**kwargs)
 
         context['id'] = self.kwargs['pk']
+
+        obj = report.objects.get(pk=context['id'], user=self.request.user)
+        if obj.path:
+            # open from aws storage
+            report_path = "reports/{user_id}/{report_name}".format(user_id=self.request.user.pk, report_name=obj.path)
+            if (default_storage.exists(report_path)):
+                # read object
+                context['report_url'] = default_storage.url(report_path)
+
         return context
 
 class AjaxView(View):

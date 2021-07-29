@@ -14,15 +14,38 @@ from pprint import pprint
 
 import json, tempfile, pprint
 from sodp.utils import google_utils
+from sodp.reports.models import report as reportmodel
+from sodp.views.models import view as viewmodel
+
 
 User = get_user_model()
 
+def getDashboardData(user):
+    data = {}
+    data["reportCount"] = reportmodel.objects.filter(user=user).count()
+    data["reportCompleteCount"] = reportmodel.objects.filter(user=user).filter(status="complete").count()
+    
+    # now retrieve all views for an user
+    data["views"] = []
+    views = viewmodel.objects.filter(user=user)
+    for view in views:
+        # check if we have reports for that view
+        view_reports = reportmodel.objects.filter(user=user).filter(project=view.pk)
+        if len(view_reports)>0:
+            data["views"].append({'name': view.name, 'url': view.url, 'totalReports': len(view_reports)})
+    return data
 
 class UserDetailView(LoginRequiredMixin, DetailView):
 
     model = User
     slug_field = "username"
     slug_url_kwarg = "username"
+
+    def get_context_data(self, **kwargs):
+        ctx = super(UserDetailView, self).get_context_data(**kwargs)
+        reportData = getDashboardData(self.request.user)
+
+        return  {**ctx, **reportData}
 
     def get_object(self,queryset = None):
         return self.request.user
@@ -73,10 +96,10 @@ class UserUpdateCredentialsView(LoginRequiredMixin, SuccessMessageMixin, UpdateV
 
     def get_object(self,queryset = None):
         return self.request.user
-    
 user_credentials_view = UserUpdateCredentialsView.as_view()
 
 class  UserGoogleCredentialsView(LoginRequiredMixin, View):
+
     def  get(self, request):
         try:
             credentials = google_utils.getUserCredentials(request)
@@ -94,8 +117,23 @@ class  UserGoogleCredentialsView(LoginRequiredMixin, View):
                 self.request.user.google_refresh_token = refresh_token
                 self.request.user.save(update_fields=['google_api_token', 'google_refresh_token'])
 
+                # and generate views
+                projects = google_utils.getProjectsFromCredentials(credentials)
+                if projects:
+                    # fill views
+                    google_utils.fillViews(projects, self.request.user)
+
                 return redirect(request.build_absolute_uri('/')+"users/~/")                    
 
         return HttpResponse(status=500)        
 
 user_google_credentials_view = UserGoogleCredentialsView.as_view()
+
+class  UserGoogleLogoutView(LoginRequiredMixin, View):
+    def  get(self, request):
+        # just remove google credentials
+        request.user.disableGoogleCredential()
+        return JsonResponse({}, status=200)        
+
+
+user_google_logout_view = UserGoogleLogoutView.as_view()
