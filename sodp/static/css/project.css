@@ -23,6 +23,10 @@
 	padding-right: 15px;
 	letter-spacing: 2px;
 	border-radius: 5px;
+
+
+	margin-left: 40px;
+
 }
 
 .bot:hover {
@@ -68,6 +72,7 @@
 	font-size: 13px;
 	background-color: #682d63;
 	color: #ffffff;
+
 }
 
 .lis{
@@ -79,6 +84,21 @@
 	background-color: #cfc2ce;
 	font-weight: 600;
 }
+
+}
+
+.lis{
+
+	background-color: #9D6498;
+	color:#ffffff;
+	width: 50px;
+}
+.lis:hover{
+	background-color: #9c3c94;
+	color:#ffffff;
+	font-weight: 600;
+}
+
 .cont{
 	margin-left: 10%;
 	margin-right: 10%;
