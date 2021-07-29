@@ -21,7 +21,7 @@ class DemoFormView(FormView):
             "Demo Request",
             message,
             form.cleaned_data.get('email'),
-           to=['calderonpochirene@gmail.com']
+           to=['settings.EMAIL_FROM']
         )
         mail.content_subtype = "html"
         mail.send()
