@@ -32,7 +32,7 @@ def getDashboardData(user):
         # check if we have reports for that view
         view_reports = reportmodel.objects.filter(user=user).filter(project=view.pk)
         if len(view_reports)>0:
-            data["views"].append({'name': view.name, 'url': view.url, 'totalReports': len(view_reports)})
+            data["views"].append({'id': view.id, 'name': view.name, 'url': view.url, 'totalReports': len(view_reports)})
     return data
 
 class UserDetailView(LoginRequiredMixin, DetailView):
