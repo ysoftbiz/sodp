@@ -25,6 +25,8 @@ import pandas as pd
 from django.core.exceptions import ValidationError
 
 from sodp.views.models import view
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 
 class ReportListView(generic.ListView):
@@ -67,6 +69,17 @@ class ReportCreateView(CreateView):
 
     def form_valid(self, form):
         self.object = form.save(commit=False)   
+        #Url validations
+        validate = URLValidator(verify_exists=True)
+        try:
+            validate(self.object.sitemap)
+        except ValidationError:
+           print(_("Please enter a valid url"))
+
+        if self.object.project.sitemap != self.object.sitemap:
+            messages.error(self.request,_("The url entered does not correspond to the selected project") )
+            return redirect('/../reports/reportscreate')
+
         self.object.user = self.request.user
         super(ReportCreateView, self).form_valid(form)
         self.object.save()
