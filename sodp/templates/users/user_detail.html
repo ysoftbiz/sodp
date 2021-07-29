@@ -1,37 +1,22 @@
 {% extends "base.html" %}
+{% load i18n %}
+
 {% load static %}
 
-{% block title %}User: {{ object.username }}{% endblock %}
-
 {% block content %}
-<div class="container">
 
-  <div class="row">
-    <div class="col-sm-12">
-
-      <h2 class="cap">Hello, {{ object.username }}</h2>
-      {% if object.name %}
-        <p>{{ object.name }}</p>
-      {% endif %}
-    </div>
-  </div>
-<div>
-
-<p>Aqui puedes ver toda tu información y cambiar el correo electronico y nombre de usuario.</p>
-
-</div>
 {% if object == request.user %}
-<!-- Action buttons -->
-<div class="row">
-
-  <div class="center">
-    <button class="bot" href="{% url 'users:update' %}" role="button">My Info</button>
-    <button class="bot" href="{% url 'account_email' %}" role="button">E-Mail</button>
-    <!-- Your Stuff: Custom user template urls -->
-  </div>
-
+<div>
+  <p>{% trans "Reports" %}: {{ reportCount }}</p>
+  <p>{% trans "Completed reports" %}: {{ reportCompleteCount }}</p>
+  <p><a href="/reports/reportslist/" class="bot">{% trans "View reports" %}</a></p>
 </div>
-<!-- End Action buttons -->
+
+<div>
+  {% for item in views %}
+  <div><p>{{ item.name }} -{{ item.url }}: {{ item.totalReports }} {% trans "reports" %}</div>
+  {% endfor %}
+</div>
 {% endif %}
 
 </div>

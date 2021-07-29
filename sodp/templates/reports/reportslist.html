@@ -28,7 +28,7 @@
             <th scope="row" > {{report.project}} </th>
             <td class="sir">{{report.creationDate}}</td>
             <td>{{report.status}}</td>
-            <td><a href = "{% url 'reports:detailview' report.pk %}">view</a></td>
+            <td><a href = "{% url 'reports:detailview' report.pk %}" class="bot">view</a></td>
           </tr>
       {% endfor %}
   

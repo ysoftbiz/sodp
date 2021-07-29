@@ -1,23 +1,38 @@
 from django.db import models
 from sodp.users.models import User
+from sodp.views.models import view
 from django.db.models import CharField, IntegerField
 from django.utils.translation import gettext_lazy as _
 import datetime
 
 class report(models.Model):
+    class Meta:
+            indexes = (
+                models.Index(
+                    name='reports_user_index',
+                    fields=('user',),
+                ),
+                models.Index(
+                    name='reports_project_index',
+                    fields=('user', 'project'),
+                )
+            )
+
     creationDate = models.DateTimeField(auto_now_add=True)
     name = CharField(_("Report name"), blank=True, max_length=100)
     project = CharField(_("project"), max_length=255)
     dateFrom = models.DateField() 
     dateTo = models.DateField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="user", related_name="user")
- 
+    viewId = models.ForeignKey(view, on_delete=models.CASCADE, verbose_name="view", related_name="view")
+
     STATUS = (
         ('pending', _('Pending')),
         ('process', _('Processing')),
         ('canceled', _('Canceled')),
         ('created', _('Created')),
         ('failed', _('Failed')),
+        ('complete', _('Completed')) 
     )
 
     status = models.CharField(
@@ -37,11 +52,5 @@ class report(models.Model):
     path = CharField(_("path"), blank=True, null=True, max_length=255)
     key = CharField(_("key"), blank=True, null=True, max_length=255)
 
-
-
-
-
     def __str__(self):
         return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
-
-
