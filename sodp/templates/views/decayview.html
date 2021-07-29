@@ -64,7 +64,20 @@ $('#modChart').on('shown.bs.modal',function(event){
     var labels = [];
     // Chart initialisieren
     var modal = $(this);
-    var ctx = document.getElementById('canvas').getContext('2d');
+
+    ajax_chart(chart, "/views/stats/{{ id }}?url="+encodeURI(link.attr('data-id')));
+
+}).on('hidden.bs.modal',function(event){
+    // reset chart
+    chart.data.labels = [];
+    chart.data.datasets[0].data = [];
+    chart.update();
+    var modal = $(this);
+        // destroy modal
+    $(this).data('bs.modal', null);
+});
+
+var ctx = document.getElementById('canvas').getContext('2d');
     
     var chart = new Chart(ctx, {        
         type: 'line',
@@ -105,16 +118,6 @@ $('#modChart').on('shown.bs.modal',function(event){
             ]
         }
     },{});
-    ajax_chart(chart, "/views/stats/{{ id }}?url="+encodeURI(link.attr('data-id')));
-
-}).on('hidden.bs.modal',function(event){
-    // reset canvas size
-    var modal = $(this);
-    var canvas = modal.find('.modal-body canvas');
-    canvas.attr('width','800px').attr('height','600px');
-    // destroy modal
-    $(this).data('bs.modal', null);
-});
 </script>
 {% endblock inline_javascript %}
 
