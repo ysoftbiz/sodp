@@ -75,7 +75,8 @@
 
 	background-color: #9D6498;
 	color:#ffffff;
-	width: 50px;
+
+
 }
 .lis:hover{
 	background-color: #9c3c94;
@@ -144,7 +145,7 @@
 
 .navbar-nav {
 	height: auto;
-	background: #fafafa;
+	background: #f8f9fa;
 	padding: 0 1.5rem;
 	display: flex;
 	align-items: center;
@@ -313,4 +314,9 @@
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
 	}
+}
+
+table.table{
+	width: 70%;
+	margin-left: -13%;
 }
