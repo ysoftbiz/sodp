@@ -26,6 +26,8 @@ from django.core.exceptions import ValidationError
 
 from sodp.views.models import view
 
+#url validation
+from urllib.parse import urlparse
 
 class ReportListView(generic.ListView):
     model = report
@@ -66,7 +68,20 @@ class ReportCreateView(CreateView):
         return self.initial
 
     def form_valid(self, form):
-        self.object = form.save(commit=False)   
+        self.object = form.save(commit=False) 
+        input_url = urlparse(self.object.sitemap)
+        project_url = urlparse(self.object.project.sitemap)
+
+        #Url validations
+        validate = URLValidator(verify_exists=True)
+        try:
+            validate(self.object.sitemap)
+        except ValidationError:
+            self.add_error('sitemap', _("Please enter a valid url"))
+
+        if not (input_url.netloc == project_url.netloc and input_url.scheme == project_url.scheme):
+            self.add_error('sitemap', _("The url entered does not correspond to the selected project"))
+
         self.object.user = self.request.user
         super(ReportCreateView, self).form_valid(form)
         self.object.save()
