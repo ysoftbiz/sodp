@@ -26,6 +26,7 @@ from django.core.exceptions import ValidationError
 
 from sodp.views.models import view
 
+import pprint
 
 class ReportListView(generic.ListView):
     model = report
@@ -58,7 +59,6 @@ class ReportCreateView(CreateView):
         first_list = treshold.objects.all()
         tresholds_list = {}
 
-        
         for item in first_list:
             tresholds_list.setdefault(item.title, item.default_value)
 
@@ -67,9 +67,10 @@ class ReportCreateView(CreateView):
 
     def form_valid(self, form):
         self.object = form.save(commit=False)   
-        self.object.user = self.request.user
-        super(ReportCreateView, self).form_valid(form)
-        self.object.save()
+        if form.is_valid():
+            self.object.user = self.request.user
+            super(ReportCreateView, self).form_valid(form)
+            self.object.save()
         return HttpResponseRedirect(self.get_success_url())
 
       
