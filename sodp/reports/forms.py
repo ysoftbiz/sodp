@@ -7,6 +7,7 @@ from bootstrap_datepicker_plus import DatePickerInput
 from pprint import pprint
 
 from sodp.utils import google_utils
+import datetime
 
 class ReportCreateForm(ModelForm):
     def __init__(self, *args, **kwargs):
