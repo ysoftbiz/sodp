@@ -54,7 +54,7 @@ class ReportCreateForm(ModelForm):
         #Url validations
         validate = URLValidator()
         try:
-            validate(self.object.sitemap)
+            validate(cleaned_data.get("sitemap"))
         except:
             self.add_error('sitemap', _("Please enter a valid url"))
  
