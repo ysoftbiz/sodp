@@ -27,6 +27,7 @@ from django.core.exceptions import ValidationError
 from sodp.views.models import view
 
 #url validation
+from django.core.validators import URLValidator
 from urllib.parse import urlparse
 
 class ReportListView(generic.ListView):
