@@ -7,7 +7,13 @@ from bootstrap_datepicker_plus import DatePickerInput
 from pprint import pprint
 
 from sodp.utils import google_utils
-import datetime
+from datetime import date
+from datetime import datetime
+
+#url validation
+from django.core.validators import URLValidator
+from urllib.parse import urlparse
+from sodp.views.models import view
 
 class ReportCreateForm(ModelForm):
     def __init__(self, *args, **kwargs):
@@ -41,7 +47,21 @@ class ReportCreateForm(ModelForm):
         date_from = cleaned_data.get("dateFrom")
         date_to = cleaned_data.get("dateTo")
 
-        if date_from >= date.today():
+        input_url = urlparse(cleaned_data.get("sitemap"))
+        project_selected = view.objects.get(id = cleaned_data.get("project"))
+        project_url = urlparse(project_selected.url)
+
+        #Url validations
+        validate = URLValidator()
+        try:
+            validate(self.object.sitemap)
+        except:
+            self.add_error('sitemap', _("Please enter a valid url"))
+ 
+        if (input_url.netloc != project_url.netloc or input_url.scheme != project_url.scheme):
+            self.add_error('sitemap', _("The url entered does not correspond to the selected project"))
+
+        if (date_from >= date.today()):
             self.add_error('dateFrom', _("The start date has to be lower than today"))
 
         if date_to >= date.today():
@@ -49,6 +69,7 @@ class ReportCreateForm(ModelForm):
 
         if date_to < date_from :
             self.add_error('dateTo',_("The end date has to be greater than or equal to the start date")) 
+
             
     class Meta(object):
         model = report
