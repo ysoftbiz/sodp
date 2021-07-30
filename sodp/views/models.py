@@ -41,4 +41,4 @@ class stats(models.Model):
     sessions =  models.IntegerField()
 
     def __str__(self):
-        return "%s %s %s %s" % (self.view, self.url, self.dateFrom, self.dateTo, self.sessions)
+        return "%s %s %s %s" % (self.view, self.url, self.dateFrom, self.dateTo)
