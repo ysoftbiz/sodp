@@ -26,9 +26,7 @@ from django.core.exceptions import ValidationError
 
 from sodp.views.models import view
 
-#url validation
-from django.core.validators import URLValidator
-from urllib.parse import urlparse
+import pprint
 
 class ReportListView(generic.ListView):
     model = report
@@ -61,7 +59,6 @@ class ReportCreateView(CreateView):
         first_list = treshold.objects.all()
         tresholds_list = {}
 
-        
         for item in first_list:
             tresholds_list.setdefault(item.title, item.default_value)
 
@@ -69,23 +66,11 @@ class ReportCreateView(CreateView):
         return self.initial
 
     def form_valid(self, form):
-        self.object = form.save(commit=False) 
-        input_url = urlparse(self.object.sitemap)
-        project_url = urlparse(self.object.project.sitemap)
-
-        #Url validations
-        validate = URLValidator(verify_exists=True)
-        try:
-            validate(self.object.sitemap)
-        except ValidationError:
-            self.add_error('sitemap', _("Please enter a valid url"))
-
-        if not (input_url.netloc == project_url.netloc and input_url.scheme == project_url.scheme):
-            self.add_error('sitemap', _("The url entered does not correspond to the selected project"))
-
-        self.object.user = self.request.user
-        super(ReportCreateView, self).form_valid(form)
-        self.object.save()
+        self.object = form.save(commit=False)   
+        if form.is_valid():
+            self.object.user = self.request.user
+            super(ReportCreateView, self).form_valid(form)
+            self.object.save()
         return HttpResponseRedirect(self.get_success_url())
 
       
@@ -93,14 +78,9 @@ class ReportDetailView(generic.DetailView):
     model = report
     template_name = 'reports/detailview.html'
 
-    def report_detail_view(request, primary_key):
-        try:
-            report = report.objects.get(pk=primary_key)
-        except report.DoesNotExist:
-            raise Http404('Book does not exist')
-
-        return render(request, 'detailview.html', context={'report': report})
-
+    def get_queryset(self):
+        query = super(ReportDetailView, self).get_queryset()
+        return query.filter(user=self.request.user)
 
 class ReportFrameView(generic.DetailView):
     model = report
