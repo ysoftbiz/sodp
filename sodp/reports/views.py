@@ -82,9 +82,6 @@ class ReportDetailView(generic.DetailView):
         query = super(ReportDetailView, self).get_queryset()
         return query.filter(user=self.request.user)
 
-        
-
-
 class ReportFrameView(generic.DetailView):
     model = report
     template_name = 'reports/frameview.html'
