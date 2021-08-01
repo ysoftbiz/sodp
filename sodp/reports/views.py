@@ -26,9 +26,8 @@ from django.core.exceptions import ValidationError
 
 from sodp.views.models import view
 
-import pprint
 
-class ReportListView(generic.ListView):
+class ReportListView(generic.ListView, LoginRequiredMixin):
     model = report
     context_object_name = 'reportsList'
     template_name = 'reports/reportslist.html'
@@ -38,7 +37,7 @@ class ReportListView(generic.ListView):
     
 report_list_view = ReportListView.as_view()
 
-class ReportCreateView(CreateView):
+class ReportCreateView(CreateView, LoginRequiredMixin):
     template_name = 'reports/reportscreate.html'
     form_class = ReportCreateForm
     success_url = '/reportcreatedsucessfully'
@@ -74,7 +73,7 @@ class ReportCreateView(CreateView):
         return HttpResponseRedirect(self.get_success_url())
 
       
-class ReportDetailView(generic.DetailView):
+class ReportDetailView(generic.DetailView, LoginRequiredMixin):
     model = report
     template_name = 'reports/detailview.html'
 
@@ -82,7 +81,7 @@ class ReportDetailView(generic.DetailView):
         query = super(ReportDetailView, self).get_queryset()
         return query.filter(user=self.request.user)
 
-class ReportFrameView(generic.DetailView):
+class ReportFrameView(generic.DetailView, LoginRequiredMixin):
     model = report
     template_name = 'reports/frameview.html'
 
@@ -101,7 +100,7 @@ class ReportFrameView(generic.DetailView):
 
         return context
 
-class AjaxView(View):
+class AjaxView(View, LoginRequiredMixin):
     def get(self, request, **kwargs):
         pk = kwargs['pk']
         
