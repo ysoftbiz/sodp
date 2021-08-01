@@ -1355,24 +1355,30 @@ p {
 }
 
 
-.yd_prc2 .prc_features {
+.prc_features {
 	list-style-type: none;
 	margin-top: 25px;
 	text-align: left;
 }
 
-.yd_prc2 .prc_features li span {
+.prc_features li {
+	height:3em;
+}
+
+.prc_features li span {
 	font-family: 'Montserrat';
 	font-size: 16px;
 	font-weight: 500;
 	color: #97a6b5;
 	vertical-align: middle;
-	line-height: 1.4;
 	letter-spacing: 0;
 	margin: 0 0 10px 0;
 }
-
-.yd_prc2 .flx_2 h2, .yd_prc2 .flx_2 span, .yd_prc2 .flx_2 .prc_features li {
+.prc_features li span.question {
+	color:black;
+	font-weight:700;
+}
+.yd_prc2 .flx_2 h2, .yd_prc2 .flx_2 span, .prc_features li {
 	color: #97a6b5;
 	color: rgba(255, 255, 255, 0.7);
 }
@@ -1382,7 +1388,7 @@ p {
 }
 
 
-.yd_prc2 .prc_features li img {
+.prc_features li img {
 	vertical-align: top;
 	margin-right: 3px;
 }

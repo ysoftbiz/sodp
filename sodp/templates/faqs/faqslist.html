@@ -9,14 +9,16 @@
 {% if object_list.count == 0 %}
   <p>{% trans "Sorry ... we are still working on it" %}</p>
 {% else %}
-  <ul>
+  <ul class="prc_features">
         {% for faq in object_list %}  
-          <tr>
-            <th scope="row"> {{faq.question}} </th>
-            <br>
-            <td>{{faq.answer}}</td>
-            <br>
-          </tr>
+        <li>
+          <img src="/static/icons/tick.png" width="14" alt="Tick">          
+          <span class="question"> {{faq.question}} </span>
+
+        </li>
+          <li>
+            <span>{{faq.answer}}</span>
+          </li>
       {% endfor %}
 
   </ul>
