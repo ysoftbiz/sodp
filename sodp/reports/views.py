@@ -35,6 +35,7 @@ class ReportListView(generic.ListView):
 
     def get_queryset(self):
         return report.objects.filter(user=self.request.user)
+
     
 report_list_view = ReportListView.as_view()
 

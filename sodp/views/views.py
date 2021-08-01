@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.generic import View
 
 from sodp.views.models import view as viewmodel, stats as statsmodel
-
+from django.views import generic
 # Create your views here.
 class ViewsDecayView(LoginRequiredMixin, View):
     model = viewmodel
@@ -51,3 +51,10 @@ class StatsView(View):
             pass
 
         return JsonResponse(data, status=500, safe=False)        
+
+class ViewDetailView(generic.DetailView):
+    model = viewmodel
+    template_name = 'views/viewdetailview.html'
+    def get_queryset(self):
+        query = super(ViewDetailView, self).get_queryset()
+        return query.filter(user=self.request.user)

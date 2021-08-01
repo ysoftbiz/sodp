@@ -15,6 +15,6 @@ urlpatterns = [
     path('reportscreate/', ReportCreateView.as_view(), name = "reportscreate"),
     path('detail/<int:pk>/', ReportFrameView.as_view(), name = "reportsdetail"),
     path('ajax/<int:pk>/', AjaxView.as_view(), name = "reportsajax"),
-   path('<int:pk>/', ReportDetailView.as_view(), name = 'detailview'),
+    path('<int:pk>/', ReportDetailView.as_view(), name = 'detailview'),
 ]
 
