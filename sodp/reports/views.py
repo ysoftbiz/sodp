@@ -70,6 +70,8 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
             self.object.user = self.request.user
             super(ReportCreateView, self).form_valid(form)
             self.object.save()
+
+            tasks.processReport.apply_async(args=[self.object.pk])
         return HttpResponseRedirect(self.get_success_url())
 
       
