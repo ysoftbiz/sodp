@@ -78,14 +78,9 @@ class ReportDetailView(generic.DetailView):
     model = report
     template_name = 'reports/detailview.html'
 
-    def report_detail_view(request, primary_key):
-        try:
-            report = report.objects.get(pk=primary_key)
-        except report.DoesNotExist:
-            raise Http404('Book does not exist')
-
-        return render(request, 'detailview.html', context={'report': report})
-
+    def get_queryset(self):
+        query = super(ReportDetailView, self).get_queryset()
+        return query.filter(user=self.request.user)
 
 class ReportFrameView(generic.DetailView):
     model = report
