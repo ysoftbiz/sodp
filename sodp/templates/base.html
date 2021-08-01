@@ -1,4 +1,7 @@
-{% load static i18n %}<!DOCTYPE html>
+{% load static i18n %}
+{% load bootstrap4 %}       {# import bootstrap4/bootstrap3 #}
+
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -18,13 +21,18 @@
 
     {% block css %}
     <!-- Latest compiled and minified Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    {% bootstrap_css %}         {# Embed Bootstrap CSS #}
 
 
       <link href="https://fonts.googleapis.com/css?family=Montserrat:300,500,600,700%7COpen+Sans:300,400,500" rel="stylesheet">
 
     <!-- Your stuff: Third-party CSS libraries go here -->
     <!-- This file stores project-specific CSS -->
+    <link rel="stylesheet" href="{% static 'css/animate.css' %}"> <!-- Resource style -->
+    <link rel="stylesheet" href="{% static 'css/owl.carousel.css' %}">
+    <link rel="stylesheet" href="{% static 'css/owl.theme.css' %}">
+    <link rel="stylesheet" href="{% static 'css/ionicons.min.css' %}"> <!-- Resource style -->
+
     <link href="{% static 'css/project.css' %}" rel="stylesheet">
     {% endblock %}
     <!-- Le javascript
@@ -36,8 +44,6 @@
       <script src="https://apis.google.com/js/platform.js" async defer></script>
 
       <!-- Your stuff: Third-party javascript libraries go here -->
-      {% load bootstrap4 %}       {# import bootstrap4/bootstrap3 #}
-      {% bootstrap_css %}         {# Embed Bootstrap CSS #}
       {% bootstrap_javascript jquery='full' %}  {# Embed Bootstrap JS+jQuery #}
       {{ form.media }}            {# Adds date-picker required JS and CSS #}
       
@@ -48,65 +54,63 @@
 
   </head>
 
-  <body>
+  <body class="boxed-layout">
 
-    <div class="mb-1">
-      <nav class="navbar navbar-expand-md navbar-light bg-light">
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-        </button>
+    <div class="wrapper">
+      <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+        <div class="container container">
+          <a class="navbar-brand" href="{% url 'home' %}">SODP</a>
 
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
+          <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+          </button>
 
-
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
             {% if request.user.is_authenticated %}
-            <a class="navbar-brand" href="{% url 'users:detail' request.user.username %}">SODP</a>
-
               <li class="nav-item">
                 {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% trans "Dashboard" %}</a>
+                <a class="nav-link js-scroll-trigger" href="{% url 'users:detail' request.user.username  %}">{% trans "Dashboard" %}</a>
               </li>
               <li class="nav-item">
                 {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'reports:reportslist' %}">{% trans "Reports list" %}</a>
+                <a class="nav-link js-scroll-trigger" href="{% url 'reports:reportslist' %}">{% trans "Reports list" %}</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{% url 'users:credentials' %}">{% trans "Credentials" %}</a>
+                <a class="nav-link js-scroll-trigger" href="{% url 'users:credentials' %}">{% trans "Credentials" %}</a>
               </li>
               <li class="nav-item">
                 {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
+                <a class="nav-link js-scroll-trigger" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
               </li>
             {% else %}
-            <a class="navbar-brand" href="{% url 'home' %}">SODP</a>
 
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">About</a>
+              <a class="nav-link js-scroll-trigger" href="{% url 'about' %}">{% trans "About" %}</a>
             </li>
             <li class="nav-item">
               {# URL provided by django-allauth/account/urls.py #}
-              <a class="nav-link" href="{% url 'faqs:faqslist' %}">{% trans "Faqs list" %}</a>
+              <a class="nav-link js-scroll-trigger" href="{% url 'faqs:faqslist' %}">{% trans "Faqs list" %}</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'demo' %}">Demo</a>
+              <a class="nav-link js-scroll-trigger" href="{% url 'demo' %}">Demo</a>
             </li>
               <li class="nav-item">
                 {# URL provided by django-allauth/account/urls.py #}
-                <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a>
+                <a id="sign-up-link" class="nav-link js-scroll-trigger" href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a>
               </li>
               <li class="nav-item">
                 {# URL provided by django-allauth/account/urls.py #}
-                <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
+                <a id="log-in-link" class="nav-link js-scroll-trigger" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
               </li>
             {% endif %}
           </ul>
         </div>
-      </nav>
+      </div>
+    </nav>
 
-    </div>
-
-    <div class="container">
+    <div id="main" class="main">
+      <div class="hero">
 
       {% if messages %}
           {% for message in messages %}
@@ -119,6 +123,7 @@
       {% endblock content %}
 
     </div>
+</div>
 
     {% block modal %}{% endblock modal %}
 
