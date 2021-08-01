@@ -16,8 +16,12 @@
         <tr class="tit">
           <th scope="col">{% trans "Report name" %} </th>
           <th scope="col">{% trans "Creation date" %}</th>
+          <th scope="col">{% trans "Project" %}</th>
           <th scope="col">{% trans "Status" %}</th>
+          <th scope="col">{% trans "Date from" %}</th>
+          <th scope="col">{% trans "Date to" %}</th>
           <th scope="col">{% trans "Detail view" %}</th>
+
 
         </tr>
       </thead>
@@ -27,7 +31,10 @@
           <tr class="lis">
             <th scope="row" > {{report.project}} </th>
             <td class="sir">{{report.creationDate}}</td>
+            <td><a href = "{% url 'views:detailview' report.project %}" class="bot">{{report.project}}</a></td>
             <td>{{report.status}}</td>
+            <td>{{report.dateFrom}}</td>
+            <td>{{report.dateto}}</td>
             <td><a href = "{% url 'reports:detailview' report.pk %}" class="bot">view</a></td>
           </tr>
       {% endfor %}
