@@ -3,14 +3,13 @@
 {% load i18n %}
 
 {% block content %}
-<h1 class="cap">{% translate "New report" %}</h1>
-<br>
-
-  <form method="post" class="cont">
+<h2>{% translate "New report" %}</h2>
+<div class="hero-form flx_2">
+  <form method="post" class="shake">
     {% csrf_token %}
     {{ form|crispy }}
     <br>
-    <button type="submit" class="bot">{% translate "Save" %}</button>
+    <button type="submit" class="btn-action">{% translate "Save" %}</button>
   </form>
-  <br>
+</div>
 {% endblock %}
