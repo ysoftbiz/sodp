@@ -14,10 +14,13 @@
     <table class="table">
       <thead>
         <tr class="tit">
-          <th scope="col">{% trans "Report name" %} </th>
+          <th scope="col">{% trans "View" %} </th>
+          <th scope="col">{% trans "Date from" %}</th>
+          <th scope="col">{% trans "Date to" %}</th>
           <th scope="col">{% trans "Creation date" %}</th>
           <th scope="col">{% trans "Status" %}</th>
           <th scope="col">{% trans "Detail view" %}</th>
+
 
         </tr>
       </thead>
@@ -25,7 +28,9 @@
       <tbody>
         {% for report in object_list %}  
           <tr>
-            <th scope="row" > {{report.project}} </th>
+            <td> {{report.viewName}} </td>
+            <td>{{report.dateFrom}}</td>
+            <td>{{report.dateto}}</td>
             <td>{{report.creationDate}}</td>
             <td>{{report.status}}</td>
             <td><a href = "{% url 'reports:detailview' report.pk %}">{% trans "View" %}</a></td>

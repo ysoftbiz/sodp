@@ -3,6 +3,7 @@ from sodp.users.models import User
 from django.db.models import CharField, IntegerField
 from django.utils.translation import gettext_lazy as _
 import datetime
+from sodp.views.models import view
 
 class report(models.Model):
     class Meta:
@@ -52,3 +53,7 @@ class report(models.Model):
 
     def __str__(self):
         return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
+
+    @property
+    def viewName(self):
+        return view.objects.filter(pk = self.project)[0]

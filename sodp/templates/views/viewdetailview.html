@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+{% block content %}
+{% load i18n %}
+
+  
+    <br><h1>{% trans "Name:" %} {{ view.name }}</h1><br>
+
+    <p><strong>{% trans "Date from:" %} </strong> {{ view.dateFrom }}</p>
+    <p><strong>{% trans "Date to:" %}</strong> {{ view.dateTo }}</p>
+
+{% endblock %}
+
+
