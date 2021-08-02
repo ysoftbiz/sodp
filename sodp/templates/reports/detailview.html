@@ -19,6 +19,7 @@
   
     <h2>{% trans "Report detail" %}</h2>
 
+    <p><label>{% trans "View:" %} </label> <a href = "{% url 'views:detailview' report.project %}" class="bot">{{report.viewName}}</a></p>
     <p><label>{% trans "Date from:" %} </label> {{ report.dateFrom }}</p>
     <p><label>{% trans "Date to:" %}</label> {{ report.dateTo }}</p>
     <p><label>{% trans "Creation date:" %}</label> {{ report.creationDate }}</p>
