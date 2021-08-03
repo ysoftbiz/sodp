@@ -56,14 +56,13 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
         n = 1
         auxDateFrom = auxDateTo - relativedelta(months=n)
 
-        tresholds_list = serializers.serialize("json", treshold.objects.all())
-        first_list = treshold.objects.all()
-        tresholds_list = {}
+        #tresholds_list = serializers.serialize("json", treshold.objects.all())
+        #first_list = treshold.objects.all()
+        #tresholds_list = {}
+        #for item in first_list:
+        #    tresholds_list.setdefault(item.title, item.default_value)
 
-        for item in first_list:
-            tresholds_list.setdefault(item.title, item.default_value)
-
-        self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
+        self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo}
         return self.initial
 
     def form_valid(self, form):
