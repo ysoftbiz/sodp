@@ -18,6 +18,7 @@ class User(AbstractUser):
     google_refresh_token = CharField(_("google_refresh_token"), blank=True, null=True, max_length=255)
     first_name = None  # type: ignore
     last_name = None  # type: ignore
+    thresholds = models.JSONField(blank=True, null = True)
 
     def get_absolute_url(self):
         """Get url for user's detail view.
