@@ -42,7 +42,7 @@ class ReportCreateForm(ModelForm):
                 request.session['projects'] = google_projects
         return choices
 
-    def clean(self, request,*args, **kwargs):
+    def clean(self, *args, **kwargs):
         cleaned_data = super().clean()
         date_from = cleaned_data.get("dateFrom")
         date_to = cleaned_data.get("dateTo")
@@ -71,7 +71,7 @@ class ReportCreateForm(ModelForm):
             self.add_error('dateTo',_("The end date has to be greater than or equal to the start date")) 
 
         #Project validation 
-        otherReports = report.objects.filter(user=self.request.user)
+        otherReports = report.objects.filter(user=request.user)
         for r in otherReports:
             if(r.status != "failed"):
                 if(date_from <= r.dateTo):
