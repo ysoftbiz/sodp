@@ -10,7 +10,7 @@
 {% if object_list.count == 0 %}
   <p>{% trans "There are no reports yet" %}</p>
 {% else %}
-  <ul class="amp">
+  <ul>
     <table class="table">
       <thead>
         <tr class="tit">
@@ -27,15 +27,10 @@
       <br>
       <tbody>
         {% for report in object_list %}  
-
           <tr>
             <td> {{report.viewName}} </td>
             <td>{{report.dateFrom}}</td>
             <td>{{report.dateto}}</td>
-
-          <tr class="lis">
-            <th scope="row" > {{report.project}} </th>
-
             <td>{{report.creationDate}}</td>
             <td>{{report.status}}</td>
             <td><a href = "{% url 'reports:detailview' report.pk %}">{% trans "View" %}</a></td>
