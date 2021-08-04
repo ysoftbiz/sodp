@@ -2,8 +2,10 @@ import httplib2
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 
+import json
 import os
 import pandas as pd
+import tempfile
 
 from apiclient.discovery import build
 from pprint import pprint
@@ -11,6 +13,9 @@ from pprint import pprint
 from oauth2client import GOOGLE_REVOKE_URI, GOOGLE_TOKEN_URI, client
 from django.conf import settings
 from django.urls import reverse
+
+from google.cloud import bigquery
+from google.oauth2 import service_account
 
 from sodp.views.models import view as modelview
 
@@ -164,3 +169,23 @@ def fillViews(projects, user):
         # create entry for each project if it does not exist
         if not modelview.objects.filter(id = project[0]).filter( user=user):
             modelview.objects.create(id=project[0], user=user, name=project[1]["name"], url=project[1]["url"])
+
+
+# authentication with big query
+def authenticateBigQuery():
+    # load json config and write to temporary file
+    tfile = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+    print(settings.GOOGLE_JSON)
+    tfile.write(settings.GOOGLE_JSON)
+    tfile.flush()
+    credentials = service_account.Credentials.from_service_account_file(
+        tfile.name, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
+
+    try:
+        client = bigquery.Client(credentials=credentials, project=credentials.project_id,)
+    except Exception as e:
+        print(client)
+        return False
+    return client
+    

@@ -1,62 +1,26 @@
-import requests
-from bs4 import BeautifulSoup as Soup
+import logging
 import pandas as pd
-import hashlib
 
-# Pass the headers you want to retrieve from the xml such as ["loc", "lastmod"]
-def parseSitemap( url, headers):
-    resp = requests.get(url)
-    # we didn't get a valid response, bail
-    if (200 != resp.status_code):
-        return False
+MAX_PAGES = 5000
 
-    # BeautifulSoup to parse the document
-    soup = Soup(resp.content, "lxml")
+from usp.tree import sitemap_tree_for_homepage
 
-    # find all the <url> tags in the document
-    urls = soup.findAll('url')
-    sitemaps = soup.findAll('sitemap')
-    new_list = ["Source"] + headers
-    panda_out_total = pd.DataFrame([], columns=new_list)
+def parseSitemap(url):
+    logging.getLogger("usp.fetch_parse").setLevel(logging.WARNING)
+    logging.getLogger("usp.helpers").setLevel(logging.WARNING)
+    logging.getLogger("usp.tree").setLevel(logging.WARNING)
+    df = pd.DataFrame(columns=['loc'])        
 
-    if not urls and not sitemaps:
-        return False
+    tree = sitemap_tree_for_homepage(url)
+    count = 0
+    if tree:
+        for page in tree.all_pages():
+            count+=1
+            df = df.append({'loc': page.url}, ignore_index=True)
+            if count>=MAX_PAGES:
+                # just break on the 5k pages
+                break
 
-    # Recursive call to the the function if sitemap contains sitemaps
-    if sitemaps:
-        for u in sitemaps:
-            sitemap_url = u.find('loc').string
-            panda_recursive = parse_sitemap(sitemap_url, headers)
-            panda_out_total = pd.concat([panda_out_total, panda_recursive], ignore_index=True)
+    return df
+        
 
-    # storage for later...
-    out = []
-
-    # Creates a hash of the parent sitemap
-    hash_sitemap = hashlib.md5(str(url).encode('utf-8')).hexdigest()
-
-    # Extract the keys we want
-    for u in urls:
-        values = [hash_sitemap]
-        for head in headers:
-            loc = None
-            loc = u.find(head)
-            if not loc:
-                loc = "None"
-            else:
-                loc = loc.string
-            values.append(loc)
-        out.append(values)
-    
-    # Creates a dataframe
-    panda_out = pd.DataFrame(out, columns= new_list)
-
-    # If recursive then merge recursive dataframe
-    if not panda_out_total.empty:
-        panda_out = pd.concat([panda_out, panda_out_total], ignore_index=True)
-
-    # remove Source column from dataframe
-    panda_out = panda_out.drop("Source", axis=1)
-
-    #returns the dataframe
-    return panda_out
