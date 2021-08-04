@@ -32,7 +32,8 @@ RECOMENDATION_TEXTS = {
 }
 
 def setErrorStatus(report, error_code):
-    pass
+    report.status = "error"
+    report.errorDescription = error_code
 
 def setStatusComplete(report, path):
     report.path = path
@@ -121,11 +122,17 @@ def processReport(pk):
             # set to processing
             obj.status='process'
             obj.save(update_fields=["status"])
+        else:
+            return False
+        
+        # authenticate to big query
+        google_big = google_utils.authenticateBigQuery()
 
         # retrieve url sitemap
-        pd_sitemap = sm.parseSitemap(obj.sitemap, ["loc",])
-        if len(pd_sitemap)<=0:
+        pd_sitemap = sm.parseSitemap(obj.sitemap)
+        if pd_sitemap.empty or len(pd_sitemap.index)<=0:
             setErrorStatus(obj, "WRONG_SITEMAP")
+            return False
 
         # get domain from sitemap url
         domain = urlparse(obj.sitemap).netloc

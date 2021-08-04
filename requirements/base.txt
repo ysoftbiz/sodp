@@ -21,6 +21,7 @@ google-api-python-client
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
+google-cloud-bigquery
 oauth2client
 python-dateutil
 httplib2
@@ -38,3 +39,4 @@ boto3
 django-storages
 xlsxwriter
 openpyxl
+ultimate_sitemap_parser
