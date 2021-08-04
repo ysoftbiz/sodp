@@ -2410,10 +2410,6 @@ ul#countdown li {
 	padding-right: 15px;
 	letter-spacing: 2px;
 	border-radius: 5px;
-
-
-	margin-left: 40px;
-
 }
 
 .bot:hover {
@@ -2455,14 +2451,7 @@ ul#countdown li {
 
 .tit{
 	text-transform: uppercase;
-
 	background-color: #fafafa;
-
-	font-family: Verdana, Geneva, Tahoma, sans-serif;
-	font-size: 13px;
-	background-color: #682d63;
-	color: #ffffff;
-
 }
 
 .lis{
@@ -2474,22 +2463,6 @@ ul#countdown li {
 	background-color: #cfc2ce;
 	font-weight: 600;
 }
-
-}
-
-.lis{
-
-	background-color: #9D6498;
-	color:#ffffff;
-
-
-}
-.lis:hover{
-	background-color: #9c3c94;
-	color:#ffffff;
-	font-weight: 600;
-}
-
 .cont{
 	margin-left: 10%;
 	margin-right: 10%;
@@ -2550,11 +2523,7 @@ ul#countdown li {
 
 .navbar-nav {
 	height: auto;
-
 	background: white;
-
-	background: #f8f9fa;
-
 	padding: 0 1.5rem;
 	display: flex;
 	align-items: center;
@@ -2724,9 +2693,4 @@ ul#countdown li {
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
 	}
-}
-
-table.table{
-	width: 70%;
-	margin-left: -13%;
 }
