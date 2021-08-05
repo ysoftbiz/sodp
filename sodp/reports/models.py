@@ -1,7 +1,6 @@
 from django.db import models
 from sodp.users.models import User
 from django.db.models import CharField, IntegerField
-from django_mysql.models import ListCharField
 from django.utils.translation import gettext_lazy as _
 import datetime
 from sodp.views.models import view

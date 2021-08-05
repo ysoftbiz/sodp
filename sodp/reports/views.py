@@ -2,6 +2,7 @@ from django.core.files.storage import default_storage
 from django.shortcuts import render
 from django.views import generic, View
 from sodp.reports.models import report
+from sodp.views.models import view as viewmodel
 from sodp.tresholds.models import treshold
 
 from django.utils.translation import ugettext_lazy as _
@@ -121,6 +122,49 @@ class AjaxView(View, LoginRequiredMixin):
                         if not df.empty:
                             data = pandas_utils.convert_excel_to_json(df)
                             return JsonResponse({"data": data}, status=200, safe=False)                                    
+        except Exception as e:
+            pass
+
+        return JsonResponse(data, status=500, safe=False)        
+
+class ReportDecayView(LoginRequiredMixin, View):
+    model = report
+    template_name = 'reports/decayview.html'
+
+    def get(self, request, *args, **kwargs):
+        report_id = kwargs['pk']
+
+        stats = []
+        report_obj = report.objects.get(user=request.user, id=report_id)
+        if report_obj:
+            # retrieve view
+            view_obj = viewmodel.objects.get(id=report_obj.project, user=request.user)
+            if view_obj:
+                # retrieve stats from google big query
+                stats = google_utils.getStoredStats(report_obj.project, report_id)
+
+        return render(request, self.template_name, {'id': report_obj.id, 'name': view_obj.name, 'dateFrom': report_obj.dateFrom, 
+                        'dateTo': report_obj.dateTo, 'stats': stats})   
+
+        return HttpResponse(status=500)
+
+class StatsView(LoginRequiredMixin, View):
+    def get(self, request, **kwargs):
+        pk = kwargs['pk']
+        url = request.GET.get('url', '')
+        
+        data = {"labels":[], "data": { "sessions": []}}
+        try:
+            report_obj = report.objects.get(user=request.user, id=pk)
+            if report_obj:
+                # extract detail for a single url
+                stats = google_utils.getStatsFromURL(report_obj.project, pk, url)
+                for obj in stats.iterrows():
+                    data["labels"].append(obj[1].date)
+                    data["data"]["sessions"].append(obj[1].pageViews)
+
+                if len(data['labels'])>0:
+                    return JsonResponse({"data": data}, status=200, safe=False)                                    
         except Exception as e:
             pass
 

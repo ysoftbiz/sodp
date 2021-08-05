@@ -21,10 +21,10 @@ from google.oauth2 import service_account
 
 from sodp.views.models import view as modelview
 
-
-DIMS = ['ga:pagePath', 'ga:segment']
+DIMS = ['ga:segment']
 METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
 SEGMENTS = ['gaid::-1','gaid::-5']
+MAX_RESULTS = 100000
 
 def getGoogleConfig(request):
     return {
@@ -149,12 +149,13 @@ def createTable(bq, table, view_id, report_id):
 
     table = bigquery.Table(table_id, schema=schema)
     table = bq.create_table(table)  # Make an API request.
+
     return table_id
 
 # inserts the row
-def insertBigTable(bq, table_id, entry):
+def insertBigTable(bq, table_id, entries):
     try:
-        errors = bq.insert_rows_json(table_id, [entry])
+        errors = bq.insert_rows_json(table_id, entries,  row_ids=[None] * len(entries))
     except Exception as e:
         print(str(e))
         return False
@@ -176,14 +177,11 @@ def getDateFromGA(datestr, period):
     return final_date.strftime("%Y-%m-%d")
 
 # returns a dump of the desired stats for the specific credentials and view
-def getStatsFromView(credentials, bq, view_id, report_id, startDate, endDate):
+def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDate, table_id):
     analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
-    # create table if it does not exist, and truncate their values
-    table_id = createTable(bq, "stats", view_id, report_id)
-
     # retrieve date interval: 6-12 months grouped monthly, 3-6 months grouped weekly, <3 months grouped daily
-    dimensions = DIMS
+    dimensions = list(DIMS)
     diff_months = (endDate.year - startDate.year) * 12 + endDate.month - startDate.month
     if diff_months>=6:
         period = "ga:yearmonth"
@@ -193,32 +191,50 @@ def getStatsFromView(credentials, bq, view_id, report_id, startDate, endDate):
         period = "ga:date"
     dimensions.append(period)
 
-    data = analytics.reports().batchGet(
-      body={
-        'reportRequests': [
-        {
-          'viewId': view_id,
-          'dateRanges': [{'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}],
-          'metrics':  [{'expression': exp} for exp in METRICS],
-          'dimensions': [{'name': name} for name in DIMS],
-          'segments':  [{"segmentId": segment} for segment in SEGMENTS],   # organic traffic
-          'orderBys': [{"fieldName":period, "sortOrder": "ASCENDING"}]          
-        }]
-      }
-    ).execute()
-
-    # get the latest entry for each page path/organic traffic
     latest_organic_traffic = {}
     latest_traffic = {}
+
+    data = analytics.reports().batchGet(
+    body={
+        'reportRequests': [
+        {
+        'viewId': view_id,
+        'dateRanges': [{'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}],
+        'metrics':  [{'expression': exp} for exp in METRICS],
+        'dimensions': [{'name': name} for name in dimensions],
+        'segments':  [{"segmentId": segment} for segment in SEGMENTS],   # organic traffic
+        'orderBys': [{"fieldName":period, "sortOrder": "ASCENDING"}],
+        'pageSize': MAX_RESULTS,
+        'dimensionFilterClauses': [
+            {
+                'filters': [
+                    {
+                        "operator": "EXACT",
+                        "dimensionName": "ga:pagePath",
+                        "expressions": [ url ]
+                    }
+                ]
+            }
+        ]
+        }]
+    }).execute()
+
+    # get the latest entry for each page path/organic traffic
+    entries = []
+    pageViews = 0
+    organicViews = 0
+
     for report in data.get('reports', []):
+        pageToken = report.get('nextPageToken')
         columnHeader = report.get('columnHeader', {})
         dimensionHeaders = columnHeader.get('dimensions', [])
         metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
+
         for row in report.get('data', {}).get('rows', []):
             entry = {}
-            entry['page_path'] = row['dimensions'][0]
-            entry['segment'] = row['dimensions'][1]
-            entry['date'] = getDateFromGA(row['dimensions'][2], period)
+            entry['page_path'] = url
+            entry['segment'] = row['dimensions'][0]
+            entry['date'] = getDateFromGA(row['dimensions'][1], period)
 
             entry['pageViews'] = row['metrics'][0]['values'][0]
             entry['uniquePageViews'] = row['metrics'][0]['values'][1]
@@ -228,15 +244,17 @@ def getStatsFromView(credentials, bq, view_id, report_id, startDate, endDate):
             entry['exitRate'] = round(float(row['metrics'][0]['values'][5]), 5)
             entry['pageValue'] = round(float(row['metrics'][0]['values'][6]), 5)
 
-            # create entry in big table
-            insertBigTable(bq, table_id, entry)
-
             if entry['segment'] == "All Users":
-                latest_traffic[entry["page_path"]] = entry['pageViews']
+                pageViews = entry['pageViews']
             else:
-                latest_organic_traffic[entry["page_path"]] = entry['pageViews']
+                organicViews = entry['pageViews']
 
-    return latest_traffic, latest_organic_traffic
+            entries.append(entry)
+
+    # create entry in big table
+    insertBigTable(bq, table_id, entries)
+
+    return pageViews, organicViews
 
 # fills views table
 def fillViews(projects, user):
@@ -262,3 +280,55 @@ def authenticateBigQuery():
         return False
     return client
     
+# gets a dump of all the stored stats for that table
+def getStoredStats(view_id, report_id):
+    google_big = authenticateBigQuery()
+    if google_big:
+        # Download query results
+        table_id = "%s.sodp.%s_%s_%d" % (google_big.project, "stats", view_id, report_id)
+
+        query_string = """
+        SELECT page_path, pageViews FROM %s
+        WHERE segment='Organic Traffic' AND `date`=(select max(date) FROM %s) ORDER BY pageViews DESC         
+        """ % (table_id, table_id)
+
+        dataframe = (
+            google_big.query(query_string)
+            .result()
+            .to_dataframe(
+                # Optionally, explicitly request to use the BigQuery Storage API. As of
+                # google-cloud-bigquery version 1.26.0 and above, the BigQuery Storage
+                # API is used by default.
+                create_bqstorage_client=True,
+            )
+        )
+        return dataframe
+
+    return False
+
+# gets a dump of invidisual stats
+def getStatsFromURL(view_id, report_id, url):
+    google_big = authenticateBigQuery()
+    if google_big:
+        # Download query results
+        table_id = "%s.sodp.%s_%s_%d" % (google_big.project, "stats", view_id, report_id)
+
+        query_string = """
+        SELECT `date`, pageViews FROM %s
+        WHERE segment='Organic Traffic' AND page_path='%s' ORDER BY `date`         
+        """ % (table_id, url)
+
+        dataframe = (
+            google_big.query(query_string)
+            .result()
+            .to_dataframe(
+                # Optionally, explicitly request to use the BigQuery Storage API. As of
+                # google-cloud-bigquery version 1.26.0 and above, the BigQuery Storage
+                # API is used by default.
+                create_bqstorage_client=True,
+            )
+        )
+        return dataframe
+
+    return False
+

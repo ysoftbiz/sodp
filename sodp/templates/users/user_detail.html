@@ -18,7 +18,7 @@
   <tr><td>{{ item.name }}</td>
     <td>{{ item.url }}</td>
     <td> {{ item.totalReports }} {% trans "reports" %}</td>
-    <td><a href="/views/decay/{{ item.id }}">{% trans "View decay chart" %}</a></td>
+    <td><a href="/views/{{ item.id }}">{% trans "View detail" %}</a></td>
   </tr></div>
   {% endfor %}
 </table>

@@ -6,7 +6,7 @@
 
 <div class="hero">
 
-<h2>{% trans "Decay chart for" %} {{ name }} - {{ date }}</h2>
+<h2>{% trans "Decay chart for" %} {{ name }} ( {{ dateFrom }} / {{ dateTo }} )</h2>
 
 <div>
     <table class="table table-striped table-bordered dt-responsive compact nowrap dataTable no-footer">
@@ -15,10 +15,10 @@
             <td>{% trans "Organic sessions" %}</td>
             <td></td>
         </thead>
-    {% for item in stats %}
-    <tr><td>{{ item.url }}</td>
-      <td>{{ item.sessions }}</td>
-      <td><a href="#" data-id="{{ item.url }}" data-toggle="modal" data-target="#modChart">{% trans "View chart" %}</a></td>
+    {% for item in stats.itertuples %}
+    <tr><td>{{ item.page_path }}</td>
+      <td>{{ item.pageViews }}</td>
+      <td><a href="#" data-id="{{ item.page_path }}" data-toggle="modal" data-target="#modChart">{% trans "View chart" %}</a></td>
     </tr></div>
     {% endfor %}
   </table>
@@ -68,7 +68,7 @@ $('#modChart').on('shown.bs.modal',function(event){
     // Chart initialisieren
     var modal = $(this);
 
-    ajax_chart(chart, "/views/stats/{{ id }}?url="+encodeURI(link.attr('data-id')));
+    ajax_chart(chart, "/reports/stats/{{ id }}?url="+encodeURI(link.attr('data-id')));
 
 }).on('hidden.bs.modal',function(event){
     // reset chart

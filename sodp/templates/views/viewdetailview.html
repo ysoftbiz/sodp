@@ -3,12 +3,32 @@
 {% block content %}
 {% load i18n %}
 
+<div>  
+    <p>{% trans "Name" %}: {{ view.name }}</h1></p>
+    <p>{% trans "URL" %}: {{ view.url }}</p>
+
+</div>
+
+<div>
+    <table class="table table-striped table-bordered dt-responsive compact nowrap dataTable no-footer">
+        <thead>
+            <td>{% trans "Date from" %}</td>
+            <td>{% trans "Date to" %}</td>
+            <td>{% trans "Creation date" %}</td>
+            <td>{% trans "Status" %}</td>
+            <td></td>
+        </thead>
+    {% for report in reports %}
+    <tr><td>{{ report.dateFrom }}</td>
+      <td>{{ report.dateTo }}</td>
+      <td>{{ report.creationDate }}</td>
+      <td>{{ report.status }}</td>
+      <td><a href="/reports/decay/{{ report.id }}">{% trans "View decay chart" %}</a></td>
+    </tr></div>
+    {% endfor %}
+  </table>
+  </div>
   
-    <br><h1>{% trans "Name:" %} {{ view.name }}</h1><br>
-
-    <p><strong>{% trans "Date from:" %} </strong> {{ view.dateFrom }}</p>
-    <p><strong>{% trans "Date to:" %}</strong> {{ view.dateTo }}</p>
-
 {% endblock %}
 
 

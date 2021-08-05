@@ -40,3 +40,4 @@ django-storages
 xlsxwriter
 openpyxl
 ultimate_sitemap_parser
+pyarrow

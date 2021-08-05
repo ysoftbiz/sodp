@@ -97,21 +97,7 @@ def uploadExcelFile(report, dataframe):
         file_url = default_storage.url(final_path)
         return file_path, file_url
 
-    return False, False
-
-def generateReportStats(obj, dataframe):
-    for index, row in dataframe.iterrows():
-        # get view with that id
-        view_obj = viewmodel.objects.get(id=obj.project)
-        if view_obj:
-            statsmodel.objects.update_or_create(
-                view=view_obj,
-                url = row["loc"],
-                dateFrom = obj.dateFrom,
-                dateTo = obj.dateTo,
-                sessions = int(row["organicSessions"])
-            )
-            
+    return False, False            
 
 @shared_task(name="sodp.reports.tasks.processReport")
 def processReport(pk):
@@ -138,23 +124,9 @@ def processReport(pk):
         # get domain from sitemap url
         domain = urlparse(obj.sitemap).netloc
 
-        # retrieve ahrefs info
-        ah = ahrefs.getAhrefsInfo(obj.user.ahrefs_token, domain)
-        if len(ah)<0:
-            setErrorStatus(obj, "WRONG_AHREFS")
-            return False
-
-        # get stats for the expected google view id
-        try:
-            credentials = google_utils.getOfflineCredentials(obj.user.google_api_token, obj.user.google_refresh_token)
-            if credentials:
-                google_traffic, google_organic_traffic = google_utils.getStatsFromView(credentials, google_big, obj.project, pk, obj.dateFrom, obj.dateTo)
-        except Exception as e:
-            print(str(e))
-            setErrorStatus(obj, "WRONG_ANALYTICS")
-            return False
-        if len(google_traffic)<0 or len(google_organic_traffic):
-            setErrorStatus(obj, "WRONG_ANALYTICS")
+        # iterate over all rows in sitemap and get google stats from it
+        google_traffic = {}
+        google_organic_traffic = {}
 
         # from original sitemap, remove xml, pdf and doc files
         pd_filtered_sm = pd_sitemap.loc[~pd_sitemap['loc'].str.endswith(SUFFIXES)]
@@ -163,6 +135,29 @@ def processReport(pk):
         pd_filtered_sm["backLinks"] = 0
         pd_filtered_sm["recomendationCode"] = ""
         pd_filtered_sm["recomendationText"] = ""
+
+        # create table if it does not exist, and truncate their values
+        table_id = google_utils.createTable(google_big, "stats", obj.project, pk)
+        try:
+            credentials = google_utils.getOfflineCredentials(obj.user.google_api_token, obj.user.google_refresh_token)
+        except Exception as e:
+            print(str(e))
+            setErrorStatus(obj, "WRONG_ANALYTICS")
+            return False
+
+        for index, row in pd_filtered_sm.iterrows():
+            path = urlparse(row["loc"]).path
+
+            # get stats for the expected google view id
+            if credentials:
+                google_traffic[path], google_organic_traffic[path] = google_utils.getStatsFromView(
+                    credentials, google_big, obj.project, pk, path, obj.dateFrom, obj.dateTo, table_id)
+
+        # retrieve ahrefs info
+        ah = ahrefs.getAhrefsInfo(obj.user.ahrefs_token, domain)
+        if len(ah)<0:
+            setErrorStatus(obj, "WRONG_AHREFS")
+            return False
 
         # iterate over all rows in sitemap and try to find the matching index in google one
         for index, row in pd_filtered_sm.iterrows():
@@ -189,9 +184,6 @@ def processReport(pk):
 
             pd_filtered_sm.at[index, "recomendationCode"] = recomendation_code
             pd_filtered_sm.at[index, "recomendationText"] = recomendation_text
-
-        # generate stats
-        generateReportStats(obj, pd_filtered_sm)
 
         # upload dataframe to storage
         path, url = uploadExcelFile(obj, pd_filtered_sm)

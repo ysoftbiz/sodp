@@ -6,6 +6,8 @@ from sodp.reports.views import (
     ReportDetailView,
     ReportFrameView,
     AjaxView,
+    ReportDecayView,
+    StatsView
 )
 
 app_name = "reports"
@@ -16,5 +18,7 @@ urlpatterns = [
     path('detail/<int:pk>/', ReportFrameView.as_view(), name = "reportsdetail"),
     path('ajax/<int:pk>/', AjaxView.as_view(), name = "reportsajax"),
     path('<int:pk>/', ReportDetailView.as_view(), name = 'detailview'),
+    path('decay/<int:pk>/', ReportDecayView.as_view(), name = 'decayview'),
+    path('stats/<int:pk>/', StatsView.as_view(), name = 'statsview'),
 ]
 

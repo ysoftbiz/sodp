@@ -19,7 +19,7 @@ class view(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="viewUser", related_name="viewUser")
 
     def __str__(self):
-        return "%s - %s" % (self.name, self.url)
+        return "%s - %s" % (self.name, self.url)        
 
 class stats(models.Model):
     class Meta:
