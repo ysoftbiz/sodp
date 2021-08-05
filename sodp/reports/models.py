@@ -1,6 +1,7 @@
 from django.db import models
 from sodp.users.models import User
 from django.db.models import CharField, IntegerField
+from django_mysql.models import ListCharField
 from django.utils.translation import gettext_lazy as _
 import datetime
 from sodp.views.models import view
@@ -51,9 +52,28 @@ class report(models.Model):
     path = CharField(_("path"), blank=True, null=True, max_length=255)
     key = CharField(_("key"), blank=True, null=True, max_length=255)
 
+   
+
+
     def __str__(self):
         return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
 
     @property
     def viewName(self):
         return view.objects.filter(pk = self.project)[0]
+
+
+class reportURL(models.Model):
+    url = CharField(_("url"), blank=True, null=True, max_length=100)
+    report = models.ForeignKey(report, on_delete=models.CASCADE, verbose_name="report", related_name="report")
+    IS_ACCEPTED_STATUS = (
+        ('accept', _('Accept')),
+        ('block', _('Block')),
+    )
+
+    is_accepted_status = models.CharField(
+        max_length=6,
+        choices=IS_ACCEPTED_STATUS,
+        blank=True,
+        default='',
+    )
