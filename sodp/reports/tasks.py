@@ -111,6 +111,7 @@ def generateReportStats(obj, dataframe):
                 dateTo = obj.dateTo,
                 sessions = int(row["organicSessions"])
             )
+            
 
 @shared_task(name="sodp.reports.tasks.processReport")
 def processReport(pk):
@@ -147,11 +148,12 @@ def processReport(pk):
         try:
             credentials = google_utils.getOfflineCredentials(obj.user.google_api_token, obj.user.google_refresh_token)
             if credentials:
-                google_export = google_utils.getStatsFromView(credentials, obj.project, obj.dateFrom, obj.dateTo)
+                google_traffic, google_organic_traffic = google_utils.getStatsFromView(credentials, google_big, obj.project, pk, obj.dateFrom, obj.dateTo)
         except Exception as e:
+            print(str(e))
             setErrorStatus(obj, "WRONG_ANALYTICS")
             return False
-        if len(google_export)<0:
+        if len(google_traffic)<0 or len(google_organic_traffic):
             setErrorStatus(obj, "WRONG_ANALYTICS")
 
         # from original sitemap, remove xml, pdf and doc files
@@ -167,14 +169,14 @@ def processReport(pk):
             path = urlparse(row["loc"]).path
             
             # in the google dataframe, search for this path and 'All users' row
-            google_row = google_export.loc[(google_export['pagePath'] == path) & (google_export['segment']=='All Users')]
-            if len(google_row)>0:
-                pd_filtered_sm.at[index, "pageViews"] = google_row.iloc[0]['pageViews']
+            pageViews = google_traffic.get(path, None)
+            if pageViews is not None:
+                pd_filtered_sm.at[index, "pageViews"] = pageViews
 
             # now do the same for organic traffic
-            google_row = google_export.loc[(google_export['pagePath'] == path) & (google_export['segment']=='Organic Traffic')]
-            if len(google_row)>0:
-                pd_filtered_sm.at[index, "organicSessions"] = google_row.iloc[0]['pageViews']
+            organicViews = google_organic_traffic.get(path, None)
+            if organicViews is not None:
+                pd_filtered_sm.at[index, "organicSessions"] = organicViews
 
             # now search for the url in ahrefs and retrieve the dofollow number
             ahrefs_row = ah.loc[ah['url'] == row["loc"]]

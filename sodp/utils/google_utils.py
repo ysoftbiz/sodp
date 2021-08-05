@@ -10,10 +10,12 @@ import tempfile
 from apiclient.discovery import build
 from pprint import pprint
 
+from datetime import datetime
 from oauth2client import GOOGLE_REVOKE_URI, GOOGLE_TOKEN_URI, client
 from django.conf import settings
 from django.urls import reverse
 
+from datetime import date
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
@@ -23,7 +25,6 @@ from sodp.views.models import view as modelview
 DIMS = ['ga:pagePath', 'ga:segment']
 METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
 SEGMENTS = ['gaid::-1','gaid::-5']
-PAGESIZE = 5000
 
 def getGoogleConfig(request):
     return {
@@ -127,41 +128,115 @@ def getProjectsFromCredentials(credentials):
 
     return projects
 
+# create google analytics table if does not exist
+def createTable(bq, table, view_id, report_id):
+    # create table inside dataset
+    table_id = "%s.sodp.%s_%s_%d" % (bq.project, table, view_id, report_id)
+    bq.delete_table(table_id, not_found_ok=True)
+
+    schema = [
+        bigquery.SchemaField("page_path", "STRING"),
+        bigquery.SchemaField("segment", "STRING"),
+        bigquery.SchemaField("date", "DATE"),
+        bigquery.SchemaField("pageViews", "INTEGER"),
+        bigquery.SchemaField("uniquePageViews", "INTEGER"),
+        bigquery.SchemaField("timeOnPage", "NUMERIC"),
+        bigquery.SchemaField("entrances", "NUMERIC"),
+        bigquery.SchemaField("bounceRate", "NUMERIC"),
+        bigquery.SchemaField("exitRate", "NUMERIC"),
+        bigquery.SchemaField("pageValue", "NUMERIC")
+    ]
+
+    table = bigquery.Table(table_id, schema=schema)
+    table = bq.create_table(table)  # Make an API request.
+    return table_id
+
+# inserts the row
+def insertBigTable(bq, table_id, entry):
+    try:
+        errors = bq.insert_rows_json(table_id, [entry])
+    except Exception as e:
+        print(str(e))
+        return False
+
+# returns a date object depending on the interval
+def getDateFromGA(datestr, period):
+    # get date from month or week
+    if period == "ga:yearmonth":
+        final_date = date(int(datestr[:4]), int(datestr[4:]), 1)
+    elif period == "ga:yearweek":
+        year, week = int(datestr[:4]), int(datestr[4:])
+        start_of_year = date(year, 1, 1)
+        days = 7 * (week - 1) - (start_of_year.isoweekday() % 7)    
+        days = max(0, days)  # GA restarts yearWeek on a new year 
+        final_date = start_of_year + datetime.timedelta(days=days)
+    else:
+        final_date = datetime.strptime(datestr, '%Y%m%d')
+
+    return final_date.strftime("%Y-%m-%d")
+
 # returns a dump of the desired stats for the specific credentials and view
-def getStatsFromView(credentials, view_id, startDate, endDate):
+def getStatsFromView(credentials, bq, view_id, report_id, startDate, endDate):
     analytics = build('analyticsreporting', 'v4', credentials=credentials)
+
+    # create table if it does not exist, and truncate their values
+    table_id = createTable(bq, "stats", view_id, report_id)
+
+    # retrieve date interval: 6-12 months grouped monthly, 3-6 months grouped weekly, <3 months grouped daily
+    dimensions = DIMS
+    diff_months = (endDate.year - startDate.year) * 12 + endDate.month - startDate.month
+    if diff_months>=6:
+        period = "ga:yearmonth"
+    elif diff_months>=3:
+        period = "ga:yearweek"
+    else:
+        period = "ga:date"
+    dimensions.append(period)
 
     data = analytics.reports().batchGet(
       body={
         'reportRequests': [
         {
           'viewId': view_id,
-          'pageSize': PAGESIZE,
           'dateRanges': [{'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}],
           'metrics':  [{'expression': exp} for exp in METRICS],
           'dimensions': [{'name': name} for name in DIMS],
           'segments':  [{"segmentId": segment} for segment in SEGMENTS],   # organic traffic
+          'orderBys': [{"fieldName":period, "sortOrder": "ASCENDING"}]          
         }]
       }
     ).execute()
 
-    # embed into a pandas dataset
-    data_dic = {f"{i}": [] for i in DIMS + METRICS}
+    # get the latest entry for each page path/organic traffic
+    latest_organic_traffic = {}
+    latest_traffic = {}
     for report in data.get('reports', []):
-        rows = report.get('data', {}).get('rows', [])
-        for row in rows:
-            for i, key in enumerate(DIMS):
-                data_dic[key].append(row.get('dimensions', [])[i]) # Get dimensions
-            dateRangeValues = row.get('metrics', [])
-            for values in dateRangeValues:
-                all_values = values.get('values', []) # Get metric values
-                for i, key in enumerate(METRICS):
-                    data_dic[key].append(all_values[i])
-            
-    df = pd.DataFrame(data=data_dic)
-    df.columns = [col.split(':')[-1] for col in df.columns]
-    df.tail()
-    return df
+        columnHeader = report.get('columnHeader', {})
+        dimensionHeaders = columnHeader.get('dimensions', [])
+        metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
+        for row in report.get('data', {}).get('rows', []):
+            entry = {}
+            entry['page_path'] = row['dimensions'][0]
+            entry['segment'] = row['dimensions'][1]
+            entry['date'] = getDateFromGA(row['dimensions'][2], period)
+
+            entry['pageViews'] = row['metrics'][0]['values'][0]
+            entry['uniquePageViews'] = row['metrics'][0]['values'][1]
+            entry['timeOnPage'] = round(float(row['metrics'][0]['values'][2]), 5)
+            entry['entrances'] = round(float(row['metrics'][0]['values'][3]), 5)
+            entry['bounceRate'] = round(float(row['metrics'][0]['values'][4]), 5)
+            entry['exitRate'] = round(float(row['metrics'][0]['values'][5]), 5)
+            entry['pageValue'] = round(float(row['metrics'][0]['values'][6]), 5)
+
+            # create entry in big table
+            insertBigTable(bq, table_id, entry)
+
+            if entry['segment'] == "All Users":
+                latest_traffic[entry["page_path"]] = entry['pageViews']
+            else:
+                latest_organic_traffic[entry["page_path"]] = entry['pageViews']
+
+    return latest_traffic, latest_organic_traffic
 
 # fills views table
 def fillViews(projects, user):
@@ -175,7 +250,6 @@ def fillViews(projects, user):
 def authenticateBigQuery():
     # load json config and write to temporary file
     tfile = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-    print(settings.GOOGLE_JSON)
     tfile.write(settings.GOOGLE_JSON)
     tfile.flush()
     credentials = service_account.Credentials.from_service_account_file(
@@ -185,7 +259,6 @@ def authenticateBigQuery():
     try:
         client = bigquery.Client(credentials=credentials, project=credentials.project_id,)
     except Exception as e:
-        print(client)
         return False
     return client
     
