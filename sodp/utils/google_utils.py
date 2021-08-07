@@ -6,17 +6,18 @@ import json
 import os
 import pandas as pd
 import tempfile
+import time
 
 from apiclient.discovery import build
 from pprint import pprint
 
-from datetime import datetime
+from datetime import datetime, date
 from oauth2client import GOOGLE_REVOKE_URI, GOOGLE_TOKEN_URI, client
 from django.conf import settings
 from django.urls import reverse
 
-from datetime import date
 from google.cloud import bigquery
+from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
 
 from sodp.views.models import view as modelview
@@ -25,6 +26,8 @@ DIMS = ['ga:segment']
 METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
 SEGMENTS = ['gaid::-1','gaid::-5']
 MAX_RESULTS = 100000
+MAX_PAGES = 5000
+GOOGLE_WAIT_TIME = 120
 
 def getGoogleConfig(request):
     return {
@@ -132,23 +135,42 @@ def getProjectsFromCredentials(credentials):
 def createTable(bq, table, view_id, report_id):
     # create table inside dataset
     table_id = "%s.sodp.%s_%s_%d" % (bq.project, table, view_id, report_id)
-    bq.delete_table(table_id, not_found_ok=True)
 
-    schema = [
-        bigquery.SchemaField("page_path", "STRING"),
-        bigquery.SchemaField("segment", "STRING"),
-        bigquery.SchemaField("date", "DATE"),
-        bigquery.SchemaField("pageViews", "INTEGER"),
-        bigquery.SchemaField("uniquePageViews", "INTEGER"),
-        bigquery.SchemaField("timeOnPage", "NUMERIC"),
-        bigquery.SchemaField("entrances", "NUMERIC"),
-        bigquery.SchemaField("bounceRate", "NUMERIC"),
-        bigquery.SchemaField("exitRate", "NUMERIC"),
-        bigquery.SchemaField("pageValue", "NUMERIC")
-    ]
+    # first check if table exists
+    try:
+        bq.get_table(table_id)
 
-    table = bigquery.Table(table_id, schema=schema)
-    table = bq.create_table(table)  # Make an API request.
+        try:
+            # delete all values
+            query_text = f"""
+                TRUNCATE TABLE %s
+            """ % table_id
+            query_job = bq.query(query_text)
+            query_job.result()
+
+            time.sleep(GOOGLE_WAIT_TIME)
+        except Exception as e:
+            print(str(e))
+    except NotFound:
+        # does not exist, create it
+        try:
+            schema = [
+                bigquery.SchemaField("page_path", "STRING"),
+                bigquery.SchemaField("segment", "STRING"),
+                bigquery.SchemaField("date", "DATE"),
+                bigquery.SchemaField("pageViews", "INTEGER"),
+                bigquery.SchemaField("uniquePageViews", "INTEGER"),
+                bigquery.SchemaField("timeOnPage", "NUMERIC"),
+                bigquery.SchemaField("entrances", "NUMERIC"),
+                bigquery.SchemaField("bounceRate", "NUMERIC"),
+                bigquery.SchemaField("exitRate", "NUMERIC"),
+                bigquery.SchemaField("pageValue", "NUMERIC")
+            ]
+
+            table = bigquery.Table(table_id, schema=schema)
+            table = bq.create_table(table)  # Make an API request.
+        except:
+            pass
 
     return table_id
 
@@ -159,6 +181,48 @@ def insertBigTable(bq, table_id, entries):
     except Exception as e:
         print(str(e))
         return False
+
+def insertUrlsTable(bq, view_id, report_id, urls):
+    # create table inside dataset
+    table_id = "%s.sodp.%s_%s_%d" % (bq.project, "organicurls", view_id, report_id)
+
+    # first check if table exists
+    try:
+        bq.get_table(table_id)
+
+        try:
+            # delete all values
+            query_text = f"""
+                TRUNCATE TABLE %s
+            """ % table_id
+            query_job = bq.query(query_text)
+            query_job.result()
+
+            time.sleep(GOOGLE_WAIT_TIME)
+        except Exception as e:
+            print(str(e))
+    except NotFound:
+        try:
+            schema = [
+                bigquery.SchemaField("page_path", "STRING"),
+                bigquery.SchemaField("startViews", "INTEGER"),
+                bigquery.SchemaField("endViews", "INTEGER"),
+                bigquery.SchemaField("decay", "NUMERIC"),
+            ]
+
+            table = bigquery.Table(table_id, schema=schema)
+            table = bq.create_table(table)  # Make an API request.
+        except:
+            pass
+
+    # now insert the values
+    try:
+        errors = bq.insert_rows_json(table_id, urls,  row_ids=[None] * len(urls))
+    except Exception as e:
+        print(str(e))
+        return False
+
+    return True
 
 # returns a date object depending on the interval
 def getDateFromGA(datestr, period):
@@ -177,18 +241,12 @@ def getDateFromGA(datestr, period):
     return final_date.strftime("%Y-%m-%d")
 
 # returns a dump of the desired stats for the specific credentials and view
-def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDate, table_id):
+def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDate, table_id, period):
+    print("parse url %s" % url)
     analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
     # retrieve date interval: 6-12 months grouped monthly, 3-6 months grouped weekly, <3 months grouped daily
     dimensions = list(DIMS)
-    diff_months = (endDate.year - startDate.year) * 12 + endDate.month - startDate.month
-    if diff_months>=6:
-        period = "ga:yearmonth"
-    elif diff_months>=3:
-        period = "ga:yearweek"
-    else:
-        period = "ga:date"
     dimensions.append(period)
 
     latest_organic_traffic = {}
@@ -221,9 +279,13 @@ def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDat
 
     # get the latest entry for each page path/organic traffic
     entries = []
-    pageViews = 0
-    organicViews = 0
+    firstPageViews = 0
+    firstOrganicViews = 0
+    lastPageViews = 0
+    lastOrganicViews = 0
 
+    first = True
+    firstOrganic = True
     for report in data.get('reports', []):
         pageToken = report.get('nextPageToken')
         columnHeader = report.get('columnHeader', {})
@@ -245,16 +307,24 @@ def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDat
             entry['pageValue'] = round(float(row['metrics'][0]['values'][6]), 5)
 
             if entry['segment'] == "All Users":
-                pageViews = entry['pageViews']
+                lastPageViews = entry['pageViews']
+                if first:
+                    first = False
+                    firstPageViews = entry['pageViews']
             else:
-                organicViews = entry['pageViews']
+                lastOrganicViews = entry['pageViews']
+                if firstOrganic:
+                    firstOrganic = False
+                    firstOrganicViews = entry['pageViews']
 
             entries.append(entry)
 
-    # create entry in big table
-    insertBigTable(bq, table_id, entries)
 
-    return pageViews, organicViews
+    # create entry in big table
+    if len(entries)>0:
+        insertBigTable(bq, table_id, entries)
+
+    return firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews, len(entries)
 
 # fills views table
 def fillViews(projects, user):
@@ -285,12 +355,11 @@ def getStoredStats(view_id, report_id):
     google_big = authenticateBigQuery()
     if google_big:
         # Download query results
-        table_id = "%s.sodp.%s_%s_%d" % (google_big.project, "stats", view_id, report_id)
+        table_id = "%s.sodp.%s_%s_%d" % (google_big.project, "organicurls", view_id, report_id)
 
         query_string = """
-        SELECT page_path, pageViews FROM %s
-        WHERE segment='Organic Traffic' AND `date`=(select max(date) FROM %s) ORDER BY pageViews DESC         
-        """ % (table_id, table_id)
+        SELECT page_path, startViews, endViews, decay FROM %s ORDER BY endViews DESC         
+        """ % (table_id)
 
         dataframe = (
             google_big.query(query_string)

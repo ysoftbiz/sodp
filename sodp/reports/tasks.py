@@ -31,6 +31,8 @@ RECOMENDATION_TEXTS = {
     "404": "Delete"
 }
 
+MAX_PAGES = 5000
+
 def setErrorStatus(report, error_code):
     report.status = "error"
     report.errorDescription = error_code
@@ -58,20 +60,32 @@ def sendReportCompletedEmail(report, url):
 
 
 # calculate recomendation based on row data and tresholds
-def calculateRecomendation(row, thresholds):
+def calculateRecomendation(row, thresholds, period):
+
+    # get threshold depending on period
+    threshold_backlinks = int(thresholds["BACKLINKS"])
+    if period == "ga:yearmonth":
+        threshold_volume = float(thresholds["VOLUME"])
+        threshold_traffic = float(thresholds["TRAFFIC"])
+    elif period == "ga:yearweek":
+        threshold_volume = float(thresholds["VOLUME"])/4
+        threshold_traffic = float(thresholds["TRAFFIC"])/4
+    else:
+        threshold_volume = float(thresholds["VOLUME"])/30
+        threshold_traffic = float(thresholds["TRAFFIC"])/30
 
     # filter by volume and traffic
-    if (row["pageViews"]>=int(thresholds["VOLUME"])):
-        if (row["organicSessions"]>=int(thresholds["TRAFFIC"])):
+    if (int(row["pageViews"])>=threshold_volume):
+        if (int(row["organicSessions"])>=threshold_traffic):
             return "200"
         else:
             # filter by backlinks
-            if (row["backLinks"]>=int(thresholds["BACKLINKS"])):
+            if (int(row["backLinks"])>=threshold_backlinks):
                 return "200"
             else:
                 return "100"    # manually review
     else:
-        if row["backLinks"]>=int(thresholds["BACKLINKS"]):
+        if int(row["backLinks"])>=threshold_backlinks:
             return "301"
         else:
             return "404"
@@ -99,6 +113,18 @@ def uploadExcelFile(report, dataframe):
 
     return False, False            
 
+# calculates if there is a decay in content
+def calculateContentDecay(firstViews, lastViews, thresholds):
+    if lastViews >= firstViews:
+        return 0
+    else:
+        # calculate decrease
+        change = (abs(lastViews - firstViews)/firstViews)*100
+        if change >= float(thresholds["CONTENT_DECAY"]):
+            return change
+
+    return 0
+
 @shared_task(name="sodp.reports.tasks.processReport")
 def processReport(pk):
     # get report data with that PK
@@ -124,9 +150,20 @@ def processReport(pk):
         # get domain from sitemap url
         domain = urlparse(obj.sitemap).netloc
 
+        # calculate period
+        diff_months = (obj.dateTo.year - obj.dateFrom.year) * 12 + obj.dateTo.month - obj.dateFrom.month
+        if diff_months>=6:
+            period = "ga:yearmonth"
+        elif diff_months>=3:
+            period = "ga:yearweek"
+        else:
+            period = "ga:date"
+
         # iterate over all rows in sitemap and get google stats from it
         google_traffic = {}
         google_organic_traffic = {}
+
+        organic_urls = []
 
         # from original sitemap, remove xml, pdf and doc files
         pd_filtered_sm = pd_sitemap.loc[~pd_sitemap['loc'].str.endswith(SUFFIXES)]
@@ -145,13 +182,31 @@ def processReport(pk):
             setErrorStatus(obj, "WRONG_ANALYTICS")
             return False
 
+        processedEntries = 0
         for index, row in pd_filtered_sm.iterrows():
             path = urlparse(row["loc"]).path
 
             # get stats for the expected google view id
             if credentials:
-                google_traffic[path], google_organic_traffic[path] = google_utils.getStatsFromView(
-                    credentials, google_big, obj.project, pk, path, obj.dateFrom, obj.dateTo, table_id)
+                firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews, totalEntries = google_utils.getStatsFromView(
+                    credentials, google_big, obj.project, pk, path, obj.dateFrom, obj.dateTo, table_id, period)
+
+                google_traffic[path] = lastPageViews
+                google_organic_traffic[path] = lastOrganicViews
+
+                # calculate decay
+                decay = calculateContentDecay(float(firstOrganicViews), float(lastOrganicViews), obj.thresholds)
+
+                # add to urls
+                organic_urls.append({"page_path": path, "startViews": int(firstOrganicViews), "endViews": int(lastOrganicViews), "decay": round(decay, 5)})
+
+                if totalEntries > 0:
+                    processedEntries +=1
+                if processedEntries >= MAX_PAGES:
+                    break    
+
+        # insert into table
+        google_utils.insertUrlsTable(google_big, obj.project, pk, organic_urls)
 
         # retrieve ahrefs info
         ah = ahrefs.getAhrefsInfo(obj.user.ahrefs_token, domain)
@@ -179,7 +234,7 @@ def processReport(pk):
                 pd_filtered_sm.at[index, "backLinks"] = ahrefs_row.iloc[0]['dofollow']
 
             # finally execute the calculation
-            recomendation_code = calculateRecomendation(pd_filtered_sm.iloc[index], obj.thresholds)
+            recomendation_code = calculateRecomendation(pd_filtered_sm.iloc[index], obj.thresholds, period)
             recomendation_text = RECOMENDATION_TEXTS[recomendation_code]
 
             pd_filtered_sm.at[index, "recomendationCode"] = recomendation_code

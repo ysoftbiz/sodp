@@ -12,12 +12,16 @@
     <table class="table table-striped table-bordered dt-responsive compact nowrap dataTable no-footer">
         <thead>
             <td>{% trans "URL" %}</td>
-            <td>{% trans "Organic sessions" %}</td>
+            <td>{% trans "Initial organic sessions" %}</td>
+            <td>{% trans "Final organic sessions" %}</td>
+            <td>{% trans "Decay" %}</td>
             <td></td>
         </thead>
     {% for item in stats.itertuples %}
     <tr><td>{{ item.page_path }}</td>
-      <td>{{ item.pageViews }}</td>
+      <td>{{ item.startViews }}</td>
+      <td>{{ item.endViews }}</td>
+      <td>{% if item.decay > 0 %}{{ item.decay|floatformat:2 }} % {% endif %}</td>
       <td><a href="#" data-id="{{ item.page_path }}" data-toggle="modal" data-target="#modChart">{% trans "View chart" %}</a></td>
     </tr></div>
     {% endfor %}
