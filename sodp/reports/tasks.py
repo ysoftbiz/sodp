@@ -183,8 +183,14 @@ def processReport(pk):
             return False
 
         processedEntries = 0
+        processedUrls = []
         for index, row in pd_filtered_sm.iterrows():
             path = urlparse(row["loc"]).path
+            
+            if path in processedUrls:
+                continue
+
+            processedUrls.append(path)
 
             # get stats for the expected google view id
             if credentials:
