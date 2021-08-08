@@ -11,7 +11,7 @@ import time
 from apiclient.discovery import build
 from pprint import pprint
 
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from oauth2client import GOOGLE_REVOKE_URI, GOOGLE_TOKEN_URI, client
 from django.conf import settings
 from django.urls import reverse
@@ -234,7 +234,7 @@ def getDateFromGA(datestr, period):
         start_of_year = date(year, 1, 1)
         days = 7 * (week - 1) - (start_of_year.isoweekday() % 7)    
         days = max(0, days)  # GA restarts yearWeek on a new year 
-        final_date = start_of_year + datetime.timedelta(days=days)
+        final_date = start_of_year + timedelta(days=days)
     else:
         final_date = datetime.strptime(datestr, '%Y%m%d')
 
