@@ -125,7 +125,7 @@ def calculateContentDecay(firstViews, lastViews, thresholds):
 
     return 0
 
-@shared_task(name="sodp.reports.tasks.processReport")
+@shared_task(name="sodp.reports.tasks.processReport", time_limit=3600, soft_time_limit=3600)
 def processReport(pk):
     # get report data with that PK
     obj = report.objects.get(pk=pk)
