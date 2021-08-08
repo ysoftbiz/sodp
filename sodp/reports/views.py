@@ -74,7 +74,7 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
             super(ReportCreateView, self).form_valid(form)
             self.object.save()
 
-            tasks.processReport.apply_async(args=[self.object.pk])
+            tasks.processReport.apply_async(args=[self.object.pk], countdown=30)
         return HttpResponseRedirect(self.get_success_url())
 
       
