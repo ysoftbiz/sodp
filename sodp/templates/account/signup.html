@@ -6,6 +6,8 @@
 {% block head_title %}{% trans "Signup" %}{% endblock %}
 
 {% block inner %}
+<div class="hero">
+
 <h2>{% trans "Sign Up" %}</h2>
 <p>{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktrans %}</p>
 <br>
@@ -19,4 +21,5 @@
   <button class="btn-action" type="submit">{% trans "Sign Up" %} &raquo;</button>
 </form>
 
+</div>
 {% endblock %}

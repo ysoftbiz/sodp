@@ -10,13 +10,11 @@ def parseSitemap(url):
     df = pd.DataFrame(columns=['loc'])        
 
     tree = sitemap_tree_for_homepage(url)
-    count = 0
     if tree:
         # we need to sort pages by date modification desc
         all_pages = list(tree.all_pages())
         all_pages.sort(key=lambda x:(x.last_modified is None, x.last_modified), reverse=True)
         for page in all_pages:
-            count+=1
             df = df.append({'loc': page.url}, ignore_index=True)
     return df
         

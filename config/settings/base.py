@@ -94,6 +94,8 @@ LOCAL_APPS = [
     "sodp.views.apps.ViewsConfig",
 
     # Your stuff: custom apps go here
+    "sodp.memberful"
+
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -331,3 +333,8 @@ AWS_S3_VERIFY = True
 USE_DUMMY_GOOGLE_DATA = env('USE_DUMMY_GOOGLE_DATA', default=False)
 GOOGLE_JSON = env('GOOGLE_JSON', default=None)
 
+# memberful
+MEMBERFUL_AUTH_URL = env('MEMBERFUL_AUTH_URL', default='')
+MEMBERFUL_TOKEN_URL =  env('MEMBERFUL_TOKEN_URL', default='')
+MEMBERFUL_CLIENT_ID = env('MEMBERFUL_CLIENT_ID', default='')
+MEMBERFUL_GRAPHQL_ENDPOINT = env('MEMBERFUL_GRAPHQL_ENDPOINT', default='')

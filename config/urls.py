@@ -35,7 +35,7 @@ urlpatterns = [
     path("users/", include("sodp.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     path("views/", include("sodp.views.urls", namespace = "views")),
-    # Your stuff: custom urls includes go here
+    path("memberful/", include("sodp.memberful.urls")),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
