@@ -6,12 +6,9 @@ from sodp.users.models import User
 
 class view(models.Model):
     class Meta:
-            indexes = (
-                models.Index(
-                    name='views_user_index',
-                    fields=('user',),
-                ),
-            )
+        index_together = unique_together = [
+            ['id', 'user']
+        ]
 
     id = CharField(_("id"), blank=True, max_length=25, primary_key=True)
     name = CharField(_("name"), blank=True, max_length=100)
