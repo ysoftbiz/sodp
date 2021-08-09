@@ -6,7 +6,8 @@ from sodp.users.views import (
     user_update_view,
     user_credentials_view,
     user_google_credentials_view,
-    user_google_logout_view
+    user_google_logout_view,
+    edit_user_tresholds_view
 )
 
 app_name = "users"
@@ -16,5 +17,7 @@ urlpatterns = [
     path("~googlecredentials/", view=user_google_credentials_view, name="google_credentials"),
     path("google_logout/", view=user_google_logout_view, name="google_logout"),
     path("~/", view=user_credentials_view, name="credentials"),
+    path("thresholdsEdit/", view=edit_user_tresholds_view, name="thresholdsEdit"),
     path("<str:username>/", view=user_detail_view, name="detail"),
+
 ]

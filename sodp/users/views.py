@@ -16,7 +16,11 @@ import json, tempfile, pprint
 from sodp.utils import google_utils
 from sodp.reports.models import report as reportmodel
 from sodp.views.models import view as viewmodel
+from django.views.generic.base import TemplateView
 
+from sodp.tresholds.models import treshold
+from django.core import serializers
+from .forms import UserThresholdsForm
 
 User = get_user_model()
 
@@ -137,3 +141,30 @@ class  UserGoogleLogoutView(LoginRequiredMixin, View):
 
 
 user_google_logout_view = UserGoogleLogoutView.as_view()
+
+
+class EditUserTresholdsView(TemplateView):
+    template_name = 'thresholds/thresholdsEdit.html'
+    form_class = UserThresholdsForm
+    success_url = '/thresholdsEditedSucessfully.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['thresholds'] = treshold.objects.all()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            form = UserThresholdsForm(request.POST)
+            #print (form.cleaned_data('1'))
+            #comment = form.save('1')
+            #print(comment)
+            #comment.save()
+
+
+        return 0
+        #return super(EditUserTresholdsView,self).form_valid(form)
+        #return HttpResponseRedirect('/thresholdsEditedSucessfully')
+
+
+edit_user_tresholds_view = EditUserTresholdsView.as_view()

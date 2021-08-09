@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static i18n %}
+
+{% block content %}
+
+<tbody>
+    <br>
+    <h2>{% trans "Edit actual thresholds" %}</h2>
+    <br>
+    <form method="post" class="bar">
+        {% csrf_token %}
+        {% for threshold in thresholds %}  
+        <tr>
+            <label>{{threshold.pk}}{{threshold.question}}</label>
+            <input type="text" id="threshold" name=threshold.pk placeholder={{threshold.default_value}}><br>
+            <br> <br>
+
+        </tr>
+        {% endfor %}
+        <button type="submit" class="btn-action">{% translate "Edit thresholds" %}</button>
+    </form>
+  </tbody>
+
+{% endblock %}
