@@ -94,7 +94,7 @@ LOCAL_APPS = [
     "sodp.views.apps.ViewsConfig",
 
     # Your stuff: custom apps go here
-    "sodp.memberful"
+    "sodp.memberful",
 
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
