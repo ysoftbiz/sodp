@@ -9,6 +9,7 @@ from pprint import pprint
 from sodp.utils import google_utils
 from datetime import date
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 #url validation
 from django.core.validators import URLValidator
@@ -69,6 +70,12 @@ class ReportCreateForm(ModelForm):
 
         if date_to < date_from :
             self.add_error('dateTo',_("The end date has to be greater than or equal to the start date")) 
+
+        time_difference = relativedelta(date_to, date_from)
+        difference_in_years = time_difference.years
+        if difference_in_years > 1:
+            self.add_error('dateTo',_("The report does can't last more than one year")) 
+
 
             
     class Meta(object):
