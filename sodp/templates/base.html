@@ -32,6 +32,8 @@
     <link rel="stylesheet" href="{% static 'css/owl.carousel.css' %}">
     <link rel="stylesheet" href="{% static 'css/owl.theme.css' %}">
     <link rel="stylesheet" href="{% static 'css/ionicons.min.css' %}"> <!-- Resource style -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 
     <link href="{% static 'css/project.css' %}" rel="stylesheet">
     {% endblock %}
@@ -48,6 +50,7 @@
       {{ form.media }}            {# Adds date-picker required JS and CSS #}
       
       <!-- place project specific Javascript in this file -->
+      <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
       <script defer src="{% static 'js/project.js' %}"></script>
 
     {% endblock javascript %}
