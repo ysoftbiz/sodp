@@ -50,9 +50,8 @@ class report(models.Model):
     errorDescription = CharField(_("error description"), blank=True, null=True, max_length=255)
     path = CharField(_("path"), blank=True, null=True, max_length=255)
     key = CharField(_("key"), blank=True, null=True, max_length=255)
-
-   
-
+    allowedUrlsPath = CharField(_("Allowed URLS"), blank=True, null=True, max_length=255)
+    bannedUrlsPath = CharField(_("Banned URLS"), blank=True, null=True, max_length=255)
 
     def __str__(self):
         return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
@@ -60,19 +59,3 @@ class report(models.Model):
     @property
     def viewName(self):
         return view.objects.filter(pk = self.project)[0]
-
-
-class reportURL(models.Model):
-    url = CharField(_("url"), blank=True, null=True, max_length=100)
-    report = models.ForeignKey(report, on_delete=models.CASCADE, verbose_name="report", related_name="report")
-    IS_ACCEPTED_STATUS = (
-        ('accept', _('Accept')),
-        ('block', _('Block')),
-    )
-
-    is_accepted_status = models.CharField(
-        max_length=6,
-        choices=IS_ACCEPTED_STATUS,
-        blank=True,
-        default='',
-    )

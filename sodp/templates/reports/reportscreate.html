@@ -5,7 +5,7 @@
 {% block content %}
 <h2>{% translate "New report" %}</h2>
 <div class="hero-form flx_2">
-  <form method="post" class="shake">
+  <form method="post" class="shake" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form|crispy }}
     <br>

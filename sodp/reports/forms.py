@@ -1,4 +1,4 @@
-from django.forms import ModelForm, DateInput, CharField, Select, ChoiceField
+from django.forms import ModelForm, DateInput, CharField, Select, ChoiceField, FileField
 from django.utils.translation import ugettext_lazy as _
 from sodp.reports.models import report
 from sodp.views.models import view
@@ -9,9 +9,10 @@ from pprint import pprint
 from sodp.utils import google_utils
 from datetime import date
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 #url validation
-from django.core.validators import URLValidator
+from django.conf import settings
 from urllib.parse import urlparse
 from sodp.views.models import view
 
@@ -19,6 +20,8 @@ class ReportCreateForm(ModelForm):
     def __init__(self, *args, **kwargs):
         request = kwargs.pop('request', None)
         super(ReportCreateForm, self).__init__(*args, **kwargs)
+        self.fields['allowedCsv'] = FileField(label=_("CSV with allowed URLS"), required=False)
+        self.fields['bannedCsv'] = FileField(label=_("CSV with banned URLS"), required=False)
         if request:
             choices = [(choice.pk, choice) for choice in view.objects.filter(user=request.user)]
             self.fields['project'] = CharField(required=True, widget=Select(choices=choices))
@@ -47,19 +50,21 @@ class ReportCreateForm(ModelForm):
         date_from = cleaned_data.get("dateFrom")
         date_to = cleaned_data.get("dateTo")
 
-        input_url = urlparse(cleaned_data.get("sitemap"))
+        allowed_csv = cleaned_data.get("allowedCsv")
+        if allowed_csv is not None and len(allowed_csv.name)>0 and not allowed_csv.name.endswith(".csv"):
+            self.add_error("allowedCsv", _("The uploaded file needs to be in CSV format"))
+
+        if allowed_csv is not None and allowed_csv.size > settings.MAX_UPLOAD_SIZE:
+            self.add_error("allowedCsv", _("The uploaded file cannot be larger than 5mb"))
+
+        banned_csv = cleaned_data.get("bannedCsv")
+        if banned_csv is not None and len(banned_csv.name)>0 and not banned_csv.name.endswith(".csv"):
+            self.add_error("bannedCsv", _("The uploaded file needs to be in CSV format"))
+        if banned_csv is not None and banned_csv.size > settings.MAX_UPLOAD_SIZE:
+            self.add_error("bannedCsv", _("The uploaded file cannot be larger than 5mb"))
+
         project_selected = view.objects.get(id = cleaned_data.get("project"))
         project_url = urlparse(project_selected.url)
-
-        #Url validations
-        validate = URLValidator()
-        try:
-            validate(cleaned_data.get("sitemap"))
-        except:
-            self.add_error('sitemap', _("Please enter a valid url"))
- 
-        if (input_url.netloc != project_url.netloc or input_url.scheme != project_url.scheme):
-            self.add_error('sitemap', _("The url entered does not correspond to the selected project"))
 
         if (date_from >= date.today()):
             self.add_error('dateFrom', _("The start date has to be lower than today"))
@@ -70,9 +75,19 @@ class ReportCreateForm(ModelForm):
         if date_to < date_from :
             self.add_error('dateTo',_("The end date has to be greater than or equal to the start date")) 
 
+        time_difference = relativedelta(date_to, date_from)
+        difference_in_years = time_difference.years
+        if difference_in_years > 1:
+            self.add_error('dateTo',_("The report can't last more than one year")) 
+
             
     class Meta(object):
         model = report
-        fields = ('project', 'sitemap', 'thresholds', 'dateFrom' ,'dateTo')
+        fields = ('project', 'thresholds', 'dateFrom' ,'dateTo')
         widgets = { 'dateFrom' : DatePickerInput(format='%Y-%m-%d') ,
                     'dateTo' : DatePickerInput(format='%Y-%m-%d'), 'project': Select}
+        labels = {
+            'dateFrom': _("Report start date"),
+            'dateTo': _("Report end date")
+        }
+        
