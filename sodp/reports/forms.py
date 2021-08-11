@@ -90,3 +90,4 @@ class ReportCreateForm(ModelForm):
             'dateFrom': _("Report start date"),
             'dateTo': _("Report end date")
         }
+        
