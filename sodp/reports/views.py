@@ -8,9 +8,10 @@ from sodp.tresholds.models import treshold
 from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
+from django.core.files.base import ContentFile
 from django.views.generic.edit import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from dateutil.relativedelta import relativedelta
 from sodp.reports.forms import ReportCreateForm
 from django.urls import reverse
@@ -67,11 +68,34 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
         self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
         return self.initial
 
+    # upload the csv file to AWS
+    def uploadCsvFile(self, report, file, name):    
+        file_directory_within_bucket = 'reports/{username}'.format(username=report.user.pk)
+        dt_string = datetime.now().strftime("%Y%m%d%H%M%S")
+        file_path = "{name}_{report_id}_{timestamp}.csv".format(name=name, report_id=report.pk, timestamp=dt_string)
+        final_path = file_directory_within_bucket+"/"+file_path
+
+        if not default_storage.exists(final_path): # avoid overwriting existing file
+            default_storage.save(final_path, ContentFile(file.read()))
+            return file_path
+
+        return False           
+
     def form_valid(self, form):
         self.object = form.save(commit=False)   
         if form.is_valid():
             self.object.user = self.request.user
             super(ReportCreateView, self).form_valid(form)
+            self.object.save()
+
+            # if there are files, process them
+            if "allowedCsv" in self.request.FILES:
+                allowedCsvPath = self.uploadCsvFile(self.object, self.request.FILES["allowedCsv"], "allowedCsv")
+                self.object.allowedUrlsPath = allowedCsvPath
+            if "bannedCsv" in self.request.FILES:
+                bannedCsvPath = self.uploadCsvFile(self.object, self.request.FILES["bannedCsv"], "bannedCsv")
+                self.object.bannedUrlsPath = bannedCsvPath
+
             self.object.save()
 
             tasks.processReport.apply_async(args=[self.object.pk], countdown=30)
