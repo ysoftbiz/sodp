@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.generic import View
 
-from sodp.views.models import view as viewmodel, stats as statsmodel
+from sodp.views.models import view as viewmodel
 from sodp.reports.models import report
 from django.views import generic
 

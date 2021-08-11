@@ -8,7 +8,7 @@ from celery.contrib import rdb
 from pprint import pprint
 
 from sodp.reports.models import report
-from sodp.views.models import stats as statsmodel, view as viewmodel
+from sodp.views.models import view as viewmodel
 from sodp.utils import google_utils, ahrefs
 from sodp.utils import sitemap as sm
 
@@ -132,9 +132,10 @@ def processReport(pk):
     if obj:
         # check if report is pending
         if obj.status == 'pending':
+            pass
             # set to processing
-            obj.status='process'
-            obj.save(update_fields=["status"])
+            #obj.status='process'
+            #obj.save(update_fields=["status"])
         else:
             return False
         
@@ -142,13 +143,15 @@ def processReport(pk):
         google_big = google_utils.authenticateBigQuery()
 
         # retrieve url sitemap
-        pd_sitemap = sm.parseSitemap(obj.sitemap)
-        if pd_sitemap.empty or len(pd_sitemap.index)<=0:
-            setErrorStatus(obj, "WRONG_SITEMAP")
-            return False
+        if (obj.allowedUrlsPath):
+            urlsSitemap = sm.getUrlsFromFile(obj.user.pk, obj.allowedUrlsPath)
 
-        # get domain from sitemap url
-        domain = urlparse(obj.sitemap).netloc
+        if (obj.bannedUrlsPath):
+            bannedUrls = sm.getUrlsFromFile(obj.user.pk, obj.bannedUrlsPath)
+
+        # get domain from view
+        view = view.objects.get()
+        domain = urlparse(obj.project).netloc
 
         # calculate period
         diff_months = (obj.dateTo.year - obj.dateFrom.year) * 12 + obj.dateTo.month - obj.dateFrom.month

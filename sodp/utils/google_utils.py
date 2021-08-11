@@ -330,8 +330,9 @@ def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDat
 def fillViews(projects, user):
     for project in projects.items():
         # create entry for each project if it does not exist
-        if not modelview.objects.filter(id = project[0]).filter( user=user):
-            modelview.objects.create(id=project[0], user=user, name=project[1]["name"], url=project[1]["url"])
+        object = modelview.objects.get(project = project[0], user=user)
+        if not object:
+            modelview.objects.create(project=project[0], user=user, name=project[1]["name"], url=project[1]["url"])
 
 
 # authentication with big query
