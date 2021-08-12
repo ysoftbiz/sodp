@@ -264,7 +264,9 @@ def getAllUrls(credentials, view_id, report_id, url, startDate, endDate):
         metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
 
         for row in report.get('data', {}).get('rows', []):
-            urls.append("%s%s" % (url, row['dimensions'][0]))
+            final_url = "%s%s" % (url, row['dimensions'][0])
+            if final_url not in urls:
+                urls.append(final_url)
 
     return urls
 
