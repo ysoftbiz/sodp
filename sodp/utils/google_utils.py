@@ -241,7 +241,7 @@ def getDateFromGA(datestr, period):
     return final_date.strftime("%Y-%m-%d")
 
 # returns a list of all urls sorted by views
-def getAllUrls(credentials, view_id, report_id, startDate, endDate):
+def getAllUrls(credentials, view_id, report_id, url, startDate, endDate):
     analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
     data = analytics.reports().batchGet(
@@ -264,7 +264,7 @@ def getAllUrls(credentials, view_id, report_id, startDate, endDate):
         metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
 
         for row in report.get('data', {}).get('rows', []):
-            urls.append(row['dimensions'][0])
+            urls.append("%s%s" % (url, row['dimensions'][0]))
 
     return urls
 

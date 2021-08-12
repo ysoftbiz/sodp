@@ -174,7 +174,7 @@ def processReport(pk):
         # get a list of all pages sorted by views, if we do not have a sitemap
         if len(urlsSitemap)<=0:
             if credentials:
-                urlsSitemap = google_utils.getAllUrls(credentials, objview.project, pk, obj.dateFrom, obj.dateTo)
+                urlsSitemap = google_utils.getAllUrls(credentials, objview.project, pk, objview.url, obj.dateFrom, obj.dateTo)
 
         # iterate over all rows in sitemap and get google stats from it
         google_traffic = {}
