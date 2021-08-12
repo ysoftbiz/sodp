@@ -132,10 +132,9 @@ def processReport(pk):
     if obj:
         # check if report is pending
         if obj.status == 'pending':
-            pass
             # set to processing
-            #obj.status='process'
-            #obj.save(update_fields=["status"])
+            obj.status='process'
+            obj.save(update_fields=["status"])
         else:
             return False
         
