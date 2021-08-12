@@ -27,7 +27,7 @@ METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances'
 SEGMENTS = ['gaid::-1','gaid::-5']
 MAX_RESULTS = 100000
 MAX_PAGES = 5000
-GOOGLE_WAIT_TIME = 120
+GOOGLE_WAIT_TIME = 180
 
 def getGoogleConfig(request):
     return {
@@ -240,6 +240,35 @@ def getDateFromGA(datestr, period):
 
     return final_date.strftime("%Y-%m-%d")
 
+# returns a list of all urls sorted by views
+def getAllUrls(credentials, view_id, report_id, startDate, endDate):
+    analytics = build('analyticsreporting', 'v4', credentials=credentials)
+
+    data = analytics.reports().batchGet(
+    body={
+        'reportRequests': [
+        {
+        'viewId': view_id,
+        'dateRanges': [{'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}],
+        'metrics':  [{'expression': exp} for exp in ["ga:pageViews"]],
+        'dimensions': [{'name': name} for name in ["ga:pagePath"]],
+        'orderBys': [{"fieldName":"ga:pageViews", "sortOrder": "DESCENDING"}],
+        'pageSize': MAX_RESULTS
+        }]
+    }).execute()
+
+    urls = []
+    for report in data.get('reports', []):
+        columnHeader = report.get('columnHeader', {})
+        dimensionHeaders = columnHeader.get('dimensions', [])
+        metricHeaders = columnHeader.get('metricHeader', {}).get('metricHeaderEntries', [])
+
+        for row in report.get('data', {}).get('rows', []):
+            urls.append(row['dimensions'][0])
+
+    return urls
+
+
 # returns a dump of the desired stats for the specific credentials and view
 def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDate, table_id, period):
     print("parse url %s" % url)
@@ -318,7 +347,6 @@ def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDat
                     firstOrganicViews = entry['pageViews']
 
             entries.append(entry)
-
 
     # create entry in big table
     if len(entries)>0:

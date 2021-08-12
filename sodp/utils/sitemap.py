@@ -1,3 +1,4 @@
+import csv
 import logging
 import pandas as pd
 
@@ -20,15 +21,16 @@ def parseSitemap(url):
 
 def getUrlsFromFile(user, path):
     # generate path
+    entries = []
     csv_path = "reports/{user_id}/{path}".format(user_id=user, path=path)
     if (default_storage.exists(csv_path)):
         # read object
-        with default_storage.open(csv_path) as handle:
-            df = pd.read_csv(handle)
-            if not df.empty:
-                return df.iterrows()
+        with default_storage.open(csv_path, "rt") as handle:
+            reader = csv.reader(handle)
+            for row in reader:
+                entries.append(row[0])
 
-    return []
+    return entries
 
         
 

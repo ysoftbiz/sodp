@@ -165,7 +165,7 @@ class ReportDecayView(LoginRequiredMixin, View):
             view_obj = viewmodel.objects.get(id=report_obj.project, user=request.user)
             if view_obj:
                 # retrieve stats from google big query
-                stats = google_utils.getStoredStats(report_obj.project, report_id)
+                stats = google_utils.getStoredStats(view_obj.project, report_id)
 
         return render(request, self.template_name, {'id': report_obj.id, 'name': view_obj.name, 'dateFrom': report_obj.dateFrom, 
                         'dateTo': report_obj.dateTo, 'stats': stats})   

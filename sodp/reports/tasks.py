@@ -143,6 +143,8 @@ def processReport(pk):
         google_big = google_utils.authenticateBigQuery()
 
         # retrieve url sitemap
+        urlsSitemap = []
+        bannedUrls = []
         if (obj.allowedUrlsPath):
             urlsSitemap = sm.getUrlsFromFile(obj.user.pk, obj.allowedUrlsPath)
 
@@ -150,8 +152,8 @@ def processReport(pk):
             bannedUrls = sm.getUrlsFromFile(obj.user.pk, obj.bannedUrlsPath)
 
         # get domain from view
-        view = view.objects.get()
-        domain = urlparse(obj.project).netloc
+        objview = viewmodel.objects.get(id=obj.project)
+        domain = urlparse(objview.url).netloc
 
         # calculate period
         diff_months = (obj.dateTo.year - obj.dateFrom.year) * 12 + obj.dateTo.month - obj.dateFrom.month
@@ -162,14 +164,30 @@ def processReport(pk):
         else:
             period = "ga:date"
 
+        # retrieve google credentials
+        try:
+            credentials = google_utils.getOfflineCredentials(obj.user.google_api_token, obj.user.google_refresh_token)
+        except Exception as e:
+            print(str(e))
+            setErrorStatus(obj, "WRONG_ANALYTICS")
+            return False
+
+        # get a list of all pages sorted by views, if we do not have a sitemap
+        if len(urlsSitemap)<=0:
+            if credentials:
+                urlsSitemap = google_utils.getAllUrls(credentials, objview.project, pk, obj.dateFrom, obj.dateTo)
+
         # iterate over all rows in sitemap and get google stats from it
         google_traffic = {}
         google_organic_traffic = {}
+        backlinks = {}
 
         organic_urls = []
 
-        # from original sitemap, remove xml, pdf and doc files
-        pd_filtered_sm = pd_sitemap.loc[~pd_sitemap['loc'].str.endswith(SUFFIXES)]
+        # create a sitemap with all urls
+        urlsSitemap = [ x for x in urlsSitemap if x not in bannedUrls]
+        urlsSitemap = filter(lambda x: not x.endswith(SUFFIXES), urlsSitemap)
+        pd_filtered_sm = pd.DataFrame(urlsSitemap, columns=["loc"])
         pd_filtered_sm["pageViews"] = 0
         pd_filtered_sm["organicSessions"] = 0
         pd_filtered_sm["backLinks"] = 0
@@ -177,13 +195,7 @@ def processReport(pk):
         pd_filtered_sm["recomendationText"] = ""
 
         # create table if it does not exist, and truncate their values
-        table_id = google_utils.createTable(google_big, "stats", obj.project, pk)
-        try:
-            credentials = google_utils.getOfflineCredentials(obj.user.google_api_token, obj.user.google_refresh_token)
-        except Exception as e:
-            print(str(e))
-            setErrorStatus(obj, "WRONG_ANALYTICS")
-            return False
+        table_id = google_utils.createTable(google_big, "stats", objview.project, pk)
 
         processedEntries = 0
         processedUrls = []
@@ -198,49 +210,15 @@ def processReport(pk):
             # get stats for the expected google view id
             if credentials:
                 firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews, totalEntries = google_utils.getStatsFromView(
-                    credentials, google_big, obj.project, pk, path, obj.dateFrom, obj.dateTo, table_id, period)
+                    credentials, google_big, objview.project, pk, path, obj.dateFrom, obj.dateTo, table_id, period)
 
-                google_traffic[path] = lastPageViews
-                google_organic_traffic[path] = lastOrganicViews
+                pd_filtered_sm.at[index, "pageViews"] = lastPageViews
+                pd_filtered_sm.at[index, "organicSessions"] = lastOrganicViews
 
-                # calculate decay
-                decay = calculateContentDecay(float(firstOrganicViews), float(lastOrganicViews), obj.thresholds)
-
-                # add to urls
-                organic_urls.append({"page_path": path, "startViews": int(firstOrganicViews), "endViews": int(lastOrganicViews), "decay": round(decay, 5)})
-
-                if totalEntries > 0:
-                    processedEntries +=1
-                if processedEntries >= MAX_PAGES:
-                    break    
-
-        # insert into table
-        google_utils.insertUrlsTable(google_big, obj.project, pk, organic_urls)
-
-        # retrieve ahrefs info
-        ah = ahrefs.getAhrefsInfo(obj.user.ahrefs_token, domain)
-        if len(ah)<0:
-            setErrorStatus(obj, "WRONG_AHREFS")
-            return False
-
-        # iterate over all rows in sitemap and try to find the matching index in google one
-        for index, row in pd_filtered_sm.iterrows():
-            path = urlparse(row["loc"]).path
-            
-            # in the google dataframe, search for this path and 'All users' row
-            pageViews = google_traffic.get(path, None)
-            if pageViews is not None:
-                pd_filtered_sm.at[index, "pageViews"] = pageViews
-
-            # now do the same for organic traffic
-            organicViews = google_organic_traffic.get(path, None)
-            if organicViews is not None:
-                pd_filtered_sm.at[index, "organicSessions"] = organicViews
-
-            # now search for the url in ahrefs and retrieve the dofollow number
-            ahrefs_row = ah.loc[ah['url'] == row["loc"]]
-            if len(ahrefs_row)>0:
-                pd_filtered_sm.at[index, "backLinks"] = ahrefs_row.iloc[0]['dofollow']
+                # now search for the url in ahrefs and retrieve the dofollow number
+                backlinks_number = ahrefs.getAhrefsInfo(obj.user.ahrefs_token, row["loc"])
+                if backlinks_number is not None:
+                    pd_filtered_sm.at[index, "backLinks"] = backlinks_number
 
             # finally execute the calculation
             recomendation_code = calculateRecomendation(pd_filtered_sm.iloc[index], obj.thresholds, period)
@@ -249,6 +227,24 @@ def processReport(pk):
             pd_filtered_sm.at[index, "recomendationCode"] = recomendation_code
             pd_filtered_sm.at[index, "recomendationText"] = recomendation_text
 
+            # calculate decay
+            decay = calculateContentDecay(float(firstOrganicViews), float(lastOrganicViews), obj.thresholds)
+
+            # add to urls
+            organic_urls.append({"page_path": path, "startViews": int(firstOrganicViews), "endViews": int(lastOrganicViews), "decay": round(decay, 5)})
+
+            if totalEntries > 0:
+                processedEntries +=1
+            if processedEntries >= MAX_PAGES:
+                break    
+
+        # insert into table
+        google_utils.insertUrlsTable(google_big, objview.project, pk, organic_urls)
+
+        # iterate over all rows in sitemap and try to find the matching index in google one
+        for index, row in pd_filtered_sm.iterrows():
+            path = urlparse(row["loc"]).path
+            
         # upload dataframe to storage
         path, url = uploadExcelFile(obj, pd_filtered_sm)
         if path and url:
