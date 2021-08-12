@@ -179,10 +179,12 @@ class StatsView(LoginRequiredMixin, View):
         
         data = {"labels":[], "data": { "sessions": []}}
         try:
-            report_obj = report.objects.get(user=request.user, id=pk)
-            if report_obj:
+            # retrieve view
+            report_obj = report.objects.get(id=pk)
+            view_obj = viewmodel.objects.get(user=request.user, id=report_obj.project)
+            if view_obj:
                 # extract detail for a single url
-                stats = google_utils.getStatsFromURL(report_obj.project, pk, url)
+                stats = google_utils.getStatsFromURL(view_obj.project, pk, url)
                 for obj in stats.iterrows():
                     data["labels"].append(obj[1].date)
                     data["data"]["sessions"].append(obj[1].pageViews)
@@ -190,6 +192,7 @@ class StatsView(LoginRequiredMixin, View):
                 if len(data['labels'])>0:
                     return JsonResponse({"data": data}, status=200, safe=False)                                    
         except Exception as e:
+            print(str(e))
             pass
 
         return JsonResponse(data, status=500, safe=False)        
