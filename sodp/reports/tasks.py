@@ -31,7 +31,7 @@ RECOMENDATION_TEXTS = {
     "404": "Delete"
 }
 
-MAX_PAGES = 5000
+CHUNK_SIZE=1000
 
 def setErrorStatus(report, error_code):
     report.status = "error"
@@ -60,7 +60,7 @@ def sendReportCompletedEmail(report, url):
 
 
 # calculate recomendation based on row data and tresholds
-def calculateRecomendation(row, thresholds, period):
+def calculateRecomendation(pageViews, organicViews, backlinks, thresholds, period):
 
     # get threshold depending on period
     threshold_backlinks = int(thresholds["BACKLINKS"])
@@ -75,17 +75,17 @@ def calculateRecomendation(row, thresholds, period):
         threshold_traffic = float(thresholds["TRAFFIC"])/30
 
     # filter by volume and traffic
-    if (int(row["pageViews"])>=threshold_volume):
-        if (int(row["organicSessions"])>=threshold_traffic):
+    if (int(pageViews)>=threshold_volume):
+        if (int(organicViews)>=threshold_traffic):
             return "200"
         else:
             # filter by backlinks
-            if (int(row["backLinks"])>=threshold_backlinks):
+            if (int(backlinks)>=threshold_backlinks):
                 return "200"
             else:
                 return "100"    # manually review
     else:
-        if int(row["backLinks"])>=threshold_backlinks:
+        if int(backlinks)>=threshold_backlinks:
             return "301"
         else:
             return "404"
@@ -186,63 +186,66 @@ def processReport(pk):
         # create a sitemap with all urls
         urlsSitemap = [ x for x in urlsSitemap if x not in bannedUrls]
         urlsSitemap = filter(lambda x: not x.endswith(SUFFIXES), urlsSitemap)
-        pd_filtered_sm = pd.DataFrame(urlsSitemap, columns=["loc"])
-        pd_filtered_sm["pageViews"] = 0
-        pd_filtered_sm["organicSessions"] = 0
-        pd_filtered_sm["backLinks"] = 0
-        pd_filtered_sm["recomendationCode"] = ""
-        pd_filtered_sm["recomendationText"] = ""
+        urlsSitemap = list(map(lambda x: urlparse(x).path , urlsSitemap))
+
+        # generate unique urls
+        urlsSitemap = list(set(urlsSitemap))
+        pd_filtered_sm = pd.DataFrame(columns=["loc", "pageViews", "organicSessions", "backLinks", "recomendationCode", "recomendationText"])
+
+        # retrieve all urls from ahrefs
+        ah = ahrefs.getAhrefsInfo(obj.user.ahrefs_token, domain)
 
         # create table if it does not exist, and truncate their values
         table_id = google_utils.createTable(google_big, "stats", objview.project, pk)
 
-        processedEntries = 0
-        processedUrls = []
-        for index, row in pd_filtered_sm.iterrows():
-            path = urlparse(row["loc"]).path
-            
-            if path in processedUrls:
-                continue
-
-            processedUrls.append(path)
-
+        # divide the dataframe in chunks, to fit the google max size
+        final = [urlsSitemap[i * CHUNK_SIZE:(i + 1) * CHUNK_SIZE] for i in range((len(urlsSitemap) + CHUNK_SIZE - 1) // CHUNK_SIZE )] 
+        organic_urls = []
+        for batch in final:
             # get stats for the expected google view id
             if credentials:
-                firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews, totalEntries = google_utils.getStatsFromView(
-                    credentials, google_big, objview.project, pk, path, obj.dateFrom, obj.dateTo, table_id, period)
+                entries = google_utils.getStatsFromView(credentials, objview.project, batch, obj.dateFrom, obj.dateTo, period)
 
-                pd_filtered_sm.at[index, "pageViews"] = lastPageViews
-                pd_filtered_sm.at[index, "organicSessions"] = lastOrganicViews
+                # iterate over all urls and generate data
+                for url, entries in entries.items():
+                    # insert table data
+                    if len(entries)>0:
+                        google_utils.insertBigTable(google_big, table_id, entries)
 
-                # now search for the url in ahrefs and retrieve the dofollow number
-                backlinks_number = ahrefs.getAhrefsInfo(obj.user.ahrefs_token, row["loc"])
-                if backlinks_number is not None:
-                    pd_filtered_sm.at[index, "backLinks"] = backlinks_number
+                    # iterate over all entries
+                    firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews = 0, 0, 0, 0
+                    firstOrganic, firstNormal = True, True
+                    for entry in entries:
+                        if entry["segment"] == "All Users":
+                            if firstNormal:
+                                firstNormal = False
+                                firstPageViews = entry["pageViews"]
+                            lastPageViews = entry["pageViews"]
+                        else:
+                            if firstOrganic:
+                                firstOrganic = False
+                                firstOrganicViews = entry["pageViews"]
+                            lastOrganicViews = entry["pageViews"]
 
-            # finally execute the calculation
-            recomendation_code = calculateRecomendation(pd_filtered_sm.iloc[index], obj.thresholds, period)
-            recomendation_text = RECOMENDATION_TEXTS[recomendation_code]
+                    # calculate decay
+                    decay = calculateContentDecay(float(firstOrganicViews), float(lastOrganicViews), obj.thresholds)
 
-            pd_filtered_sm.at[index, "recomendationCode"] = recomendation_code
-            pd_filtered_sm.at[index, "recomendationText"] = recomendation_text
+                    # add to urls
+                    organic_urls.append({"page_path": url, "startViews": int(firstOrganicViews), "endViews": int(lastOrganicViews), "decay": round(decay, 5)})
 
-            # calculate decay
-            decay = calculateContentDecay(float(firstOrganicViews), float(lastOrganicViews), obj.thresholds)
+                    # get backlinks
+                    backlinks = ah.get(url, 0)
 
-            # add to urls
-            organic_urls.append({"page_path": path, "startViews": int(firstOrganicViews), "endViews": int(lastOrganicViews), "decay": round(decay, 5)})
+                    # finally execute the calculation
+                    recomendation_code = calculateRecomendation(lastPageViews, lastOrganicViews, backlinks, obj.thresholds, period)
+                    recomendation_text = RECOMENDATION_TEXTS[recomendation_code]
 
-            if totalEntries > 0:
-                processedEntries +=1
-            if processedEntries >= MAX_PAGES:
-                break    
+                    # create entry in dataframe
+                    pd_filtered_sm = pd_filtered_sm.append({"loc": url, "pageViews": lastPageViews, "organicSessions": lastOrganicViews, "backLinks": backlinks,
+                        "recomendationCode": recomendation_code, "recomendationText": recomendation_text }, ignore_index=True)
 
         # insert into table
         google_utils.insertUrlsTable(google_big, objview.project, pk, organic_urls)
-
-        # iterate over all rows in sitemap and try to find the matching index in google one
-        for index, row in pd_filtered_sm.iterrows():
-            path = urlparse(row["loc"]).path
             
         # upload dataframe to storage
         path, url = uploadExcelFile(obj, pd_filtered_sm)

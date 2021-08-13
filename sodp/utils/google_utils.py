@@ -22,7 +22,7 @@ from google.oauth2 import service_account
 
 from sodp.views.models import view as modelview
 
-DIMS = ['ga:segment']
+DIMS = ['ga:pagePath', 'ga:segment']
 METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
 SEGMENTS = ['gaid::-1','gaid::-5']
 MAX_RESULTS = 100000
@@ -272,8 +272,7 @@ def getAllUrls(credentials, view_id, report_id, url, startDate, endDate):
 
 
 # returns a dump of the desired stats for the specific credentials and view
-def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDate, table_id, period):
-    print("parse url %s" % url)
+def getStatsFromView(credentials, view_id, urls, startDate, endDate, period):
     analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
     # retrieve date interval: 6-12 months grouped monthly, 3-6 months grouped weekly, <3 months grouped daily
@@ -283,8 +282,7 @@ def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDat
     latest_organic_traffic = {}
     latest_traffic = {}
 
-    data = analytics.reports().batchGet(
-    body={
+    request_body={
         'reportRequests': [
         {
         'viewId': view_id,
@@ -292,31 +290,26 @@ def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDat
         'metrics':  [{'expression': exp} for exp in METRICS],
         'dimensions': [{'name': name} for name in dimensions],
         'segments':  [{"segmentId": segment} for segment in SEGMENTS],   # organic traffic
-        'orderBys': [{"fieldName":period, "sortOrder": "ASCENDING"}],
+        'orderBys': [{"fieldName":"ga:pagePath", "sortOrder":"ASCENDING"}, {"fieldName":period, "sortOrder": "ASCENDING"}],
         'pageSize': MAX_RESULTS,
         'dimensionFilterClauses': [
             {
                 'filters': [
                     {
-                        "operator": "EXACT",
+                        "operator": "IN_LIST",
                         "dimensionName": "ga:pagePath",
-                        "expressions": [ url ]
+                        "expressions": [ urls ]
                     }
                 ]
             }
         ]
         }]
-    }).execute()
+    }
+    data = analytics.reports().batchGet(body=request_body).execute()
 
     # get the latest entry for each page path/organic traffic
-    entries = []
-    firstPageViews = 0
-    firstOrganicViews = 0
-    lastPageViews = 0
-    lastOrganicViews = 0
+    entries = {}
 
-    first = True
-    firstOrganic = True
     for report in data.get('reports', []):
         pageToken = report.get('nextPageToken')
         columnHeader = report.get('columnHeader', {})
@@ -325,9 +318,13 @@ def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDat
 
         for row in report.get('data', {}).get('rows', []):
             entry = {}
-            entry['page_path'] = url
-            entry['segment'] = row['dimensions'][0]
-            entry['date'] = getDateFromGA(row['dimensions'][1], period)
+            url = row['dimensions'][0]
+            if url not in entries:
+                entries[url] = []
+
+            entry['page_path'] = row['dimensions'][0]
+            entry['segment'] = row['dimensions'][1]
+            entry['date'] = getDateFromGA(row['dimensions'][2], period)
 
             entry['pageViews'] = row['metrics'][0]['values'][0]
             entry['uniquePageViews'] = row['metrics'][0]['values'][1]
@@ -337,24 +334,9 @@ def getStatsFromView(credentials, bq, view_id, report_id, url, startDate, endDat
             entry['exitRate'] = round(float(row['metrics'][0]['values'][5]), 5)
             entry['pageValue'] = round(float(row['metrics'][0]['values'][6]), 5)
 
-            if entry['segment'] == "All Users":
-                lastPageViews = entry['pageViews']
-                if first:
-                    first = False
-                    firstPageViews = entry['pageViews']
-            else:
-                lastOrganicViews = entry['pageViews']
-                if firstOrganic:
-                    firstOrganic = False
-                    firstOrganicViews = entry['pageViews']
+            entries[url].append(entry)
 
-            entries.append(entry)
-
-    # create entry in big table
-    if len(entries)>0:
-        insertBigTable(bq, table_id, entries)
-
-    return firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews, len(entries)
+    return entries
 
 # fills views table
 def fillViews(projects, user):
