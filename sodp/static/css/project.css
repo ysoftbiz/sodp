@@ -287,10 +287,10 @@ body {
 }
 
 .main {
-	width: 95%;
+	width: 50%;
 	height: 100%;
-	margin:auto;
-	margin-top:6em;
+	margin: auto;
+	margin-top: 15em;
 }
 
 .hero {
@@ -335,6 +335,37 @@ body {
 	text-decoration: none;
 }
 
+.form_title {
+	color: #3cbbb1;
+	font-family: 'Roboto', sans-serif;
+	font-weight: 300;
+	font-size: 2em;
+    margin-bottom: .5em;
+}
+
+.form_content {
+	background-color: #e6f3f2;
+    border-radius: .5em;
+    padding: 4em 2em;
+}
+
+.requiredField {
+	color: #616161;
+}
+
+.asteriskField {
+	color: tomato;
+}
+
+.form-control {
+	height: 4em;
+	color: #838e99;
+}
+
+.send_button {
+	text-align: center;
+}
+
 h2 {
 	font-size: 1.6em;
 	font-weight: 700;
@@ -358,33 +389,33 @@ p {
 .btn-action {
 	font-family: 'Montserrat';
 	display: inline-block;
-  height: 42px;
-  padding: 0 30px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 40px;
-  letter-spacing: 2px;
+	height: 42px;
+	padding: 0 30px;
+	text-align: center;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 40px;
+	letter-spacing: 2px;
 	margin: 20px 0;
-  text-transform: uppercase;
+ 	 text-transform: uppercase;
 	text-decoration: none !important;
-  white-space: nowrap;
-  cursor: pointer;
+	white-space: nowrap;
+	cursor: pointer;
 	background-color: transparent;
-	background: #1e266d;
-  color: #FFFFFF;
-  border: 1px solid #1e266d;
-  border-radius: 50px;
-  box-sizing: border-box;
+	background: #682d63;
+  	color: #FFFFFF;
+	border-radius: .3em;
+	border: none;
+	box-sizing: border-box;
 	-webkit-transition: 0.2s;
 	-moz-transition: 0.2s;
 	transition: 0.2s;
 }
 
 .btn-action:hover {
-	color: #23D3D3;
-	background: #1e266d;
-	border: 1px solid #1e266d !important;
+	color: #ac70a7;
+	background: #461e42;
+	border: none !important;
 	outline: none !important;
 	text-decoration: none;
 }
@@ -2302,8 +2333,7 @@ flex: 0 0 568px;
 }
 
 .bar{
-	margin-left:10%;
-	margin-right:10%;
+	margin: 0 8%;
 }
 
 .botgo{
@@ -2413,7 +2443,7 @@ flex: 0 0 568px;
 	color: #ffffff;
 	-webkit-transition: 0.5s;
 	transition: 0.5s;
-	background-color:#682d63 ;
+	background-color:#682d63;
 	font-weight: 700;
 }
 

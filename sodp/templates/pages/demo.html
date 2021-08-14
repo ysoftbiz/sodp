@@ -3,15 +3,18 @@
 {% load i18n %}
 
 {% block content %}
-<h2>{% translate "Request demo" %}</h2>
+<h2 class="form_title">{% translate "Request demo" %}</h2>
 <br>
-
+<div class="form_content">
   <form method="post" class="bar">
     {% csrf_token %}
     {{ form|crispy }}
     <br>
-    <button type="submit" class="btn-action">{% translate "Send request" %}</button>
+    <div class="send_button">
+      <button type="submit" class="btn-action">{% translate "Send request" %}</button>
+    </div>
   </form>
+</div>
 {% endblock %}
 
 
