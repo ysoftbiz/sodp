@@ -52,6 +52,8 @@ class report(models.Model):
     key = CharField(_("key"), blank=True, null=True, max_length=255)
     allowedUrlsPath = CharField(_("Allowed URLS"), blank=True, null=True, max_length=255)
     bannedUrlsPath = CharField(_("Banned URLS"), blank=True, null=True, max_length=255)
+    dashboard = models.JSONField(blank=True, null = True)
+
 
     def __str__(self):
         return "%s %s %s %s %s %s" % (self.creationDate, self.name, self.project, self.dateFrom, self.dateTo, self.user)
