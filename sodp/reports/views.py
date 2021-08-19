@@ -29,6 +29,7 @@ from django.core.exceptions import ValidationError
 
 from sodp.views.models import view
 
+RECOMENDATIONS = {"100": _("Manually review"), "200": _("Leave as is"), "301": _("Redirect or update"), "404": _("Delete")}
 
 class ReportListView(generic.ListView, LoginRequiredMixin):
     model = report
@@ -202,36 +203,43 @@ class DashboardAjaxView(LoginRequiredMixin, View):
     def get(self, request, **kwargs):
         pk = kwargs['pk']
         
+        # first retrieve data for linechart
         data = {"labels":[], "datasets": []}
-        try:
-            report_obj = report.objects.get(id=pk, user=request.user)
-            i = 0
-            stats = json.loads(report_obj.dashboard)
-            for stat in stats['urls']:
-                # extract detail for a single url
-                url = stat[0]
-                dates = stat[1]
-                dataset = {
-                    "label": url,
-                    "data": [],
-                    "fill": False,
-                    "yAxisId": "y%d" % i
-                }
+        report_obj = report.objects.get(id=pk, user=request.user)
+        i = 0
+        stats = json.loads(report_obj.dashboard)
+        for stat in stats['urls']:
+            # extract detail for a single url
+            url = stat[0]
+            dates = stat[1]
+            dataset = {
+                "label": url,
+                "data": [],
+                "fill": False,
+                "yAxisId": "y%d" % i
+            }
 
-                for obj in dates:
-                    if i == 0:
-                        # fill labels just once
-                        data["labels"].append(obj['date'])
+            for obj in dates:
+                if i == 0:
+                    # fill labels just once
+                    data["labels"].append(obj['date'])
 
-                    # fill dataset
-                    dataset["data"].append(obj['pageViews'])
+                # fill dataset
+                dataset["data"].append(obj['pageViews'])
 
-                # append dataset
-                data['datasets'].append(dataset)
-                i+=1
+            # append dataset
+            data['datasets'].append(dataset)
+            i+=1
 
-        except Exception as e:
-            print(str(e))
-            pass
+        # retrieve data for piechart
+        piedata = {"labels":[], "datasets": [{"label": _("Distribution per recomendation"), "data": []}]}
+        for key, value in stats["percentage"]["percentage_"].items():            
+            piedata["labels"].append(RECOMENDATIONS.get(key, ""))
+            piedata["datasets"][0]["data"].append(round(value, 2))
 
-        return JsonResponse({"data": data}, status=200, safe=False)
+        # retrieve the url
+        urldata = []
+        for item in stats['top']:
+            urldata.append((item['loc'], item['organicSessions'], item['backLinks'], RECOMENDATIONS.get(item['recomendationCode'], '')))
+
+        return JsonResponse({"linedata": data, "piedata": piedata, "urldata": urldata}, status=200, safe=False)

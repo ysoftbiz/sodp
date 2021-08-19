@@ -3,6 +3,17 @@
 
 {% load static %}
 
+{% block css %}
+{{ block.super}}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+{% endblock %}
+
+{% block javascript %}
+{{ block.super}}
+
+<script src="//cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
 {% block content %}
 
 {% if object == request.user %}
@@ -15,14 +26,12 @@
 </div>
 
 <div>
-    <canvas id="lineChart" height="200" width="800"></canvas>
+    <canvas id="lineChart" height="150" width="800"></canvas>
 </div>
 <div>
-  <canvas id="pieChart" width="400"></canvas>
-</div>
-<div>
-  <div id="rankingChart" ></div>
-</div>
+  <canvas id="pieChart" height="75" width="400"></canvas>
+  <table id="rankingChart" class="display" width=50% ></div>
+  </div>
 
 {% endif %}
 
@@ -32,13 +41,21 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
 <script src="/static/js/chartjs-plugin-colorschemes.min.js"></script>
 <script type="text/javascript">
-function ajax_chart(chart, url) {
+function ajax_chart(chart, piechart, rankingchart, url) {
         var data = {};
 
         $.getJSON(url, data).done(function(response) {
-            chart.data.labels = response.data.labels;
-            chart.data.datasets = response.data.datasets;
+            chart.data.labels = response.linedata.labels;
+            chart.data.datasets = response.linedata.datasets;
             chart.update(); // finally update our chart
+
+            piechart.data.labels = response.piedata.labels;
+            piechart.data.datasets = response.piedata.datasets;
+            piechart.update();
+
+            rankingchart.clear();
+            rankingchart.rows.add(response.urldata);
+            rankingchart.draw();
         });
     }
 
@@ -59,7 +76,7 @@ function ajax_chart(chart, url) {
             plugins: {
               title: {
                 display: true,
-                text: 'Organic sessions per URL'
+                text: '{% trans "Organic sessions per URL" %}'
               },
               colorschemes: {
                 scheme: 'tableau.Tableau20'
@@ -69,15 +86,54 @@ function ajax_chart(chart, url) {
           }          
       },{});
 
+      var piectx = document.getElementById('pieChart').getContext('2d');
+      var piechart = new Chart(piectx, {        
+          type: 'doughnut',
+          data: {},
+          options: {
+            responsive: true,
+            interaction: {
+              mode: 'index',
+              intersect: false,
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: '{% trans "Distribution of recomendations" %}'
+              },
+              colorschemes: {
+                scheme: 'tableau.Tableau20'
+
+              }              
+            },
+          }          
+      },{});
+
+      // datatable
+      $('#rankingChart').DataTable( {
+        data: [],
+        paging: false,
+        ordering: false,
+        searching: false,
+        info: false,
+        columns: [
+            { title: "URL" },
+            { title: "Organic sessions" },
+            { title: "Backlinks" },
+            { title: "Recomendation" },
+        ]
+      } );
+
+      var rankingchart = $("#rankingChart").DataTable();
+
       first_id = $("#latestReports option:first").val();
       $("#latestReports").val(first_id);
-      ajax_chart(chart, "/reports/dashboard/"+first_id);
+      ajax_chart(chart, piechart, rankingchart, "/reports/dashboard/"+first_id);
 
       $("#latestReports").on('change', function (event) {
-        ajax_chart(chart, "/reports/dashboard/"+this.value);
+        ajax_chart(chart, piechart, rankingchart, "/reports/dashboard/"+this.value);
       });
 
     });
 </script>
 {% endblock inline_javascript %}
-
