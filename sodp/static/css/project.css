@@ -56,6 +56,10 @@ p, table, td, th, a, div {
 
 /*----- Helper Classes -----*/
 
+html {
+	background: #fafafa;
+}
+
 html * {
 	text-rendering: optimizeLegibility !important;
   -webkit-font-smoothing: antialiased;
@@ -63,6 +67,7 @@ html * {
 }
 
 body {
+	background: #fafafa;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
@@ -335,7 +340,7 @@ body {
 	text-decoration: none;
 }
 
-.form_title {
+.form_title h2{
 	color: #3cbbb1;
 	font-family: 'Roboto', sans-serif;
 	font-weight: 300;
@@ -346,17 +351,21 @@ body {
 .form_content {
 	background-color: #e6f3f2;
     border-radius: .5em;
-    padding: 4em 2em;
+	padding: 2em 2em 1em;
+}
+
+.centered {
+	text-align: center;
 }
 
 .form-group > label {
 	color: #616161;
 }
-.requiredField {
+.form_content p {
 	color: #616161;
+	text-align: center;
 }
-
-  
+ 
 .asteriskField {
 	color: tomato;
 }
@@ -400,8 +409,8 @@ p {
 	font-weight: 600;
 	line-height: 40px;
 	letter-spacing: 2px;
-	margin: 20px 0;
- 	 text-transform: uppercase;
+	margin: 2em 1em .5em;
+ 	text-transform: uppercase;
 	text-decoration: none !important;
 	white-space: nowrap;
 	cursor: pointer;
@@ -2446,6 +2455,22 @@ flex: 0 0 568px;
 	font-weight: 500;
 	display: flex;
 	vertical-align: middle;
+	width: fit-content;
+    white-space: nowrap;
+}
+
+.sign {
+	background: #30958d;
+    border-radius: 2em;
+    padding: .7em 2em;
+    border: none;
+}
+
+.sign:hover {
+	background: #11635c;
+    color: rgb(112, 155, 184) !important;
+	transition: ease-out;
+	transition: .5s;
 }
 
 .navbar-nav .nav-item:hover .nav-link:hover {
