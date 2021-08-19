@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import pandas as pd
 import xlsxwriter 
@@ -19,6 +20,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.mail import EmailMessage
+from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 from django.utils.translation import gettext as _
 
@@ -37,11 +39,12 @@ def setErrorStatus(report, error_code):
     report.status = "error"
     report.errorDescription = error_code
 
-def setStatusComplete(report, path):
+def setStatusComplete(report, path, dashboard):
     report.path = path
     report.status = 'complete'
+    report.dashboard = dashboard
     report.processingEndDate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    report.save(update_fields=["path", "status", "processingEndDate"])
+    report.save(update_fields=["path", "status", "processingEndDate", "dashboard"])
 
 # sends an email to the user with the report URL
 def sendReportCompletedEmail(report, url):
@@ -124,6 +127,29 @@ def calculateContentDecay(firstViews, lastViews, thresholds):
             return change
 
     return 0
+
+# calculate dashboard content and return in a dict
+def calculateDashboard(project, report_pk, dataframe):
+    # retrieve top 5 urls from dataframe
+    topurls = dataframe.head(5)
+
+    data = {}
+    data['urls'] = []
+    for top in topurls.itertuples():
+        # retrieve timeline
+        timeline = google_utils.getStatsFromURL(project, report_pk, top.loc)
+        data['urls'].append((top.loc, timeline.to_dict(orient='records')))
+
+    # second, division by report
+    s=dataframe.recomendationCode.value_counts(normalize=True,sort=False).mul(100) # mul(100) is == *100
+    s.index.name,s.name='recomendationCode','percentage_' #setting the name of index and series
+    grouped = s.to_frame()
+    data['percentage'] = grouped.to_dict()
+
+    # third, top urls
+    data['top'] = topurls.to_dict(orient='records')
+    return data
+
 
 @shared_task(name="sodp.reports.tasks.processReport", time_limit=3600, soft_time_limit=3600)
 def processReport(pk):
@@ -246,6 +272,10 @@ def processReport(pk):
 
         # insert into table
         google_utils.insertUrlsTable(google_big, objview.project, pk, organic_urls)
+
+        # calculate dashboard entries
+        pd_filtered_sm = pd_filtered_sm.sort_values(by=['organicSessions'], ascending=False)
+        dashboard = calculateDashboard(objview.project, pk, pd_filtered_sm)
             
         # upload dataframe to storage
         path, url = uploadExcelFile(obj, pd_filtered_sm)
@@ -253,7 +283,7 @@ def processReport(pk):
             sendReportCompletedEmail(obj, url)
 
             # update as completed with path
-            setStatusComplete(obj, path)
+            setStatusComplete(obj, path, json.dumps(dashboard, cls=DjangoJSONEncoder))
         else:
             setErrorStatus(obj, "ERROR_SAVING")
            
