@@ -349,10 +349,14 @@ body {
     padding: 4em 2em;
 }
 
+.form-group > label {
+	color: #616161;
+}
 .requiredField {
 	color: #616161;
 }
 
+  
 .asteriskField {
 	color: tomato;
 }
@@ -1839,21 +1843,29 @@ ul#countdown li {
 	border-color: transparent;
 }
 
+.mt2 {
+	margin-top: 2em;
+}
+
+.mid_button {
+	display: flex;
+    align-items: center;
+}
+
 .submit-button {
-  height: 45px;
-  border: 0;
-  border-radius: 30px;
-  margin-left: -35px;
-  padding: 0 25px 0 25px;
-	background: #23D3D3;
+	height: 45px;
+	border: 0;
+	border-radius: .3em;
+	padding: 0 25px 0 25px;
+	background: #767676;
 	font-family: 'Montserrat';
 	font-size: 14px;
 	font-weight: 500;
 	text-transform: capitalize;
 	letter-spacing: 0;
-  color: #FFFFFF;
+  	color: #FFFFFF;
 	cursor: pointer;
-  outline: none;
+ 	outline: none;
 	box-shadow: 0 5px 30px rgba(255, 255, 255, 0.05);
 	-webkit-transition: 500ms;
 	-moz-transition: 500ms;
@@ -2372,10 +2384,7 @@ flex: 0 0 568px;
 	font-weight: 600;
 }
 .cont{
-	margin-left: 10%;
-	margin-right: 10%;
-	font-weight: 600;
-
+    margin: 0 8%;
 }
 
 .alert-debug {
