@@ -22,17 +22,11 @@ User = get_user_model()
 
 def getDashboardData(user):
     data = {}
-    data["reportCount"] = reportmodel.objects.filter(user=user).count()
-    data["reportCompleteCount"] = reportmodel.objects.filter(user=user).filter(status="complete").count()
-    
-    # now retrieve all views for an user
-    data["views"] = []
-    views = viewmodel.objects.filter(user=user)
-    for view in views:
-        # check if we have reports for that view
-        view_reports = reportmodel.objects.filter(user=user).filter(project=view.pk)
-        if len(view_reports)>0:
-            data["views"].append({'id': view.id, 'name': view.name, 'url': view.url, 'totalReports': len(view_reports)})
+
+    # retrieve latest 5 reports for that user
+    reports = reportmodel.objects.filter(user=user).filter(status="complete").order_by('-creationDate')[:5]
+    data["reports"] = reports
+
     return data
 
 class UserDetailView(LoginRequiredMixin, DetailView):

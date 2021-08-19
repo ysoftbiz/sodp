@@ -196,3 +196,43 @@ class StatsView(LoginRequiredMixin, View):
             pass
 
         return JsonResponse(data, status=500, safe=False)        
+
+class DashboardAjaxView(LoginRequiredMixin, View):
+    def get(self, request, **kwargs):
+        pk = kwargs['pk']
+        
+        data = {"labels":[], "datasets": []}
+        try:
+            report_obj = report.objects.get(id=pk, user=request.user)
+            view_obj = viewmodel.objects.get(user=request.user, id=report_obj.project)
+
+            if view_obj:
+                # get global stats
+                stats = google_utils.getStoredStats(view_obj.project, pk)
+
+                top_stats = stats[['page_path']].head(5)
+                for stat in top_stats.itertuples():
+                    # extract detail for a single url
+                    urlstats = google_utils.getStatsFromURL(view_obj.project, pk, stat.page_path)
+                    dataset = {
+                        "label": stat.page_path,
+                        "data": [],
+                        "fill": False,
+                        "yAxisId": "y%d" % stat.Index
+                    }
+                    for obj in urlstats.iterrows():
+                        if stat.Index == 0:
+                            # fill labels just once
+                            data["labels"].append(obj[1].date)
+
+                        # fill dataset
+                        dataset["data"].append(obj[1].pageViews)
+
+                    # append dataset
+                    data['datasets'].append(dataset)
+
+        except Exception as e:
+            print(str(e))
+            pass
+
+        return JsonResponse({"data": data}, status=200, safe=False)
