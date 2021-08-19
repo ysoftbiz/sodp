@@ -23,6 +23,7 @@ from sodp.reports import tasks
 from datetime import date
 from django.core.exceptions import ValidationError
 
+import json
 import pandas as pd
 from django.core.exceptions import ValidationError
 
@@ -204,32 +205,30 @@ class DashboardAjaxView(LoginRequiredMixin, View):
         data = {"labels":[], "datasets": []}
         try:
             report_obj = report.objects.get(id=pk, user=request.user)
-            view_obj = viewmodel.objects.get(user=request.user, id=report_obj.project)
+            i = 0
+            stats = json.loads(report_obj.dashboard)
+            for stat in stats['urls']:
+                # extract detail for a single url
+                url = stat[0]
+                dates = stat[1]
+                dataset = {
+                    "label": url,
+                    "data": [],
+                    "fill": False,
+                    "yAxisId": "y%d" % i
+                }
 
-            if view_obj:
-                # get global stats
-                stats = google_utils.getStoredStats(view_obj.project, pk)
+                for obj in dates:
+                    if i == 0:
+                        # fill labels just once
+                        data["labels"].append(obj['date'])
 
-                top_stats = stats[['page_path']].head(5)
-                for stat in top_stats.itertuples():
-                    # extract detail for a single url
-                    urlstats = google_utils.getStatsFromURL(view_obj.project, pk, stat.page_path)
-                    dataset = {
-                        "label": stat.page_path,
-                        "data": [],
-                        "fill": False,
-                        "yAxisId": "y%d" % stat.Index
-                    }
-                    for obj in urlstats.iterrows():
-                        if stat.Index == 0:
-                            # fill labels just once
-                            data["labels"].append(obj[1].date)
+                    # fill dataset
+                    dataset["data"].append(obj['pageViews'])
 
-                        # fill dataset
-                        dataset["data"].append(obj[1].pageViews)
-
-                    # append dataset
-                    data['datasets'].append(dataset)
+                # append dataset
+                data['datasets'].append(dataset)
+                i+=1
 
         except Exception as e:
             print(str(e))
