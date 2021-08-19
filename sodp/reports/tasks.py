@@ -274,6 +274,7 @@ def processReport(pk):
         google_utils.insertUrlsTable(google_big, objview.project, pk, organic_urls)
 
         # calculate dashboard entries
+        pd_filtered_sm.organicSessions = pd_filtered_sm.organicSessions.astype(int)
         pd_filtered_sm = pd_filtered_sm.sort_values(by=['organicSessions'], ascending=False)
         dashboard = calculateDashboard(objview.project, pk, pd_filtered_sm)
             
