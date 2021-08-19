@@ -352,7 +352,11 @@ body {
 .form-group > label {
 	color: #616161;
 }
+.requiredField {
+	color: #616161;
+}
 
+  
 .asteriskField {
 	color: tomato;
 }
