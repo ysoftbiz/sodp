@@ -1,22 +1,46 @@
-{% extends 'base.html' %}
 {% load crispy_forms_tags %}
-{% load i18n %}
 
-{% block content %}
-<h2>{% translate "New report" %}</h2>
-<div class="hero-form flx_2">
-  <form method="post" class="shake" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <br>
-    <button type="submit" class="btn-action">{% translate "Save" %}</button>
-  </form>
+<form method="post" class="shake" enctype="multipart/form-data">
+              {% csrf_token %}
+              {% crispy form %}
+              <br>
+            </form>
 <script>
   $(document).ready(function() {
     $('#id_project').select2();
+
+    // bind to the form’s submit event
+    $(".btn-action").click(function(e) {
+        // prevent the form from performing its default submit action
+        event.preventDefault();
+        $("#modal-errors").html("");
+
+        // either use the action supplied by the form, or the original rendering url
+        var form = $("div.modal-body > form")[0];
+        var data = new FormData(form);
+
+        // serialize the form’s content and sent via an AJAX call
+        // using the form’s defined method
+        var request = $.ajax({
+            type: 'post',
+            enctype: 'multipart/form-data',
+            url: '/reports/reportcreateajax/',
+            data: data,
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: function(xhr, ajaxOptions, thrownError) {
+                window.location.replace('/reportcreatedsucessfully/')
+            }
+        });
+
+        request.fail(function( jqXHR, textStatus ) {
+          errormessage = "";
+          for (const [key, value] of Object.entries(jqXHR.responseJSON)) {
+            errormessage = errormessage + value + "<br />"
+          }
+          $("#modal-errors").html(errormessage);
+        });        
+    });
   });
 </script>
-</div>
-{% endblock %}
-
-

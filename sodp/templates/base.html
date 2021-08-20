@@ -47,10 +47,11 @@
 
       <!-- Your stuff: Third-party javascript libraries go here -->
       {% bootstrap_javascript jquery='full' %}  {# Embed Bootstrap JS+jQuery #}
-      {{ form.media }}            {# Adds date-picker required JS and CSS #}
       
       <!-- place project specific Javascript in this file -->
       <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.min.js"></script>      
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>      
       <script defer src="{% static 'js/project.js' %}"></script>
 
     {% endblock javascript %}

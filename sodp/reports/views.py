@@ -1,3 +1,6 @@
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Column, Row
+
 from django.core.files.storage import default_storage
 from django.shortcuts import render
 from django.views import generic, View
@@ -53,6 +56,18 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
         form_kwargs["request"] = self.request
         return form_kwargs
 
+    def get_form(self, form_class=None):
+       form = super().get_form(form_class)
+       form.helper = FormHelper()
+       form.helper.layout = Layout(
+            Row(Column('project')),
+            Row(Column('dateFrom', css_class='form-group col-md-6 mb-0'), Column('dateTo', css_class='form-group col-md-6 mb-0')),
+            Row(Column('allowedCsv', css_class='form-group col-md-6 mb-0'), Column('bannedCsv', css_class='form-group col-md-6 mb-0')),
+            Row(Column('thresholds'))
+        )
+
+       return form        
+
     def get_initial(self):
         super(ReportCreateView, self).get_initial()
 
@@ -70,6 +85,13 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
         self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
         return self.initial
 
+
+class ReportCreateViewAjax(CreateView, LoginRequiredMixin):
+    model = report
+    form_class = ReportCreateForm
+    success_url = '/reportcreatedsucessfully'
+    template_name = 'reports/reportscreate.html'
+
     # upload the csv file to AWS
     def uploadCsvFile(self, report, file, name):    
         file_directory_within_bucket = 'reports/{username}'.format(username=report.user.pk)
@@ -83,11 +105,15 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
 
         return False           
 
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        return JsonResponse(form.errors, status=400)
+
     def form_valid(self, form):
         self.object = form.save(commit=False)   
         if form.is_valid():
             self.object.user = self.request.user
-            super(ReportCreateView, self).form_valid(form)
+            super(ReportCreateViewAjax, self).form_valid(form)
             self.object.save()
 
             # if there are files, process them
@@ -101,9 +127,9 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
             self.object.save()
 
             tasks.processReport.apply_async(args=[self.object.pk], countdown=30)
-        return HttpResponseRedirect(self.get_success_url())
+            return JsonResponse({}, status=200)
 
-      
+
 class ReportDetailView(generic.DetailView, LoginRequiredMixin):
     model = report
     template_name = 'reports/detailview.html'

@@ -6,7 +6,7 @@
 <br>
 <h2>{% trans "Reports List" %}</h2>
 <br>
- <a href="/reports/reportscreate" class="btn-action">{% trans "Create new report" %}</a>
+ <a href="/reports/reportscreate" class="btn-action" onclick="openCreateModal(event); return false;">{% trans "Create new report" %}</a>
 {% if object_list.count == 0 %}
   <p>{% trans "There are no reports yet" %}</p>
 {% else %}
@@ -41,6 +41,35 @@
     </table>  
   </ul>
   {% endif %} 
+
+  <div class="modal inmodal" id="modal_create_report" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+    <div class="modal-content animated bounceInRight">
+            <div class="modal-header">
+              <h4 class="modal-title"><i class="fa fa-laptop modal-icon"></i> {% translate "Create new report" %}</h4>
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span>
+                    <span class="sr-only">{% trans 'Close' %}</span>
+                </button>
+            </div>
+            <div class="modal-body">
+            
+            </div>
   
- 
+            <div class="modal-footer">
+              <span id="modal-errors"></span>
+              <button type="submit" class="btn-action">{% translate "Save" %}</button>
+            </div>
+  </div></div></div>
+      
+  
+ <script>
+function openCreateModal(event) {
+    var modal = $('#modal_create_report');
+    var url = $(event.target).closest('a').attr('href');
+    modal.find('.modal-body').html('').load(url, function() {
+        modal.modal('show');
+    });
+}   
+
+ </script>
   {% endblock %}
