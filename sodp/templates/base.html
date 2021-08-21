@@ -103,10 +103,10 @@
         </ul>
           
           {% if request.user.is_authenticated %}
-            <button class="sign nav-link js-scroll-trigger" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</button>
+            <a class="sign nav-link js-scroll-trigger" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
               {# URL provided by django-allauth/account/urls.py #}
           {% else %}
-            <button class="sign nav-link js-scroll-trigger" href="/memberful/memberful/login/?process=login">{% trans "Sign In" %}</button>
+            <a class="sign nav-link js-scroll-trigger" href="/memberful/memberful/login/?process=login">{% trans "Sign In" %}</a>
               {# URL provided by django-allauth/account/urls.py #}
           {% endif %}
         </div>

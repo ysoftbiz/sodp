@@ -1,1 +1,9 @@
 {% extends "base.html" %}
+
+{% block content %}
+<script>
+    {% if request.user.is_authenticated %}
+    window.location.replace("/users/{{ request.user.username }}")
+    {% endif %}
+</script>
+{% endblock %}
