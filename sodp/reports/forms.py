@@ -80,13 +80,12 @@ class ReportCreateForm(ModelForm):
         if difference_in_years > 1:
             self.add_error('dateTo',_("The report can't last more than one year")) 
 
-        print("after clean")
         return cleaned_data
 
             
     class Meta(object):
         model = report
-        fields = ('project', 'thresholds', 'dateFrom' ,'dateTo')
+        fields = ('project', 'dateFrom' ,'dateTo')
         widgets = { 'dateFrom' : DatePickerInput(format='%Y-%m-%d') ,
                     'dateTo' : DatePickerInput(format='%Y-%m-%d'), 'project': Select}
         labels = {

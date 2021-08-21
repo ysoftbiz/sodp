@@ -4,8 +4,8 @@
       "pk": 1,
       "fields": {
         "title": "AGE",
-        "question": "Is the page older than 6 months?",
-        "default_value": "180"
+        "question": "Is the page older than x days?",
+        "default_value": "365"
       }
     },
     {
@@ -13,7 +13,7 @@
         "pk": 2,
         "fields": {
           "title": "VOLUME",
-          "question": "Question2",
+          "question": "Is the page targeting a keyword with meaningful search volume?",
           "default_value": "50"
         }
     },
@@ -22,7 +22,7 @@
         "pk": 3,
         "fields": {
             "title": "WORD COUNT",
-            "question": "Question3",
+            "question": "Does the page have thin content?",
             "default_value": "150"
         }
     },
@@ -40,7 +40,7 @@
         "pk": 5,
         "fields": {
           "title": "ORGANIC TRAFFIC",
-          "question": "Question5",
+          "question": "Does it generate a meaningful level of monthly organic traffic?",
           "default_value": "10"
         }
     },
@@ -49,7 +49,7 @@
         "pk": 6,
         "fields": {
           "title": "TRAFFIC",
-          "question": "Question6",
+          "question": "Does it generate a meaningful level of non-organic traffic?",
           "default_value": "30 "
         }
     },
@@ -61,5 +61,24 @@
           "question": "Dos it have any external backlinks pointing to it?",
           "default_value": "10"
         }
+    },
+    {
+      "model": "tresholds.treshold",
+      "pk": 8,
+      "fields": {
+        "title": "CONTENT DECAY",
+        "question": "At what percentage traffic decline in a 12 month period is content categorised as decaying?",
+        "default_value": "25"
+      }
+    },
+    {
+      "model": "tresholds.treshold",
+      "pk": 9,
+      "fields": {
+        "title": "CLUSTERS",
+        "question": "Is the page content about a core cluster related to your business?",
+        "default_value": "forestry,telematics,trucking,backhoe,truck"
+      }
     }
+
   ]

@@ -16,6 +16,7 @@ import json, tempfile, pprint
 from sodp.utils import google_utils
 from sodp.reports.models import report as reportmodel
 from sodp.views.models import view as viewmodel
+from sodp.users.forms import ThresholdsForm
 
 
 User = get_user_model()
@@ -131,3 +132,19 @@ class  UserGoogleLogoutView(LoginRequiredMixin, View):
 
 
 user_google_logout_view = UserGoogleLogoutView.as_view()
+
+class UserThresholdsView(LoginRequiredMixin, UpdateView):
+    model = User
+    form_class = ThresholdsForm
+    template_name_suffix = 'thresholds'
+    success_message = _("Thresholds successfully updated")
+
+    def get_object(self,queryset = None):
+        return self.request.user
+
+    def form_valid(self, form):
+        form.instance.thresholds = form.cleaned_data
+        form.instance.save(update_fields=['thresholds'])
+        return redirect(self.request.build_absolute_uri('/')+"users/"+self.request.user.username)                    
+
+user_thresholds_view = UserThresholdsView.as_view()

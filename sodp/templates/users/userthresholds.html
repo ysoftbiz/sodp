@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<div>
+  <h2 class="form_title">{% translate "User thresholds" %}</h2>
+  <br>
+</div>
+<div class="form_content">
+    <form class="cont" method="post" >
+        {% csrf_token %}
+        {{ form|crispy }}
+        <div class="control-group">
+          <div class="controls">
+            <button type="submit" class="btn-action">{% trans "Update" %}</button>
+          </div>
+        </div>
+      </form>
+    
+  </div>
+{% endblock %}

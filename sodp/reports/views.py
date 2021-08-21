@@ -62,8 +62,7 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
        form.helper.layout = Layout(
             Row(Column('project')),
             Row(Column('dateFrom', css_class='form-group col-md-6 mb-0'), Column('dateTo', css_class='form-group col-md-6 mb-0')),
-            Row(Column('allowedCsv', css_class='form-group col-md-6 mb-0'), Column('bannedCsv', css_class='form-group col-md-6 mb-0')),
-            Row(Column('thresholds'))
+            Row(Column('allowedCsv', css_class='form-group col-md-6 mb-0'), Column('bannedCsv', css_class='form-group col-md-6 mb-0'))
         )
 
        return form        
@@ -75,14 +74,7 @@ class ReportCreateView(CreateView, LoginRequiredMixin):
         n = 1
         auxDateFrom = auxDateTo - relativedelta(months=n)
 
-        tresholds_list = serializers.serialize("json", treshold.objects.all())
-        first_list = treshold.objects.all()
-        tresholds_list = {}
-
-        for item in first_list:
-            tresholds_list.setdefault(item.title, item.default_value)
-
-        self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo, "thresholds" : tresholds_list}
+        self.initial = {"dateFrom":auxDateFrom, "dateTo":auxDateTo}
         return self.initial
 
 
@@ -113,6 +105,17 @@ class ReportCreateViewAjax(CreateView, LoginRequiredMixin):
         self.object = form.save(commit=False)   
         if form.is_valid():
             self.object.user = self.request.user
+
+            # get thresholds
+            if self.request.user.thresholds is not None:
+                self.object.thresholds = self.request.user.thresholds
+            else:
+                # get from default
+                objs = {}
+                for obj in treshold.objects.all():
+                    objs[obj.title] = obj.default_value
+                self.object.thresholds = objs
+
             super(ReportCreateViewAjax, self).form_valid(form)
             self.object.save()
 
