@@ -26,12 +26,15 @@
 </div>
 
 <div>
-    <canvas id="lineChart" height="150" width="800"></canvas>
+    <canvas class="boxed" id="lineChart" height="150" width="800"></canvas>
 </div>
-<div>
-  <canvas id="pieChart" height="75" width="400"></canvas>
-  <table id="rankingChart" class="display" width=50% ></div>
+<div class="section">
+  <div class="pie canvas_container boxed width45">
+    <canvas id="pieChart"></canvas>
   </div>
+    <table id="rankingChart" class="display boxed" width=50% style="height: 25em;border: none;">
+</div>
+</div>
 
 {% endif %}
 
@@ -62,7 +65,8 @@ function ajax_chart(chart, piechart, rankingchart, url) {
 
     $(document).ready(function() {
       var ctx = document.getElementById('lineChart').getContext('2d');
-      
+      Chart.defaults.global.defaultFontSize = 13;
+
       var chart = new Chart(ctx, {        
           type: 'line',
           data: {},
