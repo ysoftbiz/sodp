@@ -6,12 +6,12 @@
 <br>
 <h2>{% trans "Reports List" %}</h2>
 <br>
- <a href="/reports/reportscreate" class="btn-action" onclick="openCreateModal(event); return false;">{% trans "Create new report" %}</a>
+ <a href="/reports/reportscreate" class="btn-action btn_report" onclick="openCreateModal(event); return false;">{% trans "Create new report" %}</a>
 {% if object_list.count == 0 %}
   <p>{% trans "There are no reports yet" %}</p>
 {% else %}
   <ul>
-    <table class="table">
+    <table class="table boxed">
       <thead>
         <tr class="tit">
           <th scope="col">{% trans "View" %} </th>
@@ -27,7 +27,7 @@
       <br>
       <tbody>
         {% for report in object_list %}  
-          <tr>
+          <tr class="odd">
             <td> {{report.viewName}} </td>
             <td>{{report.dateFrom}}</td>
             <td>{{report.dateTo}}</td>
