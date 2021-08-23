@@ -3,15 +3,15 @@
 {% load i18n %}
 
 {% block content %}
-<br>
-<h2>{% trans "Reports List" %}</h2>
-<br>
+<div>
  <a href="/reports/reportscreate" class="btn-action btn_report" onclick="openCreateModal(event); return false;">{% trans "Create new report" %}</a>
+</div>
 {% if object_list.count == 0 %}
   <p>{% trans "There are no reports yet" %}</p>
 {% else %}
-  <ul>
-    <table class="table boxed">
+  <div class="boxed">
+    <h3 class="report_title">{% trans "Reports List" %}</h3>
+    <table class="table">
       <thead>
         <tr class="tit">
           <th scope="col">{% trans "View" %} </th>
@@ -20,11 +20,8 @@
           <th scope="col">{% trans "Creation date" %}</th>
           <th scope="col">{% trans "Status" %}</th>
           <th scope="col">{% trans "Detail view" %}</th>
-
-
         </tr>
       </thead>
-      <br>
       <tbody>
         {% for report in object_list %}  
           <tr class="odd">
@@ -32,14 +29,14 @@
             <td>{{report.dateFrom}}</td>
             <td>{{report.dateTo}}</td>
             <td>{{report.creationDate}}</td>
-            <td>{{report.status}}</td>
+            <td><span class="btn_{{report.status}}">{{report.status}}</span></td>
             <td><a href = "{% url 'reports:detailview' report.pk %}">{% trans "View" %}</a></td>
           </tr>
       {% endfor %}
   
       </tbody>
     </table>  
-  </ul>
+  </div>
   {% endif %} 
 
   <div class="modal inmodal" id="modal_create_report" tabindex="-1" role="dialog" aria-hidden="true">

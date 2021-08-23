@@ -353,19 +353,54 @@ table.dataTable {
 	width: 95% !important;
 }
 
-.top5_title {
+.btn_complete,
+.btn_pending,
+.btn_process,
+.btn_error {
+	text-transform: capitalize;
+    color: #fafafa;
+    border-radius: .5em;
+    vertical-align: middle;
+	padding: .5em;
+}
+
+.btn_complete {
+	background-color: #34b43a;
+}
+
+.btn_pending {
+	background-color: #f8a01d;
+}
+
+.btn_process {
+	background-color: #18bca6;
+}
+
+.btn_error {
+	background-color: #d0011b;
+}
+
+.top5_title,
+.report_title {
 	text-transform: uppercase;
 	padding: 0 1.5em;
 	font-weight: bold;
 }
 
+.report_title {
+	padding: .5em;
+    text-align: start;
+}
+
 .table thead th {
 	white-space: nowrap;
 	border: none;
+	font-weight: bold;
 }
 
-#rankingChart > thead {
-	background-color: #f8fcfd;
+#rankingChart > thead,
+#main > div > div.boxed > table > thead .tit {
+	background-color: #f8fcfd !important;
 	color: #56b3ae;
 }
 
@@ -495,7 +530,8 @@ p {
 }
 
 .btn_report {
-	float: right;
+	position: relative;
+    left: 82%;
 	margin-bottom: 2em !important;
 }
 
