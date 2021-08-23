@@ -340,8 +340,8 @@ body {
 	text-decoration: none;
 }
 
-.width100 {
-	width: 100% !important;
+.width40 {
+	width: 40% !important;
 }
 
 .dataTables_wrapper {
@@ -353,9 +353,20 @@ table.dataTable {
 	width: 95% !important;
 }
 
+.top5_title {
+	text-transform: uppercase;
+	padding: 0 1.5em;
+	font-weight: bold;
+}
+
 .table thead th {
 	white-space: nowrap;
 	border: none;
+}
+
+#rankingChart > thead {
+	background-color: #f8fcfd;
+	color: #56b3ae;
 }
 
 .tit {
@@ -375,6 +386,7 @@ table.dataTable thead td {
 table.dataTable tbody th,
 table.dataTable tbody td {
 	border: none !important;
+	padding: 10px 18px !important;
 }
 
 .even,
@@ -383,6 +395,10 @@ table.dataTable tbody td {
 }
 
 .odd {
+	background-color: #fff !important;
+}
+
+.even {
 	background-color: #f9f9f9 !important;
 }
 
@@ -400,13 +416,17 @@ table.dataTable tbody td {
     box-shadow: rgb(50 50 93 / 25%) 0px 13px 27px -5px, rgb(0 0 0 / 30%) 0px 8px 16px -8px;
 	background-color: white;
 	border-radius: .5em;
-	margin: 2em 0 4em;
 	padding: 1em .3em;
+}
+
+.ranking_table {
+	width: 100%;
 }
 
 .section {
 	display: flex;
 	justify-content: space-between;
+	margin-top: 3em;
 	margin-bottom: 3em;
 }
 

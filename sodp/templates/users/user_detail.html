@@ -29,10 +29,15 @@
     <canvas class="boxed" id="lineChart" height="150" width="800"></canvas>
 </div>
 <div class="section">
-  <div class="pie canvas_container boxed width100">
+  <div class="pie canvas_container boxed width40">
     <canvas id="pieChart"></canvas>
   </div>
-    <table id="rankingChart" class="display boxed width100" style="height: 566px; border: none;">
+  <div class="boxed ranking_table">
+    <h3 class="top5_title">{% trans "top 5 performance" %}</h3>
+    <table id="rankingChart" style="border: none;">
+    </table>
+  
+  </div>
 </div>
 </div>
 
@@ -66,6 +71,8 @@ function ajax_chart(chart, piechart, rankingchart, url) {
     $(document).ready(function() {
       var ctx = document.getElementById('lineChart').getContext('2d');
       Chart.defaults.global.defaultFontSize = 13;
+      Chart.defaults.global.legend.position = 'left';
+
 
       var chart = new Chart(ctx, {        
           type: 'line',
@@ -121,10 +128,10 @@ function ajax_chart(chart, piechart, rankingchart, url) {
         searching: false,
         info: false,
         columns: [
-            { title: "URL" },
-            { title: "Organic sessions" },
-            { title: "Backlinks" },
-            { title: "Recomendation" },
+            { title: "URL" , width: "45%"},
+            { title: "Organic sessions" , className: "dt-body-right"},
+            { title: "Backlinks" , className: "dt-body-right"},
+            { title: "Recomendation" , width: "20%"},
         ]
       } );
 
