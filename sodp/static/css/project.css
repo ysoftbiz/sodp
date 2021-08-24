@@ -309,6 +309,10 @@ body {
 	padding: 150px 0 100px 0;
 }
 
+input:focus,
+select:focus {
+	outline: none;
+}
 
 .hero-content .yd_alert {
 	background: linear-gradient(to right,rgba(138,155,166,.1),transparent 60%);
@@ -390,6 +394,80 @@ table.dataTable {
 .report_title {
 	padding: .5em;
     text-align: start;
+	color: #745656;
+}
+
+.modal-header {
+	border: none;
+}
+
+.modal-title {
+	font-weight: bold;
+    font-family: 'Montserrat';
+    font-size: 1.5em;
+	color: #682d63;
+}
+
+.modal-content {
+	border: none;
+}
+
+#div_id_project > div > span > span.selection > span {
+	border-color: #ced4da;
+	height: 3em;
+}
+
+.select2-results__option--selectable {
+	font-family: 'Montserrat';
+    font-size: .8em;
+}
+
+#select2-id_project-container {
+	padding-top: .3em;
+}
+
+.input-group>.custom-file, .input-group>.custom-select, .input-group>.form-control, .input-group>.form-control-plaintext {
+	height: 3em !important;
+}
+
+.modal-footer {
+	border: none;
+	padding-top: 0;
+	flex-wrap: nowrap;
+}
+
+#modal-errors {
+	margin-right: 3em;
+    color: tomato;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+table.dataTable.no-footer {
+	border: none !important;
+}
+
+.dataTables_length {
+	padding: 0 .5em;
+	color: #745656 !important;
+}
+
+#reportlist_length > label > select,
+.dataTables_wrapper .dataTables_filter input,
+#reportlist_paginate > span > a {
+	background: #dcefff !important;
+	color: #4f5e6a !important;
+    border: none !important;
+}
+
+.dataTables_filter {
+	color: #745656 !important;
+	margin-right: 3em;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+	height: 2.5em;
+	margin-left: .8em !important;
 }
 
 .table thead th {
@@ -399,9 +477,14 @@ table.dataTable {
 }
 
 #rankingChart > thead,
-#main > div > div.boxed > table > thead .tit {
+#main > div > div.boxed > table > thead .tit,
+#reportlist > thead > tr {
 	background-color: #f8fcfd !important;
 	color: #56b3ae;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+	border: none;
 }
 
 .tit {
