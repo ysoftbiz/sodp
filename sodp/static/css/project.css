@@ -568,14 +568,6 @@ table.dataTable tbody td {
 	padding: 2em 2em 1em;
 }
 
-div > div.form_content {
-	padding-right: 0;
-}
-
-div > div.form_content > form {
-	margin-right: 0;
-}
-
 div > div.form_content > form > table > tbody > tr > th {
 	background: #3cbbb1;
     width: 100%;
@@ -703,9 +695,6 @@ p {
 	text-decoration: none;
 }
 
-.hero2 {
-}
-
 .hero2 .hero-inner {
 	padding: 150px 0 100px 0;
 }
@@ -754,7 +743,7 @@ p {
 	margin-top: 15px;
 }
 
-.hero-form  {
+.hero-form {
 	background: #FFFFFF;
 	padding: 35px;
 	border-radius: 10px;
@@ -762,17 +751,55 @@ p {
 	float: none;
 }
 
- label {
+.thresholdcontainer {
+	display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.thresholdlabel {
+	height: 2em;
+    width: 50%;
+    background: #3cbbb1;
+    padding-top: .4em;
+}
+
+.thresholdlabel > span {
+	padding-left: .5em;
+    color: aliceblue;
+    font-weight: bold;
+}
+
+.thresholdvalue > input {
+	height: 2.2em;
+    border: 1px solid #b4becb;
+	font-weight: bold;
+    text-align: center;
+}
+
+.thresholdcontainer {
+	margin-bottom: .5em;
+}
+
+.thresholdhelp {
+	margin-bottom: 2em;
+}
+
+label {
 	font-family: 'Montserrat';
 	font-size: 1em;
 	font-weight: 600;
 	line-height: 3em;
 }
+
 .form-check-input {
 	margin-top:1em !important;
 }
 
-  input, textarea, select {
+input, textarea, select {
 	font-family: 'Montserrat';
 	font-size: 0.9em  !important;
 	font-weight: 400;
@@ -781,7 +808,7 @@ p {
 	border-bottom: 2px solid #b4becb;
 }
 
- .hero-form  .btn-action {
+.hero-form  .btn-action {
 	margin: 20px 0;
 	min-width: 100%;
 }
