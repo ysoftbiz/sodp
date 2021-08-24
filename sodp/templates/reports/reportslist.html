@@ -2,6 +2,17 @@
 {% load crispy_forms_tags %}
 {% load i18n %}
 
+{% block css %}
+{{ block.super}}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+{% endblock %}
+
+{% block javascript %}
+{{ block.super}}
+
+<script src="//cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <div>
  <a href="/reports/reportscreate" class="btn-action btn_report" onclick="openCreateModal(event); return false;">{% trans "Create new report" %}</a>
@@ -11,7 +22,7 @@
 {% else %}
   <div class="boxed">
     <h3 class="report_title">{% trans "Reports List" %}</h3>
-    <table class="table">
+    <table class="table" id="reportlist">
       <thead>
         <tr class="tit">
           <th scope="col">{% trans "View" %} </th>
@@ -67,6 +78,13 @@ function openCreateModal(event) {
         modal.modal('show');
     });
 }   
+
+$('#reportlist').DataTable( {
+        paging: true,
+        ordering: true,
+        searching: true,
+        info: false
+      } );
 
  </script>
   {% endblock %}
