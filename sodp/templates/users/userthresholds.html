@@ -10,7 +10,10 @@
 <div class="form_content">
     <form class="cont" method="post" >
         {% csrf_token %}
-        {{ form|crispy }}
+        <table>
+          {{ form.as_table }}
+
+        </table>
         <div class="control-group">
           <div class="controls">
             <button type="submit" class="btn-action">{% trans "Update" %}</button>

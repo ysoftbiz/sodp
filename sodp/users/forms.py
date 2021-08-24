@@ -30,13 +30,19 @@ class ThresholdsForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ThresholdsForm, self).__init__(*args, **kwargs)
         self.fields = {}
+        self.fieldsets = []
         self.initial = {}
 
         # read all the entries for thresholds
         thresholds = threshold_model.objects.all().order_by('pk')
         for obj in thresholds:
-            newfield = forms.CharField(max_length=255, label=obj.question, required=True)
-            newfield.widget.attrs={'id': obj.title, 'name': obj.title}
+
+            newfield = forms.CharField(max_length=255, label=obj.title, required=True, help_text=obj.question)
+
+            if obj.title == "CLUSTERS":
+                newfield.widget.attrs={'id': obj.title, 'name': obj.title, 'size': 100}
+            else:
+                newfield.widget.attrs={'id': obj.title, 'name': obj.title, 'size': 20}
             self.fields[obj.title] = newfield
 
         user_thresholds = self.instance.thresholds
