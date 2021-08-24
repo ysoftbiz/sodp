@@ -10,10 +10,15 @@
 <div class="form_content">
     <form class="cont" method="post" >
         {% csrf_token %}
-        <table>
-          {{ form.as_table }}
-
-        </table>
+        {% for field in form %}
+        <div class="fieldWrapper">
+          <div class="thresholdcontainer">
+            <div class="thresholdlabel">{{ field.label_tag}}</div><div class="thresholdvalue">{{ field}}</div>
+          </div>
+          <div class="thresholdhelp">{{ field.help_text }}</div>
+          <div class="error">{{ field.errors }}</div>
+        </div>
+        {% endfor %}
         <div class="control-group">
           <div class="controls">
             <button type="submit" class="btn-action">{% trans "Update" %}</button>
