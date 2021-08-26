@@ -2132,6 +2132,12 @@ ul#countdown li {
 	margin-top: 2em;
 }
 
+
+.flex_start {
+    display: flex;
+    justify-content: flex-start;
+}
+
 .mid_button {
 	display: flex;
     align-items: center;
