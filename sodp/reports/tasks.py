@@ -12,6 +12,7 @@ from sodp.reports.models import report
 from sodp.views.models import view as viewmodel
 from sodp.utils import google_utils, ahrefs
 from sodp.utils import sitemap as sm
+from sodp.utils import dataforseo
 
 from datetime import datetime
 from urllib.parse import urlparse
@@ -23,6 +24,8 @@ from django.core.mail import EmailMessage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 from django.utils.translation import gettext as _
+
+import asyncio
 
 SUFFIXES = ( '.xml', '.pdf', '.doc', '.docx' )
 
@@ -123,7 +126,7 @@ def calculateContentDecay(firstViews, lastViews, thresholds):
     else:
         # calculate decrease
         change = (abs(lastViews - firstViews)/firstViews)*100
-        if change >= float(thresholds["CONTENT_DECAY"]):
+        if change >= float(thresholds["CONTENT DECAY"]):
             return change
 
     return 0
@@ -180,6 +183,9 @@ def processReport(pk):
         objview = viewmodel.objects.get(id=obj.project)
         domain = urlparse(objview.url).netloc
 
+        # retrieve global domain data
+        seoclient = dataforseo.RestClient("login", "password")
+
         # calculate period
         diff_months = (obj.dateTo.year - obj.dateFrom.year) * 12 + obj.dateTo.month - obj.dateFrom.month
         if diff_months>=6:
@@ -218,25 +224,38 @@ def processReport(pk):
         urlsSitemap = list(set(urlsSitemap))
         pd_filtered_sm = pd.DataFrame(columns=["loc", "pageViews", "organicSessions", "backLinks", "recomendationCode", "recomendationText"])
 
-        # retrieve all urls from ahrefs
-        ah = ahrefs.getAhrefsInfo(obj.user.ahrefs_token, domain)
-
         # create table if it does not exist, and truncate their values
         table_id = google_utils.createTable(google_big, "stats", objview.project, pk)
+        table_report_id = google_utils.createTableReport(google_big, "report", objview.project, pk)
 
         # divide the dataframe in chunks, to fit the google max size
         final = [urlsSitemap[i * CHUNK_SIZE:(i + 1) * CHUNK_SIZE] for i in range((len(urlsSitemap) + CHUNK_SIZE - 1) // CHUNK_SIZE )] 
         organic_urls = []
+        pd_entries = []
+
         for batch in final:
             # get stats for the expected google view id
             if credentials:
-                entries = google_utils.getStatsFromView(credentials, objview.project, batch, obj.dateFrom, obj.dateTo, period)
+                # get all ahrefs queries
+                loop = asyncio.get_event_loop()
+                ahrefs_infos, ahrefs_pages = loop.run_until_complete(ahrefs.getAhrefsUrls(settings.AHREFS_TOKEN, objview.url, batch))
+
+                # get keywords from google
+                #loop1 = asyncio.get_event_loop()
+                #google_keywords = loop1.run_until_complete(google_utils.getTopKeywordsBatch(credentials, objview.url, batch, obj.dateFrom, obj.dateTo))
+                google_keywords = {}
+
+                entries = google_utils.getStatsFromView(credentials, objview.project, objview.url, batch, obj.dateFrom, obj.dateTo, period)
 
                 # iterate over all urls and generate data
+                seoTraffic , nonSeoTraffic = 0, 0
+                seoTrafficNum , nonSeoTrafficNum = 0, 0
+
                 for url, entries in entries.items():
                     # insert table data
                     if len(entries)>0:
                         google_utils.insertBigTable(google_big, table_id, entries)
+
 
                     # iterate over all entries
                     firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews = 0, 0, 0, 0
@@ -245,13 +264,17 @@ def processReport(pk):
                         if entry["segment"] == "All Users":
                             if firstNormal:
                                 firstNormal = False
-                                firstPageViews = entry["pageViews"]
-                            lastPageViews = entry["pageViews"]
+                                firstPageViews = float(entry["pageViews"])
+                            lastPageViews = float(entry["pageViews"])
+                            nonSeoTraffic += float(entry["pageViews"])
+                            nonSeoTrafficNum += 1
                         else:
                             if firstOrganic:
                                 firstOrganic = False
-                                firstOrganicViews = entry["pageViews"]
-                            lastOrganicViews = entry["pageViews"]
+                                firstOrganicViews = float(entry["pageViews"])
+                            lastOrganicViews = float(entry["pageViews"])
+                            seoTraffic += float(entry["pageViews"])
+                            seoTrafficNum += 1
 
                     # calculate decay
                     decay = calculateContentDecay(float(firstOrganicViews), float(lastOrganicViews), obj.thresholds)
@@ -259,23 +282,46 @@ def processReport(pk):
                     # add to urls
                     organic_urls.append({"page_path": url, "startViews": int(firstOrganicViews), "endViews": int(lastOrganicViews), "decay": round(decay, 5)})
 
-                    # get backlinks
-                    backlinks = ah.get(url, 0)
+                    info = ahrefs_infos.get(url, {})
+                    backlinks = info.get('dofollow', 0)
+                    publishDate = info.get('first_seen', None)
+                    if publishDate:
+                        publishDate = publishDate[0:10] # just date
+
+                    pageinfo = ahrefs_pages.get(url, {})
+                    title = pageinfo.get('title', '')
+                    words = pageinfo.get('words', 0)
 
                     # finally execute the calculation
                     recomendation_code = calculateRecomendation(lastPageViews, lastOrganicViews, backlinks, obj.thresholds, period)
                     recomendation_text = RECOMENDATION_TEXTS[recomendation_code]
 
                     # create entry in dataframe
-                    pd_filtered_sm = pd_filtered_sm.append({"loc": url, "pageViews": lastPageViews, "organicSessions": lastOrganicViews, "backLinks": backlinks,
-                        "recomendationCode": recomendation_code, "recomendationText": recomendation_text }, ignore_index=True)
+                    if seoTrafficNum == 0:
+                        avgTraffic = 0
+                    else:
+                        avgTraffic = round((float(seoTraffic)/float(seoTrafficNum)), 4)
+
+                    if nonSeoTrafficNum == 0:
+                        nonAvgTraffic = 0
+                    else:
+                        nonAvgTraffic = round((float(nonSeoTraffic)/float(nonSeoTrafficNum)), 4)
+
+                    top_keywords = google_keywords.get(url, [])
+                    pd_entry = {"url": url, "title": title, "publishDate": publishDate, "topKw": ",".join(top_keywords),
+                        "vol": 0, "clusterInKw": False, "clusterInTitle": False, "wordCount": int(words),
+                        "seoTraffic": avgTraffic, "nonSeoTraffic": nonAvgTraffic,
+                        "backLinks": backlinks, "decay": round(decay, 4), "prune": False, 
+                        "recomendationCode": recomendation_code, "recomendationText": recomendation_text }
+                    pd_entries.append(pd_entry)
+                    pd_filtered_sm = pd_filtered_sm.append(pd_entry, ignore_index=True)
 
         # insert into table
         google_utils.insertUrlsTable(google_big, objview.project, pk, organic_urls)
+        google_utils.insertBigTable(google_big, table_report_id, pd_entries)
 
         # calculate dashboard entries
-        pd_filtered_sm.organicSessions = pd_filtered_sm.organicSessions.astype(int)
-        pd_filtered_sm = pd_filtered_sm.sort_values(by=['organicSessions'], ascending=False)
+        pd_filtered_sm = pd_filtered_sm.sort_values(by=['seoTraffic'], ascending=False)
         dashboard = calculateDashboard(objview.project, pk, pd_filtered_sm)
             
         # upload dataframe to storage

@@ -1,3 +1,4 @@
+import asyncio
 import httplib2
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
@@ -9,8 +10,10 @@ import tempfile
 import time
 
 from apiclient.discovery import build
+from urllib.parse import urlparse
 from pprint import pprint
 
+from collections import Counter
 from datetime import datetime, date, timedelta
 from oauth2client import GOOGLE_REVOKE_URI, GOOGLE_TOKEN_URI, client
 from django.conf import settings
@@ -21,11 +24,13 @@ from google.cloud.exceptions import NotFound
 from google.oauth2 import service_account
 
 from sodp.views.models import view as modelview
+from sodp.utils import nlp
 
 DIMS = ['ga:pagePath', 'ga:segment']
 METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
 SEGMENTS = ['gaid::-1','gaid::-5']
 MAX_RESULTS = 100000
+MAX_SEARCH_RESULTS = 50
 MAX_PAGES = 5000
 GOOGLE_WAIT_TIME = 180
 
@@ -45,6 +50,7 @@ def getScopes():
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/analytics.readonly',
         'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/webmasters.readonly',
         'openid'        
     ]
 def generateGoogleURL(request):
@@ -148,7 +154,7 @@ def createTable(bq, table, view_id, report_id):
             query_job = bq.query(query_text)
             query_job.result()
 
-            time.sleep(GOOGLE_WAIT_TIME)
+            #time.sleep(GOOGLE_WAIT_TIME)
         except Exception as e:
             print(str(e))
     except NotFound:
@@ -174,10 +180,59 @@ def createTable(bq, table, view_id, report_id):
 
     return table_id
 
+# create table to store excel report
+def createTableReport(bq, table, view_id, report_id):
+    # create table inside dataset
+    table_id = "%s.sodp.%s_%s_%d" % (bq.project, table, view_id, report_id)
+
+    # first check if table exists
+    try:
+        bq.get_table(table_id)
+
+        try:
+            # delete all values
+            query_text = f"""
+                TRUNCATE TABLE %s
+            """ % table_id
+            query_job = bq.query(query_text)
+            query_job.result()
+
+            #time.sleep(GOOGLE_WAIT_TIME)
+        except Exception as e:
+            print(str(e))
+    except NotFound:
+        # does not exist, create it
+        try:
+            schema = [
+                bigquery.SchemaField("url", "STRING"),
+                bigquery.SchemaField("title", "STRING"),
+                bigquery.SchemaField("publishDate", "DATE"),
+                bigquery.SchemaField("topKw", "STRING"),
+                bigquery.SchemaField("vol", "INTEGER"),
+                bigquery.SchemaField("clusterInKw", "BOOLEAN"),
+                bigquery.SchemaField("clusterInTitle", "BOOLEAN"),
+                bigquery.SchemaField("wordCount", "INTEGER"),
+                bigquery.SchemaField("seoTraffic", "NUMERIC"),
+                bigquery.SchemaField("nonSeoTraffic", "NUMERIC"),
+                bigquery.SchemaField("backLinks", "INTEGER"),
+                bigquery.SchemaField("decay", "NUMERIC"),
+                bigquery.SchemaField("prune", "BOOLEAN"),
+                bigquery.SchemaField("recomendationCode", "STRING"),
+                bigquery.SchemaField("recomendationText", "STRING")
+            ]
+
+            table = bigquery.Table(table_id, schema=schema)
+            table = bq.create_table(table)  # Make an API request.
+        except:
+            pass
+
+    return table_id
+
 # inserts the row
 def insertBigTable(bq, table_id, entries):
     try:
         errors = bq.insert_rows_json(table_id, entries,  row_ids=[None] * len(entries))
+        print(errors)
     except Exception as e:
         print(str(e))
         return False
@@ -198,7 +253,7 @@ def insertUrlsTable(bq, view_id, report_id, urls):
             query_job = bq.query(query_text)
             query_job.result()
 
-            time.sleep(GOOGLE_WAIT_TIME)
+            #time.sleep(GOOGLE_WAIT_TIME)
         except Exception as e:
             print(str(e))
     except NotFound:
@@ -270,9 +325,77 @@ def getAllUrls(credentials, view_id, report_id, url, startDate, endDate):
 
     return urls
 
+# given search data results, extract keywords from it
+def extractKeywords(searchdata):
+    final_keywords = []
+    for row in searchdata.get('rows', []):
+        keys = row.get('keys', [])
+        searchquery = keys[1]
+        keywords = nlp.getKeywords(searchquery)
+        final_keywords.extend(keywords)
+
+    # count popular
+    counter = Counter(final_keywords)
+    most_common = counter.most_common(5)
+
+    return [seq[0] for seq in most_common]
+
+# extract keywords in batch
+async def getTopKeywordsBatch(credentials, topurl, batch, startDate, endDate):
+    # get the search console requests for urls
+    searchconsole = build('searchconsole', 'v1', credentials=credentials)
+
+    # first get the list of authorized sites, to check if ours is on the list
+    domainurl = urlparse(topurl).netloc
+    domainurl = domainurl.replace("www.", "")
+    domaintoparse = None
+    sites = searchconsole.sites().list().execute()
+    for val in sites['siteEntry']:
+        if domainurl in val['siteUrl']:
+            domaintoparse = val['siteUrl']
+            break
+    # if we cannot access, keyword is null
+    if not domaintoparse:
+        return {}
+
+    tasks = []
+    keyword_results = {}
+    for url in batch:
+        task = asyncio.ensure_future(extractKeywordsFromGoogle(searchconsole, domaintoparse, url, startDate, endDate))
+        tasks.append(task)
+
+    responses = await asyncio.gather(*tasks)
+    for response in responses:
+        keyword_results[response[0]] = response[1]
+
+    return keyword_results
+
+# gets keywords from google
+async def extractKeywordsFromGoogle(searchconsole, topurl, url, startDate, endDate):
+
+    searchrequest = {
+        'startDate': startDate.strftime("%Y-%m-%d"),     # Get today's date (while loop)
+        'endDate': endDate.strftime("%Y-%m-%d"),       # Get today's date (while loop)
+        'dimensions': ['page', 'query'],  # Extract This information
+        'dimensionFilterGroups': [{
+            'filters': [{
+                'dimension': 'page',              
+                'operator': 'contains',           #contains, equals, notEquals, notContains
+                'expression': url
+            }]
+        }],
+        "aggregationType": "byPage",
+        'orderBys': [{"fieldName":"impressions", "sortOrder": "DESCENDING"}],
+        'rowLimit': MAX_SEARCH_RESULTS                    # Set number of rows to extract at once (max 25k)
+    }       
+    searchdata = searchconsole.searchanalytics().query(siteUrl=topurl, body=searchrequest).execute()
+
+    # extract keywords from search data
+    keywords = extractKeywords(searchdata)
+    return url, keywords
 
 # returns a dump of the desired stats for the specific credentials and view
-def getStatsFromView(credentials, view_id, urls, startDate, endDate, period):
+def getStatsFromView(credentials, view_id, topurl, urls, startDate, endDate, period):
     analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
     # retrieve date interval: 6-12 months grouped monthly, 3-6 months grouped weekly, <3 months grouped daily
@@ -303,6 +426,7 @@ def getStatsFromView(credentials, view_id, urls, startDate, endDate, period):
                 ]
             }
         ]
+
         }]
     }
     data = analytics.reports().batchGet(body=request_body).execute()
@@ -333,7 +457,7 @@ def getStatsFromView(credentials, view_id, urls, startDate, endDate, period):
             entry['bounceRate'] = round(float(row['metrics'][0]['values'][4]), 5)
             entry['exitRate'] = round(float(row['metrics'][0]['values'][5]), 5)
             entry['pageValue'] = round(float(row['metrics'][0]['values'][6]), 5)
-
+                
             entries[url].append(entry)
 
     return entries

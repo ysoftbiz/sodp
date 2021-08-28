@@ -41,3 +41,5 @@ xlsxwriter
 openpyxl
 ultimate_sitemap_parser
 pyarrow
+nltk
+aiohttp
