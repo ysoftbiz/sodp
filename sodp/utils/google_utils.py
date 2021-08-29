@@ -154,7 +154,7 @@ def createTable(bq, table, view_id, report_id):
             query_job = bq.query(query_text)
             query_job.result()
 
-            #time.sleep(GOOGLE_WAIT_TIME)
+            time.sleep(GOOGLE_WAIT_TIME)
         except Exception as e:
             print(str(e))
     except NotFound:
@@ -197,7 +197,7 @@ def createTableReport(bq, table, view_id, report_id):
             query_job = bq.query(query_text)
             query_job.result()
 
-            #time.sleep(GOOGLE_WAIT_TIME)
+            time.sleep(GOOGLE_WAIT_TIME)
         except Exception as e:
             print(str(e))
     except NotFound:
@@ -207,16 +207,20 @@ def createTableReport(bq, table, view_id, report_id):
                 bigquery.SchemaField("url", "STRING"),
                 bigquery.SchemaField("title", "STRING"),
                 bigquery.SchemaField("publishDate", "DATE"),
+                bigquery.SchemaField("isContentOutdated", "BOOLEAN"),
                 bigquery.SchemaField("topKw", "STRING"),
                 bigquery.SchemaField("vol", "INTEGER"),
                 bigquery.SchemaField("clusterInKw", "BOOLEAN"),
                 bigquery.SchemaField("clusterInTitle", "BOOLEAN"),
                 bigquery.SchemaField("wordCount", "INTEGER"),
+                bigquery.SchemaField("inDepthContent", "BOOLEAN"),
                 bigquery.SchemaField("seoTraffic", "NUMERIC"),
+                bigquery.SchemaField("meaningfulSeoTraffic", "BOOLEAN"),
                 bigquery.SchemaField("nonSeoTraffic", "NUMERIC"),
+                bigquery.SchemaField("meaningfulNonSeoTraffic", "BOOLEAN"),
                 bigquery.SchemaField("backLinks", "INTEGER"),
+                bigquery.SchemaField("sufficientBacklinks", "BOOLEAN"),
                 bigquery.SchemaField("decay", "NUMERIC"),
-                bigquery.SchemaField("prune", "BOOLEAN"),
                 bigquery.SchemaField("recomendationCode", "STRING"),
                 bigquery.SchemaField("recomendationText", "STRING")
             ]
@@ -232,7 +236,6 @@ def createTableReport(bq, table, view_id, report_id):
 def insertBigTable(bq, table_id, entries):
     try:
         errors = bq.insert_rows_json(table_id, entries,  row_ids=[None] * len(entries))
-        print(errors)
     except Exception as e:
         print(str(e))
         return False
@@ -253,7 +256,7 @@ def insertUrlsTable(bq, view_id, report_id, urls):
             query_job = bq.query(query_text)
             query_job.result()
 
-            #time.sleep(GOOGLE_WAIT_TIME)
+            time.sleep(GOOGLE_WAIT_TIME)
         except Exception as e:
             print(str(e))
     except NotFound:

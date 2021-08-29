@@ -269,6 +269,7 @@ class DashboardAjaxView(LoginRequiredMixin, View):
         # retrieve the url
         urldata = []
         for item in stats['top']:
-            urldata.append((item['loc'], item['organicSessions'], item['backLinks'], RECOMENDATIONS.get(item['recomendationCode'], '')))
+            print(item)
+            urldata.append((item['url'], item['seoTraffic'], item['backLinks'], RECOMENDATIONS.get(item['recomendationCode'], '')))
 
         return JsonResponse({"linedata": data, "piedata": piedata, "urldata": urldata}, status=200, safe=False)

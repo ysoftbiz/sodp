@@ -342,5 +342,10 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # ahrefs
 AHREFS_TOKEN = env('AHREFS_TOKEN', default='')
+
+# dataforseo
+DATAFORSEO_EMAIL = env('DATAFORSEO_EMAIL', default='')
+DATAFORSEO_PASSWORD = env('DATAFORSEO_PASSWORD', default='')
+
 # files
 MAX_UPLOAD_SIZE=5242880 #5mb

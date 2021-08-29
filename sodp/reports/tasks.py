@@ -2,7 +2,6 @@ import io
 import json
 import os
 import pandas as pd
-import xlsxwriter 
 
 from celery import shared_task
 from celery.contrib import rdb
@@ -14,7 +13,7 @@ from sodp.utils import google_utils, ahrefs
 from sodp.utils import sitemap as sm
 from sodp.utils import dataforseo
 
-from datetime import datetime
+from datetime import datetime, date
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -42,12 +41,11 @@ def setErrorStatus(report, error_code):
     report.status = "error"
     report.errorDescription = error_code
 
-def setStatusComplete(report, path, dashboard):
-    report.path = path
+def setStatusComplete(report, dashboard):
     report.status = 'complete'
     report.dashboard = dashboard
     report.processingEndDate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    report.save(update_fields=["path", "status", "processingEndDate", "dashboard"])
+    report.save(update_fields=["status", "processingEndDate", "dashboard"])
 
 # sends an email to the user with the report URL
 def sendReportCompletedEmail(report, url):
@@ -66,19 +64,12 @@ def sendReportCompletedEmail(report, url):
 
 
 # calculate recomendation based on row data and tresholds
-def calculateRecomendation(pageViews, organicViews, backlinks, thresholds, period):
+def calculateRecomendation(pageViews, organicViews, backlinks, thresholds, periodNumber):
 
     # get threshold depending on period
     threshold_backlinks = int(thresholds["BACKLINKS"])
-    if period == "ga:yearmonth":
-        threshold_volume = float(thresholds["VOLUME"])
-        threshold_traffic = float(thresholds["TRAFFIC"])
-    elif period == "ga:yearweek":
-        threshold_volume = float(thresholds["VOLUME"])/4
-        threshold_traffic = float(thresholds["TRAFFIC"])/4
-    else:
-        threshold_volume = float(thresholds["VOLUME"])/30
-        threshold_traffic = float(thresholds["TRAFFIC"])/30
+    threshold_volume = float(thresholds["VOLUME"])/periodNumber
+    threshold_traffic = float(thresholds["TRAFFIC"])/periodNumber
 
     # filter by volume and traffic
     if (int(pageViews)>=threshold_volume):
@@ -98,27 +89,6 @@ def calculateRecomendation(pageViews, organicViews, backlinks, thresholds, perio
 
     return "100"
 
-# uploads file to s3 and returns url
-def uploadExcelFile(report, dataframe):    
-    file_directory_within_bucket = 'reports/{username}'.format(username=report.user.pk)
-    dt_string = datetime.now().strftime("%Y%m%d%H%M%S")
-
-    file_path = "report_{report_id}_{timestamp}.xls".format(report_id=report.pk, timestamp=dt_string)
-    final_path = file_directory_within_bucket+"/"+file_path
-
-    # write to excel
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        dataframe.to_excel(writer, 'sheet_name')
-    data = output.getvalue()    
-
-    if not default_storage.exists(final_path): # avoid overwriting existing file
-        default_storage.save(final_path, ContentFile(data))
-        file_url = default_storage.url(final_path)
-        return file_path, file_url
-
-    return False, False            
-
 # calculates if there is a decay in content
 def calculateContentDecay(firstViews, lastViews, thresholds):
     if lastViews >= firstViews:
@@ -132,7 +102,10 @@ def calculateContentDecay(firstViews, lastViews, thresholds):
     return 0
 
 # calculate dashboard content and return in a dict
-def calculateDashboard(project, report_pk, dataframe):
+def calculateDashboard(project, report_pk, entries):
+    dataframe = pd.DataFrame.from_dict(entries)
+
+    dataframe = dataframe.sort_values(by=['seoTraffic'], ascending=False)
     # retrieve top 5 urls from dataframe
     topurls = dataframe.head(5)
 
@@ -140,8 +113,8 @@ def calculateDashboard(project, report_pk, dataframe):
     data['urls'] = []
     for top in topurls.itertuples():
         # retrieve timeline
-        timeline = google_utils.getStatsFromURL(project, report_pk, top.loc)
-        data['urls'].append((top.loc, timeline.to_dict(orient='records')))
+        timeline = google_utils.getStatsFromURL(project, report_pk, top.url)
+        data['urls'].append((top.url, timeline.to_dict(orient='records')))
 
     # second, division by report
     s=dataframe.recomendationCode.value_counts(normalize=True,sort=False).mul(100) # mul(100) is == *100
@@ -152,7 +125,6 @@ def calculateDashboard(project, report_pk, dataframe):
     # third, top urls
     data['top'] = topurls.to_dict(orient='records')
     return data
-
 
 @shared_task(name="sodp.reports.tasks.processReport", time_limit=3600, soft_time_limit=3600)
 def processReport(pk):
@@ -183,8 +155,8 @@ def processReport(pk):
         objview = viewmodel.objects.get(id=obj.project)
         domain = urlparse(objview.url).netloc
 
-        # retrieve global domain data
-        seoclient = dataforseo.RestClient("login", "password")
+        # retrieve data for seo
+        seoclient = dataforseo.RestClient(settings.DATAFORSEO_EMAIL, settings.DATAFORSEO_PASSWORD)
 
         # calculate period
         diff_months = (obj.dateTo.year - obj.dateFrom.year) * 12 + obj.dateTo.month - obj.dateFrom.month
@@ -222,7 +194,6 @@ def processReport(pk):
 
         # generate unique urls
         urlsSitemap = list(set(urlsSitemap))
-        pd_filtered_sm = pd.DataFrame(columns=["loc", "pageViews", "organicSessions", "backLinks", "recomendationCode", "recomendationText"])
 
         # create table if it does not exist, and truncate their values
         table_id = google_utils.createTable(google_big, "stats", objview.project, pk)
@@ -244,6 +215,8 @@ def processReport(pk):
                 #loop1 = asyncio.get_event_loop()
                 #google_keywords = loop1.run_until_complete(google_utils.getTopKeywordsBatch(credentials, objview.url, batch, obj.dateFrom, obj.dateTo))
                 google_keywords = {}
+
+                #keywordsperurls = dataforseo.getKeywords(seoclient, objview.url, batch)
 
                 entries = google_utils.getStatsFromView(credentials, objview.project, objview.url, batch, obj.dateFrom, obj.dateTo, period)
 
@@ -292,8 +265,16 @@ def processReport(pk):
                     title = pageinfo.get('title', '')
                     words = pageinfo.get('words', 0)
 
+                    # get period number
+                    if period == "ga:yearmonth":
+                        periodNumber = 1
+                    elif period == "ga:yearweek":
+                        periodNumber = 4
+                    else:
+                        periodNumber = 30
+
                     # finally execute the calculation
-                    recomendation_code = calculateRecomendation(lastPageViews, lastOrganicViews, backlinks, obj.thresholds, period)
+                    recomendation_code = calculateRecomendation(lastPageViews, lastOrganicViews, backlinks, obj.thresholds, periodNumber)
                     recomendation_text = RECOMENDATION_TEXTS[recomendation_code]
 
                     # create entry in dataframe
@@ -307,32 +288,41 @@ def processReport(pk):
                     else:
                         nonAvgTraffic = round((float(nonSeoTraffic)/float(nonSeoTrafficNum)), 4)
 
+                    # date difference
+                    if (publishDate):
+                        today = date.today()
+                        diffdate = today - datetime.strptime(publishDate, "%Y-%m-%d").date()
+                        days = diffdate.days
+                    else:
+                        days = 999999
+
                     top_keywords = google_keywords.get(url, [])
-                    pd_entry = {"url": url, "title": title, "publishDate": publishDate, "topKw": ",".join(top_keywords),
+                    pd_entry = {"url": url, "title": title, "publishDate": publishDate,
+                        "isContentOutdated": (days >= int(obj.thresholds["AGE"])),
+                        "topKw": ",".join(top_keywords),
                         "vol": 0, "clusterInKw": False, "clusterInTitle": False, "wordCount": int(words),
-                        "seoTraffic": avgTraffic, "nonSeoTraffic": nonAvgTraffic,
-                        "backLinks": backlinks, "decay": round(decay, 4), "prune": False, 
+                        "inDepthContent": int(words) >= int(obj.thresholds["WORD COUNT"]),
+                        "seoTraffic": avgTraffic,
+                        "meaningfulSeoTraffic": (avgTraffic >= float(obj.thresholds["ORGANIC TRAFFIC"])/periodNumber),
+                        "nonSeoTraffic": nonAvgTraffic,
+                        "meaningfulNonSeoTraffic": (nonAvgTraffic >= float(obj.thresholds["TRAFFIC"])/periodNumber),
+                        "backLinks": backlinks,
+                        "sufficientBacklinks": (backlinks >= float(obj.thresholds["BACKLINKS"])),
+                        "decay": round(decay, 4),
                         "recomendationCode": recomendation_code, "recomendationText": recomendation_text }
                     pd_entries.append(pd_entry)
-                    pd_filtered_sm = pd_filtered_sm.append(pd_entry, ignore_index=True)
 
         # insert into table
         google_utils.insertUrlsTable(google_big, objview.project, pk, organic_urls)
         google_utils.insertBigTable(google_big, table_report_id, pd_entries)
 
         # calculate dashboard entries
-        pd_filtered_sm = pd_filtered_sm.sort_values(by=['seoTraffic'], ascending=False)
-        dashboard = calculateDashboard(objview.project, pk, pd_filtered_sm)
+        dashboard = calculateDashboard(objview.project, pk, pd_entries)
             
-        # upload dataframe to storage
-        path, url = uploadExcelFile(obj, pd_filtered_sm)
-        if path and url:
-            sendReportCompletedEmail(obj, url)
+        sendReportCompletedEmail(obj, url)
 
-            # update as completed with path
-            setStatusComplete(obj, path, json.dumps(dashboard, cls=DjangoJSONEncoder))
-        else:
-            setErrorStatus(obj, "ERROR_SAVING")
+        # update as completed with path
+        setStatusComplete(obj, json.dumps(dashboard, cls=DjangoJSONEncoder))
            
     else:
         print("Report not pending")
