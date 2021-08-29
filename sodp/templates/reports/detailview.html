@@ -86,7 +86,7 @@
         <tbody>
           {% for entry in stats.itertuples %}
           <tr>
-              <td><input type="checkbox" data-attr="{{ entry.url }}" name="prune" /> </td>
+              <td><input type="checkbox" data-attr="{{ entry.url }}" name="prune[]" /> </td>
               <td>{{ entry.url }}</td>
               <td>{{ entry.topKw }}</td>
               <td class="{% if entry.publishDate %}{%if entry.isContentOutdated %}red{% else %}green{% endif %}{% else %}red{% endif %}">
@@ -119,7 +119,49 @@
   
 
     </div>
-    <div class="tab-pane fade" id="analysis" role="tabpanel" aria-labelledby="analysis-tab">...</div>
+    <div class="tab-pane fade" id="analysis" role="tabpanel" aria-labelledby="analysis-tab">
+
+      <table class="table" id="analysistable">
+        <thead>
+          <tr class="tit">
+            <th scope="col" class="tophead">{% trans "URL" %}</th>
+            <th scope="col" class="tophead">{% trans "TITLE" %}</th>
+            <th scope="col" class="tophead">{% trans "PUBLISH DATE" %}</th>
+            <th scope="col" class="tophead">{% trans "TOP KW" %}</th>
+            <th scope="col" class="tophead">{% trans "VOL" %}</th>
+            <th scope="col" class="tophead">{% trans "Cluster in KW" %}</th>
+            <th scope="col" class="tophead">{% trans "Cluster in TITLE" %}</th>
+            <th scope="col" class="tophead">{% trans "WORD COUNT" %}</th>
+            <th scope="col" class="tophead">{% trans "SEO TRAFFIC (Av. per period)" %}</th>
+            <th scope="col" class="tophead">{% trans "NON-SEO TRAFFIC (Av. per period)" %}</th>
+            <th scope="col" class="tophead">{% trans "BACKLINKS (Unique root links)" %}</th>
+            <th scope="col" class="tophead">{% trans "DECAY" %} (> %{{ threshold_decay}})</th>
+            <th scope="col" class="tophead">{% trans "View decay chart" %}</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for entry in stats.itertuples %}
+          <tr>
+              <td>{{ entry.url }}</td>
+              <td>{{ entry.title }}</td>
+              <td>{{ entry.publishDate }}</td>
+              <td>{{ entry.topKw }}</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>{{ entry.wordCount }}</td>
+              <td>{{ entry.meaningfulSeoTraffic }}</td>
+              <td>{{ entry.meaningfulNonSeoTraffic }}</td>
+              <td>{{ entry.backlinks }}</td>
+              <td>
+                {%if entry.decay < threshold_decay %}{% translate "No" %}{% else %}{% translate "Yes" %}{% endif %}
+              </td>
+            </tr>
+        {% endfor %}
+
+      </table>
+    </div>
 
     {% endif %}
 
@@ -144,10 +186,23 @@
       });
     });
 
+    $("input[name='prune[]']").change(function() {
+        if(this.checked) {
+          console.log(this);
+        }
+    });    
+
     $('#detaillist').DataTable( {
             paging: true,
             ordering: true,
             searching: true,
+            info: false
+          } );
+
+          $('#analysistable').DataTable( {
+            paging: false,
+            ordering: true,
+            searching: false,
             info: false
           } );
 
