@@ -260,7 +260,7 @@ def processReport(pk):
                     publishDate = info.get('first_seen', None)
                     if publishDate:
                         publishDate = publishDate[0:10] # just date
-                    if len(publishDate)<=0:
+                    if publishDate is not None and len(publishDate)<=0:
                         publishDate = None
 
                     pageinfo = ahrefs_pages.get(url, {})
