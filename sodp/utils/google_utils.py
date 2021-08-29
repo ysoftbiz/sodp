@@ -236,6 +236,8 @@ def createTableReport(bq, table, view_id, report_id):
 def insertBigTable(bq, table_id, entries):
     try:
         errors = bq.insert_rows_json(table_id, entries,  row_ids=[None] * len(entries))
+        if (errors):
+            print(errors)
     except Exception as e:
         print(str(e))
         return False
@@ -276,6 +278,8 @@ def insertUrlsTable(bq, view_id, report_id, urls):
     # now insert the values
     try:
         errors = bq.insert_rows_json(table_id, urls,  row_ids=[None] * len(urls))
+        if errors:
+            print(errors)
     except Exception as e:
         print(str(e))
         return False
