@@ -542,3 +542,27 @@ def getStatsFromURL(view_id, report_id, url):
 
     return False
 
+# gets a dump of all the report stats for that table
+def getReportStats(view_id, report_id):
+    google_big = authenticateBigQuery()
+    if google_big:
+        # Download query results
+        table_id = "%s.sodp.%s_%s_%d" % (google_big.project, "report", view_id, report_id)
+
+        query_string = """
+        SELECT * FROM %s ORDER BY seoTraffic DESC         
+        """ % (table_id)
+
+        dataframe = (
+            google_big.query(query_string)
+            .result()
+            .to_dataframe(
+                # Optionally, explicitly request to use the BigQuery Storage API. As of
+                # google-cloud-bigquery version 1.26.0 and above, the BigQuery Storage
+                # API is used by default.
+                create_bqstorage_client=True,
+            )
+        )
+        return dataframe
+
+    return False

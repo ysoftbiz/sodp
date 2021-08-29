@@ -14,11 +14,34 @@
 
 
 {% block content %}
-<div class="hero">
-  
-    <h2>{% trans "Report detail" %}</h2>
+<div>
+    <h2 class="form_title">{% trans "Report detail" %}</h2>
+</div>
 
-    <p><label>{% trans "View:" %} </label> <a href = "{% url 'views:detailview' report.project %}" class="bot">{{report.viewName}}</a></p>
+<ul class="nav nav-tabs" id="reportTab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <a class="nav-link active" id="summary-tab" data-toggle="tab" href="#summary" role="tab" aria-controls="summary" aria-selected="true">
+      {% translate "Summary" %}</a>
+  </li>
+
+  {% if report.status == "complete" %}
+  <li class="nav-item" role="presentation">
+    <a class="nav-link" id="content-tab" data-toggle="tab" href="#content" role="tab" aria-controls="content" aria-selected="false">
+      {% translate "Content pruning" %}
+    </a>
+  </li>
+  <li class="nav-item" role="presentation">
+    <a class="nav-link" id="analysis-tab" data-toggle="tab" href="#analysis" role="tab" aria-controls="analysis" aria-selected="false">
+      {% translate "Pruning analysis" %}
+    </a>
+  </li>
+  {% endif %}
+</ul>
+
+<div class="tab-content" id="reportTabContent">
+
+  <div class="tab-pane fade show active" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+    <p><label>{% trans "URL:" %} </label> {{report.viewName}}</a></p>
     <p><label>{% trans "Date from:" %} </label> {{ report.dateFrom }}</p>
     <p><label>{% trans "Date to:" %}</label> {{ report.dateTo }}</p>
     <p><label>{% trans "Creation date:" %}</label> {{ report.creationDate }}</p>
@@ -27,12 +50,82 @@
     <p><label>{% trans "Error description:" %}</label> {{ report.errorDescription }}</p>
     {% endif %}
 
+  </div>
+
+
     {% if report.status == "complete" %}
-    <p><a class="open-report-detail btn-action" href="/reports/detail/{{ report.pk }}/"
-        data-popup-url="/reports/detail/{{ report.pk }}/" >{%trans "View detail" %}</a></p>
+    <div class="tab-pane fade" id="content" role="tabpanel" aria-labelledby="content-tab">
+
+      <table class="table" id="detaillist">
+        <thead>
+          <tr class="tit">
+            <th scope="col" rowspan=2 class="tophead">{% trans "PRUNE?" %} </th>
+            <th scope="col" rowspan=2 class="tophead">{% trans "URL" %}</th>
+            <th scope="col" rowspan=2 class="tophead">{% trans "TOP KW" %}</th>
+            <th scope="col" class="tophead">{% trans "AGE" %}</th>
+            <th scope="col" class="tophead">{% trans "TOPIC" %}</th>
+            <th scope="col" class="tophead">{% trans "VOLUME" %}</th>
+            <th scope="col" class="tophead">{% trans "WORD COUNT" %}</th>
+            <th scope="col" class="tophead">{% trans "ORGANIC TRAFFIC" %}</th>
+            <th scope="col" class="tophead">{% trans "TRAFFIC" %}</th>
+            <th scope="col" class="tophead">{% trans "BACKLINKS" %}</th>
+            <th scope="col" class="tophead">{% trans "CONTENT DECAY" %}</th>
+            <th scope="col" rowspan=2 class="tophead">{% trans "RECOMENDATION" %}</th>
+          </tr>
+          <tr>
+            <th scope="col" class="lowhead">{% trans "Is the page older than" %} {{ thresholds.AGE }} {% trans "days?" %}</th>
+            <th scope="col" class="lowhead">{% trans "Is the page content about a related cluster?" %}</th>
+            <th scope="col" class="lowhead">{% trans "Is the page targetting a KW with search volume?" %}</th>
+            <th scope="col" class="lowhead">{% trans "Does the page have in-depth content?" %}</th>
+            <th scope="col" class="lowhead">{% trans "Does it generate meaningful organic traffic?" %}</th>
+            <th scope="col" class="lowhead">{% trans "Does it generate meaningful non-organic traffic?" %}</th>
+            <th scope="col" class="lowhead">{% trans "Does it have sufficient backlinks pointing to it?" %}</th>
+            <th scope="col" class="lowhead">{% trans "Is the content outdated or obsolete?" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in stats.itertuples %}
+          <tr>
+              <td><input type="checkbox" data-attr="{{ entry.url }}" name="prune" /> </td>
+              <td>{{ entry.url }}</td>
+              <td>{{ entry.topKw }}</td>
+              <td class="{% if entry.publishDate %}{%if entry.isContentOutdated %}red{% else %}green{% endif %}{% else %}red{% endif %}">
+                {% if entry.publishDate %}{%if entry.isContentOutdated %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}{% else %}{% translate "URL not found" %}{% endif %}
+              </td>
+              <td></td>
+              <td></td>
+              <td class="{% if entry.wordCount %}{%if entry.inDepthContent %}green{% else %}red{% endif %}{% else %}red{% endif %}">
+                {% if entry.wordCount %}{%if entry.inDepthContent %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}{% else %}{% translate "URL not found" %}{% endif %}
+              </td>
+              <td class="{%if entry.meaningfulSeoTraffic %}green{% else %}red{% endif %}">
+                {% if entry.meaningfulSeoTraffic %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}
+              </td>
+              <td class="{%if entry.meaningfulNonSeoTraffic %}green{% else %}red{% endif %}">
+                {% if entry.meaningfulNonSeoTraffic %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}
+              </td>
+              <td class="{% if entry.backlinks %}{%if entry.sufficientBacklinks %}green{% else %}red{% endif %}{% else %}red{% endif %}">
+                {% if entry.backlinks %}{%if entry.sufficientBacklinks %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}{% else %}{% translate "No backlinks" %}{% endif %}
+              </td>
+
+              <td class="{%if entry.decay < threshold_decay %}green{% else %}red{% endif %}">
+                {%if entry.decay < threshold_decay %}{% translate "No" %}{% else %}{% translate "Yes" %}{% endif %}
+              </td>
+              <td>{{ entry.recomendationText }}</td>
+            </tr>
+        {% endfor %}
+    
+        </tbody>
+      </table>  
+  
+
+    </div>
+    <div class="tab-pane fade" id="analysis" role="tabpanel" aria-labelledby="analysis-tab">...</div>
+
     {% endif %}
 
   </div>
+</div>
+
 {% endblock %}
 
 {% block modal %}
@@ -50,5 +143,13 @@
         return false;
       });
     });
+
+    $('#detaillist').DataTable( {
+            paging: true,
+            ordering: true,
+            searching: true,
+            info: false
+          } );
+
   </script>
 {% endblock %}

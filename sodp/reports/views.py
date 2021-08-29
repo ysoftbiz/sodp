@@ -141,6 +141,32 @@ class ReportDetailView(generic.DetailView, LoginRequiredMixin):
         query = super(ReportDetailView, self).get_queryset()
         return query.filter(user=self.request.user)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['id'] = self.kwargs['pk']
+
+        obj = report.objects.get(pk=context['id'], user=self.request.user)
+        if obj.thresholds:
+            context['thresholds'] = obj.thresholds
+            context['threshold_decay'] = obj.thresholds['CONTENT DECAY']
+        else:
+            context['thresholds'] = {}
+            context['threshold_decay'] = 0
+
+        # now retrieve data from bigquery
+        context["stats"] = []
+        if obj.project:
+            # retrieve view
+            view_obj = viewmodel.objects.get(id=obj.project, user=self.request.user)
+            if view_obj:
+                # retrieve stats from google big query
+                stats = google_utils.getReportStats(view_obj.project, obj.pk)
+                context["stats"] = stats
+
+        return context
+        
+
 class ReportFrameView(generic.DetailView, LoginRequiredMixin):
     model = report
     template_name = 'reports/frameview.html'
