@@ -452,12 +452,35 @@ table.dataTable.no-footer {
 	color: #745656 !important;
 }
 
+.nav-tabs {
+	border: none;
+}
+
+.nav-tabs .nav-link.active {
+	color: #56b3ae !important;
+}
+
+.nav-tabs .nav-link {
+	color: #4f5e6a !important;
+}
+
 #reportlist_length > label > select,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover,
+.paginate_button:hover,
 .dataTables_wrapper .dataTables_filter input,
-#reportlist_paginate > span > a {
+#reportlist_paginate > span > a,
+.dataTables_wrapper .dataTables_length select {
 	background: #dcefff !important;
 	color: #4f5e6a !important;
     border: none !important;
+}
+
+table.dataTable thead th, table.dataTable thead td {
+	font-size: .88em;
+}
+
+table.dataTable tbody th, table.dataTable tbody td {
+	font-size: .86em;
 }
 
 .dataTables_filter {
@@ -476,19 +499,15 @@ table.dataTable.no-footer {
 	font-weight: bold;
 }
 
-#rankingChart > thead,
-#main > div > div.boxed > table > thead .tit,
-#reportlist > thead > tr {
+.tit,
+table.dataTable thead .sorting {
 	background-color: #f8fcfd !important;
 	color: #56b3ae;
+	text-transform: uppercase;
 }
 
 .select2-container--default .select2-search--dropdown .select2-search__field {
 	border: none;
-}
-
-.tit {
-	background-color: #fff !important;
 }
 
 .table td, .table th {
@@ -530,7 +549,8 @@ table.dataTable tbody td {
 	background-color: #fff !important;
 }
 
-.boxed {
+.boxed,
+.tab-content {
     box-shadow: rgb(50 50 93 / 25%) 0px 13px 27px -5px, rgb(0 0 0 / 30%) 0px 8px 16px -8px;
 	background-color: white;
 	border-radius: .5em;
@@ -2653,11 +2673,6 @@ flex: 0 0 568px;
 	transition: 0.5s;
 	background-color:#682d63;
 	color: #fff;
-}
-
-.tit{
-	text-transform: uppercase;
-	background-color: #fafafa;
 }
 
 .lis{
