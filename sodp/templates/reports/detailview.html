@@ -157,6 +157,7 @@
               <td>
                 {%if entry.decay < threshold_decay %}{% translate "No" %}{% else %}{% translate "Yes" %}{% endif %}
               </td>
+              <td></td>
             </tr>
         {% endfor %}
 
@@ -199,12 +200,12 @@
             info: false
           } );
 
-          $('#analysistable').DataTable( {
-            paging: false,
-            ordering: true,
-            searching: false,
-            info: false
-          } );
+      $('#analysistable').DataTable( {
+        paging: false,
+        ordering: true,
+        searching: false,
+        info: false
+      } );
 
   </script>
 {% endblock %}
