@@ -45,12 +45,12 @@ table {
 /* --- Common Styles ---*/
 
 h1, h2, h3, h4, h5, h6 {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
   font-size: 16px;
 }
 
 p, table, td, th, a, div {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 14px;
 }
 
@@ -158,7 +158,7 @@ body {
 }
 
 .tld-text h6 {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 14px;
 	font-weight: 700;
 	color: #FFFFFF !important;
@@ -167,7 +167,7 @@ body {
 
 
 .tld-text a {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 16px;
 	font-weight: 500;
 	color: #FFFFFF !important;
@@ -344,6 +344,14 @@ select:focus {
 	text-decoration: none;
 }
 
+.width20em {
+	min-width: 20em;
+}
+
+.width33em {
+	min-width: 33em;
+}
+
 .width40 {
 	width: 40% !important;
 }
@@ -403,7 +411,7 @@ table.dataTable {
 
 .modal-title {
 	font-weight: bold;
-    font-family: 'Montserrat';
+    font-family: 'Montserrat', sans-serif;
     font-size: 1.5em;
 	color: #682d63;
 }
@@ -418,7 +426,7 @@ table.dataTable {
 }
 
 .select2-results__option--selectable {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
     font-size: .8em;
 }
 
@@ -504,6 +512,17 @@ table.dataTable thead .sorting {
 	background-color: #f8fcfd !important;
 	color: #56b3ae;
 	text-transform: uppercase;
+	font-size: 12px;
+	white-space: normal;
+}
+
+#detaillist > thead > tr > th > a,
+#detaillist > thead > tr > th > a:hover {
+	color: #56b3ae;
+	font-family: 'Montserrat', sans-serif;
+	text-decoration: none;
+	font-size: 12px;
+	white-space: normal;
 }
 
 .select2-container--default .select2-search--dropdown .select2-search__field {
@@ -555,6 +574,9 @@ table.dataTable tbody td {
 	background-color: white;
 	border-radius: .5em;
 	padding: 1em .3em;
+	min-width: 100%;
+	width: fit-content;
+	margin-bottom: 2em;
 }
 
 .ranking_table {
@@ -661,7 +683,7 @@ p {
 }
 
 .btn-action {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	display: inline-block;
 	height: 42px;
 	padding: 0 30px;
@@ -809,7 +831,7 @@ p {
 }
 
 label {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 1em;
 	font-weight: 600;
 	line-height: 3em;
@@ -820,7 +842,7 @@ label {
 }
 
 input, textarea, select {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 0.9em  !important;
 	font-weight: 400;
 	border: 0;
@@ -835,7 +857,7 @@ input, textarea, select {
 
 
 .help-block {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 12px;
 	font-weight: 400;
 	margin-top: 5px;
@@ -1081,7 +1103,7 @@ input, textarea, select {
 
 .yd_ft_cst ul li {
 	display: block;
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 16px;
 	line-height: 1.4;
 	margin-bottom: 10px;
@@ -1276,7 +1298,7 @@ input, textarea, select {
 }
 
 .block_list li span {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 16px;
 	font-weight: 600;
 	letter-spacing: 0;
@@ -1363,7 +1385,7 @@ input, textarea, select {
 }
 
 .flx_2 a {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 12px;
 	font-weight: 500;
 	color: #FFFFFF;
@@ -1581,7 +1603,7 @@ input, textarea, select {
 }
 
 .yd_prc2 .yd_flx2 span {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 36px;
 	font-weight: 600;
 	display: inline-block;
@@ -1590,7 +1612,7 @@ input, textarea, select {
 }
 
 .sub_span {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 14px;
 	font-weight: 600;
 	color: #97a6b5;
@@ -1609,7 +1631,7 @@ input, textarea, select {
 }
 
 .prc_features li span {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 16px;
 	font-weight: 500;
 	color: #97a6b5;
@@ -1742,7 +1764,7 @@ input, textarea, select {
 	position: fixed;
 	bottom: 30px;
 	right: 30px;
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 11px;
 	font-weight: 700;
 	text-transform: uppercase;
@@ -1905,7 +1927,7 @@ input, textarea, select {
 }
 
 .split_home .flx_1 a {
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 12px;
 	font-weight: 500;
 	color: #23a393;
@@ -2130,7 +2152,7 @@ ul#countdown li {
 
 .form input {
   color: #222222;
-  font-family: 'Montserrat';
+  font-family: 'Montserrat', sans-serif;
   padding: 0;
   font-size: 0.8em  !important;
 	font-weight: 500;
@@ -2169,7 +2191,7 @@ ul#countdown li {
 	border-radius: .3em;
 	padding: 0 25px 0 25px;
 	background: #767676;
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 14px;
 	font-weight: 500;
 	text-transform: capitalize;
@@ -2188,7 +2210,7 @@ ul#countdown li {
 	left: 20%;
 	right: 0;
 	bottom: 0%;
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 13px;
 	font-weight: 500;
 	color: #FF3333;
@@ -2199,7 +2221,7 @@ ul#countdown li {
 	left: 20%;
 	bottom: -90%;
 	vertical-align: middle;
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 13px !important;
 	font-weight: 500 !important;
 	margin: 0 !important;
@@ -2218,7 +2240,7 @@ ul#countdown li {
 	bottom: -50%;
 	vertical-align: middle;
 	text-align: center;
-	font-family: 'Montserrat';
+	font-family: 'Montserrat', sans-serif;
 	font-size: 13px;
 	font-weight: 500;
 	color: #23D3D3;
