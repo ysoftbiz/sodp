@@ -87,28 +87,39 @@
               <td><input type="checkbox" data-attr="{{ entry.url }}" name="prune[]" /> </td>
               <td>{{ entry.url }}</td>
               <td>{{ entry.topKw }}</td>
-              <td class="{% if entry.publishDate %}{%if entry.isContentOutdated %}red{% else %}green{% endif %}{% else %}red{% endif %}">
-                {% if entry.publishDate %}{%if entry.isContentOutdated %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}{% else %}{% translate "URL not found" %}{% endif %}
+              <td>
+                {% if entry.publishDate %}{%if entry.isContentOutdated %}
+                <span class="red">{% translate "Yes" %}</span>{% else %}<span class="green">{% translate "No" %}</span>{% endif %}{% else %}
+                <span class="red">{% translate "URL not found" %}</span>{% endif %}
               </td>
-              <td class="{%if entry.clusterInKw or entry.clusterInTitle %}green{% else %}red{% endif %}">
-                {% if entry.clusterInKw or entry.clusterInTitle %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
-              <td class="{%if entry.hasVolume %}green{% else %}red{% endif %}">
-                {% if entry.hasVolume %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
-              <td class="{% if entry.wordCount %}{%if entry.inDepthContent %}green{% else %}red{% endif %}{% else %}red{% endif %}">
-                {% if entry.wordCount %}{%if entry.inDepthContent %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}{% else %}{% translate "URL not found" %}{% endif %}
+              <td>
+                {% if entry.clusterInKw or entry.clusterInTitle %}<span class="green">{% translate "Yes" %}</span>{% else %}
+                <span class="red">{% translate "No" %}</span>{% endif %}</td>
+              <td>
+                {% if entry.hasVolume %}<span class="green">{% translate "Yes" %}</span>{% else %}
+                <span class="red">{% translate "No" %}</span>{% endif %}</td>
+              <td>
+                {% if entry.wordCount %}{%if entry.inDepthContent %}<span class="green">{% translate "Yes" %}</span>{% else %}
+                <span class="red">{% translate "No" %}</span>{% endif %}{% else %}
+                <span class="red">{% translate "URL not found" %}</span>{% endif %}
               </td>
-              <td class="{%if entry.meaningfulSeoTraffic %}green{% else %}red{% endif %}">
-                {% if entry.meaningfulSeoTraffic %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}
+              <td>
+                {% if entry.meaningfulSeoTraffic %}<span class="green">{% translate "Yes" %}</span>{% else %}
+                <span class="red">{% translate "No" %}</span>{% endif %}
               </td>
-              <td class="{%if entry.meaningfulNonSeoTraffic %}green{% else %}red{% endif %}">
-                {% if entry.meaningfulNonSeoTraffic %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}
+              <td>
+                {% if entry.meaningfulNonSeoTraffic %}<span class="green">{% translate "Yes" %}</span>{% else %}
+                <span class="red">{% translate "No" %}</span>{% endif %}
               </td>
-              <td class="{% if entry.backlinks %}{%if entry.sufficientBacklinks %}green{% else %}red{% endif %}{% else %}red{% endif %}">
-                {% if entry.backlinks %}{%if entry.sufficientBacklinks %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}{% else %}{% translate "No backlinks" %}{% endif %}
+              <td>
+                {% if entry.backlinks %}{%if entry.sufficientBacklinks %}<span class="green">{% translate "Yes" %}</span>{% else %}
+                <span class="red">{% translate "No" %}</span>{% endif %}{% else %}
+                <span class="red">{% translate "No backlinks" %}</span>{% endif %}
               </td>
 
-              <td class="{%if entry.decay < threshold_decay %}green{% else %}red{% endif %}">
-                {%if entry.decay < threshold_decay %}{% translate "No" %}{% else %}{% translate "Yes" %}{% endif %}
+              <td>
+                {%if entry.decay < threshold_decay %}<span class="yes">{% translate "No" %}</span>{% else %}
+                <span class="red">{% translate "Yes" %}</span>{% endif %}
               </td>
               <td>{{ entry.recomendationText }}</td>
             </tr>
@@ -147,18 +158,21 @@
               <td>{{ entry.publishDate }}</td>
               <td>{{ entry.topKw }}</td>
               <td>{{ entry.vol }}</td>
-              <td class="{%if entry.clusterInKw %}green{% else %}red{% endif %}">
-                {% if entry.clusterInKw %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
-              <td class="{%if entry.clusterInTitle %}green{% else %}red{% endif %}">
-                {% if entry.clusterInTitle %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>  
+              <td>
+                {% if entry.clusterInKw %}<span class="green">{% translate "Yes" %}</span>{% else %}
+                  <span class="red">{% translate "No" %}</span>{% endif %}</td>
+              <td>
+                {% if entry.clusterInTitle %}<span class="green">{% translate "Yes" %}</span>{% else %}
+                <span class="red"></span>{% translate "No" %}</span>{% endif %}</td>  
               <td>{{ entry.wordCount }}</td>
               <td>{{ entry.meaningfulSeoTraffic }}</td>
               <td>{{ entry.meaningfulNonSeoTraffic }}</td>
               <td>{{ entry.backLinks }}</td>
               <td>
-                {%if entry.decay < threshold_decay %}{% translate "No" %}{% else %}{% translate "Yes" %}{% endif %}
+                {%if entry.decay < threshold_decay %}<span class="green">{% translate "No" %}</span>{% else %}
+                <span class="red">{% translate "Yes" %}</span>{% endif %}
               </td>
-              <td></td>
+              <td><a href="#" data-id="{{ entry.url }}" data-toggle="modal" data-target="#modChart">{% trans "View chart" %}</a></td>
             </tr>
         {% endfor %}
 
@@ -191,27 +205,50 @@
       });
     });
 
-    $("input[name='prune[]']").change(function() {
+    var myids = [];
+
+    function filterTable(copy) {
+      var atable = $('#analysistable').DataTable();
+      const filtered = copy.filter((item, index) => myids.includes(index));
+
+      atable.clear();
+      atable.rows.add(filtered).draw();
+
+    }
+    
+    $(document).ready(function () {
+      $("input[name='prune[]']").change(function() {
+        var tableIndex = $(this).closest('tr').index();
         if(this.checked) {
-          console.log(this);
+          // append to index
+          myids.push(tableIndex);
         }
-    });    
+        else {
+          myids = myids.filter(item => item !== tableIndex)
+        }
 
-    $('#detaillist').DataTable( {
-      autoWidth: false,
-            paging: true,
-            ordering: true,
-            searching: true,
-            info: false
-          } );
+        filterTable(copy);
+      });  
 
-      $('#analysistable').DataTable( {
-        paging: false,
-        ordering: true,
-        searching: false,
-        info: false
-      } );
+      $('#detaillist').DataTable( {
+        autoWidth: false,
+              paging: true,
+              ordering: true,
+              searching: true,
+              info: false
+            } );
 
-      
+        var atable = $('#analysistable').DataTable( {
+          paging: false,
+          ordering: true,
+          searching: false,
+          info: false
+        } );
+
+        // Filter existing rows
+        var copy = atable.data();
+        filterTable(copy);
+
+    });
   </script>
 {% endblock %}

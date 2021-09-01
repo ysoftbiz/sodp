@@ -517,7 +517,10 @@ table.dataTable thead .sorting {
 }
 
 #detaillist > thead > tr > th > a,
-#detaillist > thead > tr > th > a:hover {
+#detaillist > thead > tr > th > a:hover,
+#analysistable > tbody > tr > td > a,
+#analysistable > tbody > tr > td > a:hover
+{
 	color: #56b3ae;
 	font-family: 'Montserrat', sans-serif;
 	text-decoration: none;
