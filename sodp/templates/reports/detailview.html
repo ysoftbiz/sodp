@@ -59,28 +59,26 @@
       <table class="table" id="detaillist">
         <thead>
           <tr class="tit">
-            <th scope="col" rowspan=2 class="tophead">{% trans "PRUNE?" %} </th>
-            <th scope="col" rowspan=2 class="tophead">{% trans "URL" %}</th>
-            <th scope="col" rowspan=2 class="tophead">{% trans "TOP KW" %}</th>
-            <th scope="col" class="tophead">{% trans "AGE" %}</th>
-            <th scope="col" class="tophead">{% trans "TOPIC" %}</th>
-            <th scope="col" class="tophead">{% trans "VOLUME" %}</th>
-            <th scope="col" class="tophead">{% trans "WORD COUNT" %}</th>
-            <th scope="col" class="tophead">{% trans "ORGANIC TRAFFIC" %}</th>
-            <th scope="col" class="tophead">{% trans "TRAFFIC" %}</th>
-            <th scope="col" class="tophead">{% trans "BACKLINKS" %}</th>
-            <th scope="col" class="tophead">{% trans "CONTENT DECAY" %}</th>
-            <th scope="col" rowspan=2 class="tophead">{% trans "RECOMENDATION" %}</th>
-          </tr>
-          <tr>
-            <th scope="col" class="lowhead">{% trans "Is the page older than" %} {{ thresholds.AGE }} {% trans "days?" %}</th>
-            <th scope="col" class="lowhead">{% trans "Is the page content about a related cluster?" %}</th>
-            <th scope="col" class="lowhead">{% trans "Is the page targetting a KW with search volume?" %}</th>
-            <th scope="col" class="lowhead">{% trans "Does the page have in-depth content?" %}</th>
-            <th scope="col" class="lowhead">{% trans "Does it generate meaningful organic traffic?" %}</th>
-            <th scope="col" class="lowhead">{% trans "Does it generate meaningful non-organic traffic?" %}</th>
-            <th scope="col" class="lowhead">{% trans "Does it have sufficient backlinks pointing to it?" %}</th>
-            <th scope="col" class="lowhead">{% trans "Is the content outdated or obsolete?" %}</th>
+            <th scope="col" class="tophead">{% trans "PRUNE?" %} </th>
+            <th scope="col" class="tophead width33em">{% trans "URL" %}</th>
+            <th scope="col" class="tophead width20em">{% trans "TOP KW" %}</th>
+            <th scope="col" class="tophead">
+              <a href="#" rel="tooltip" title="{% trans "Is the page older than" %} {{ thresholds.AGE }} {% trans "days?" %}">{% trans "AGE" %}</a></th>
+            <th scope="col" class="tophead">
+              <a href="#" rel="tooltip" title="{% trans "Is the page content about a related cluster?" %}">{% trans "TOPIC" %}</a></th>
+            <th scope="col" class="tophead">
+              <a href="#" rel="tooltip" title="{% trans "Is the page targetting a KW with search volume?" %}">{% trans "VOLUME" %}</a></th>
+            <th scope="col" class="tophead">
+              <a href="#" rel="tooltip" title="{% trans "Does the page have in-depth content?" %}">{% trans "WORD COUNT" %}</a></th>
+            <th scope="col" class="tophead">
+              <a href="#" rel="tooltip" title="{% trans "Does it generate meaningful organic traffic?" %}">{% trans "ORGANIC TRAFFIC" %}</a></th>
+            <th scope="col" class="tophead">
+              <a href="#" rel="tooltip" title="{% trans "Does it generate meaningful non-organic traffic?" %}">{% trans "TRAFFIC" %}</a></th>
+            <th scope="col" class="tophead">
+              <a href="#" rel="tooltip" title="{% trans "Does it have sufficient backlinks pointing to it?" %}">{% trans "BACKLINKS" %}</a></th>
+            <th scope="col" class="tophead">
+              <a href="#" rel="tooltip" title="{% trans "Is the content outdated or obsolete?" %}">{% trans "CONTENT DECAY" %}</a></th>
+            <th scope="col" class="tophead">{% trans "RECOMENDATION" %}</th>
           </tr>
         </thead>
         <tbody>
@@ -116,7 +114,6 @@
     
         </tbody>
       </table>  
-  
 
     </div>
     <div class="tab-pane fade" id="analysis" role="tabpanel" aria-labelledby="analysis-tab">
@@ -124,9 +121,9 @@
       <table class="table" id="analysistable">
         <thead>
           <tr class="tit">
-            <th scope="col" class="tophead">{% trans "URL" %}</th>
-            <th scope="col" class="tophead">{% trans "TITLE" %}</th>
-            <th scope="col" class="tophead">{% trans "PUBLISH DATE" %}</th>
+            <th scope="col" class="tophead width33em">{% trans "URL" %}</th>
+            <th scope="col" class="tophead width20em">{% trans "TITLE" %}</th>
+            <th scope="col" class="tophead width20em">{% trans "PUBLISH DATE" %}</th>
             <th scope="col" class="tophead">{% trans "TOP KW" %}</th>
             <th scope="col" class="tophead">{% trans "VOL" %}</th>
             <th scope="col" class="tophead">{% trans "Cluster in KW" %}</th>
@@ -167,7 +164,7 @@
     {% endif %}
 
   </div>
-</div>
+
 
 {% endblock %}
 
@@ -177,6 +174,9 @@
 
 {% block inline_javascript %}
 <script>
+  $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
     $(document).on("click", ".open-report-detail", function (e) {
       e.preventDefault();
       var $popup = $("#popup");
@@ -194,6 +194,7 @@
     });    
 
     $('#detaillist').DataTable( {
+      autoWidth: false,
             paging: true,
             ordering: true,
             searching: true,
@@ -207,5 +208,6 @@
         info: false
       } );
 
+      
   </script>
 {% endblock %}
