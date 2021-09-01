@@ -80,10 +80,10 @@ async def getKeywords(domain, urls):
 
         # get unique keywords and search the volume
         post_data = [{
-            "keywords": keywords_for_volume,
+            "keywords": list(set(keywords_for_volume)),
         }]
 
-        response = getDataForSeoRequest("https://api.dataforseo.com/v3/keywords_data/google/search_volume/live",
+        response = await getDataForSeoRequest("https://api.dataforseo.com/v3/keywords_data/google/search_volume/live",
                 headers, post_data, session)
 
         # iterate for each keyword
@@ -91,7 +91,8 @@ async def getKeywords(domain, urls):
             data = response
             results = data["tasks"][0]["result"]
             if results:
-                for (keyword, volume_data) in zip(data["tasks"][0]["keywords"], results):
+                for volume_data in results:
+                    keyword = volume_data["keyword"]
                     volume = volume_data["search_volume"]
 
                     # search by all urls, looking for first keyword
