@@ -60,8 +60,8 @@
         <thead>
           <tr class="tit">
             <th scope="col" class="tophead">{% trans "PRUNE?" %} </th>
-            <th scope="col" class="tophead width33em">{% trans "URL" %}</th>
-            <th scope="col" class="tophead width20em">{% trans "TOP KW" %}</th>
+            <th scope="col" class="tophead width20em">{% trans "URL" %}</th>
+            <th scope="col" class="tophead width10em">{% trans "TOP KW" %}</th>
             <th scope="col" class="tophead">
               <a href="#" rel="tooltip" title="{% trans "Is the page older than" %} {{ thresholds.AGE }} {% trans "days?" %}">{% trans "AGE" %}</a></th>
             <th scope="col" class="tophead">
@@ -90,8 +90,10 @@
               <td class="{% if entry.publishDate %}{%if entry.isContentOutdated %}red{% else %}green{% endif %}{% else %}red{% endif %}">
                 {% if entry.publishDate %}{%if entry.isContentOutdated %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}{% else %}{% translate "URL not found" %}{% endif %}
               </td>
-              <td></td>
-              <td></td>
+              <td class="{%if entry.clusterInKw or entry.clusterInTitle %}green{% else %}red{% endif %}">
+                {% if entry.clusterInKw or entry.clusterInTitle %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
+              <td class="{%if entry.hasVolume %}green{% else %}red{% endif %}">
+                {% if entry.hasVolume %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
               <td class="{% if entry.wordCount %}{%if entry.inDepthContent %}green{% else %}red{% endif %}{% else %}red{% endif %}">
                 {% if entry.wordCount %}{%if entry.inDepthContent %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}{% else %}{% translate "URL not found" %}{% endif %}
               </td>
@@ -121,10 +123,10 @@
       <table class="table" id="analysistable">
         <thead>
           <tr class="tit">
-            <th scope="col" class="tophead width33em">{% trans "URL" %}</th>
+            <th scope="col" class="tophead width20em">{% trans "URL" %}</th>
             <th scope="col" class="tophead width20em">{% trans "TITLE" %}</th>
-            <th scope="col" class="tophead width20em">{% trans "PUBLISH DATE" %}</th>
-            <th scope="col" class="tophead">{% trans "TOP KW" %}</th>
+            <th scope="col" class="tophead">{% trans "PUBLISH DATE" %}</th>
+            <th scope="col" class="tophead width10em">{% trans "TOP KW" %}</th>
             <th scope="col" class="tophead">{% trans "VOL" %}</th>
             <th scope="col" class="tophead">{% trans "Cluster in KW" %}</th>
             <th scope="col" class="tophead">{% trans "Cluster in TITLE" %}</th>
@@ -144,13 +146,15 @@
               <td>{{ entry.title }}</td>
               <td>{{ entry.publishDate }}</td>
               <td>{{ entry.topKw }}</td>
-              <td></td>
-              <td></td>
-              <td></td>
+              <td>{{ entry.vol }}</td>
+              <td class="{%if entry.clusterInKw %}green{% else %}red{% endif %}">
+                {% if entry.clusterInKw %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
+              <td class="{%if entry.clusterInTitle %}green{% else %}red{% endif %}">
+                {% if entry.clusterInTitle %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>  
               <td>{{ entry.wordCount }}</td>
               <td>{{ entry.meaningfulSeoTraffic }}</td>
               <td>{{ entry.meaningfulNonSeoTraffic }}</td>
-              <td>{{ entry.backlinks }}</td>
+              <td>{{ entry.backLinks }}</td>
               <td>
                 {%if entry.decay < threshold_decay %}{% translate "No" %}{% else %}{% translate "Yes" %}{% endif %}
               </td>

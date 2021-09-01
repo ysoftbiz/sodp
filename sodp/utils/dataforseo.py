@@ -79,27 +79,20 @@ async def getKeywords(domain, urls):
                             keywords_for_volume.append(most_common[0][0])
 
         # get unique keywords and search the volume
-        keyword_tasks = []
-        for keyword in list(set(keywords_for_volume)):
-            sleep(0.005)
+        post_data = [{
+            "keywords": keywords_for_volume,
+        }]
 
-            post_data = [{
-                "keywords": [keyword,],
-            }]
+        response = getDataForSeoRequest("https://api.dataforseo.com/v3/keywords_data/google/search_volume/live",
+                headers, post_data, session)
 
-            keyword_task = asyncio.ensure_future(getDataForSeoRequest("https://api.dataforseo.com/v3/keywords_data/google/search_volume/live",
-                headers, post_data, session))
-            keyword_tasks.append(keyword_task)
-
-        keyword_responses = await asyncio.gather(*keyword_tasks)
         # iterate for each keyword
-        for response in keyword_responses:
-            if response["status_code"] == 20000:
-                data = response
-                results = data["tasks"][0]["result"]
-                if results:
-                    keyword = data["tasks"][0]["data"]["keywords"][0]
-                    volume = results[0]["search_volume"]
+        if response["status_code"] == 20000:
+            data = response
+            results = data["tasks"][0]["result"]
+            if results:
+                for (keyword, volume_data) in zip(data["tasks"][0]["keywords"], results):
+                    volume = volume_data["search_volume"]
 
                     # search by all urls, looking for first keyword
                     for url, keywords in keywords_per_url.items():
