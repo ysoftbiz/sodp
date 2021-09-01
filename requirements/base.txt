@@ -43,3 +43,5 @@ ultimate_sitemap_parser
 pyarrow
 nltk
 aiohttp
+fuzzywuzzy
+python-Levenshtein

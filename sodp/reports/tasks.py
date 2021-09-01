@@ -12,6 +12,7 @@ from sodp.views.models import view as viewmodel
 from sodp.utils import google_utils, ahrefs
 from sodp.utils import sitemap as sm
 from sodp.utils import dataforseo
+from sodp.utils import nlp
 
 from datetime import datetime, date
 from urllib.parse import urlparse
@@ -35,8 +36,8 @@ RECOMENDATION_TEXTS = {
     "404": "Delete"
 }
 
-CHUNK_SIZE=1000
-
+CHUNK_SIZE=700 #max we can handle per batch
+ 
 def setErrorStatus(report, error_code):
     report.status = "error"
     report.errorDescription = error_code
@@ -155,9 +156,6 @@ def processReport(pk):
         objview = viewmodel.objects.get(id=obj.project)
         domain = urlparse(objview.url).netloc
 
-        # retrieve data for seo
-        seoclient = dataforseo.RestClient(settings.DATAFORSEO_EMAIL, settings.DATAFORSEO_PASSWORD)
-
         # calculate period
         diff_months = (obj.dateTo.year - obj.dateFrom.year) * 12 + obj.dateTo.month - obj.dateFrom.month
         if diff_months>=6:
@@ -203,20 +201,18 @@ def processReport(pk):
         final = [urlsSitemap[i * CHUNK_SIZE:(i + 1) * CHUNK_SIZE] for i in range((len(urlsSitemap) + CHUNK_SIZE - 1) // CHUNK_SIZE )] 
         organic_urls = []
         pd_entries = []
+        keywords_for_volume = []
 
         for batch in final:
             # get stats for the expected google view id
             if credentials:
+                # get keywords from google
+                loop = asyncio.get_event_loop()
+                google_keywords = loop.run_until_complete(dataforseo.getKeywords(objview.url, batch))
+                
                 # get all ahrefs queries
                 loop = asyncio.get_event_loop()
                 ahrefs_infos, ahrefs_pages = loop.run_until_complete(ahrefs.getAhrefsUrls(settings.AHREFS_TOKEN, objview.url, batch))
-
-                # get keywords from google
-                #loop1 = asyncio.get_event_loop()
-                #google_keywords = loop1.run_until_complete(google_utils.getTopKeywordsBatch(credentials, objview.url, batch, obj.dateFrom, obj.dateTo))
-                google_keywords = {}
-
-                #keywordsperurls = dataforseo.getKeywords(seoclient, objview.url, batch)
 
                 entries = google_utils.getStatsFromView(credentials, objview.project, objview.url, batch, obj.dateFrom, obj.dateTo, period)
 
@@ -228,7 +224,6 @@ def processReport(pk):
                     # insert table data
                     if len(entries)>0:
                         google_utils.insertBigTable(google_big, table_id, entries)
-
 
                     # iterate over all entries
                     firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews = 0, 0, 0, 0
@@ -298,11 +293,30 @@ def processReport(pk):
                     else:
                         days = 999999
 
-                    top_keywords = google_keywords.get(url, [])
+                    top_keywords = google_keywords.get(url, None)
+                    url_keywords = None
+                    url_volume = 0
+
+                    if top_keywords:
+                        url_keywords = ",".join(top_keywords["keywords"])
+                        url_volume = top_keywords["volume"]
+
+                    # check if keywords or title belong to cluster
+                    if url_keywords:
+                        clusterInKw = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], url_keywords.split(","))
+                    else:
+                        clusterInKw = False
+
+                    if title:
+                        clusterInTitle = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], nlp.getKeywords(title))
+                    else:
+                        clusterInTitle = False
+
                     pd_entry = {"url": url, "title": title, "publishDate": publishDate,
                         "isContentOutdated": (days >= int(obj.thresholds["AGE"])),
-                        "topKw": ",".join(top_keywords),
-                        "vol": 0, "clusterInKw": False, "clusterInTitle": False, "wordCount": int(words),
+                        "topKw": url_keywords,
+                        "vol": int(url_volume), "hasVolume": int(url_volume) >= int(obj.thresholds["VOLUME"]), 
+                        "clusterInKw": clusterInKw, "clusterInTitle": clusterInTitle, "wordCount": int(words),
                         "inDepthContent": int(words) >= int(obj.thresholds["WORD COUNT"]),
                         "seoTraffic": avgTraffic,
                         "meaningfulSeoTraffic": (avgTraffic >= float(obj.thresholds["ORGANIC TRAFFIC"])/periodNumber),

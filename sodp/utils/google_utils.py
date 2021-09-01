@@ -210,6 +210,7 @@ def createTableReport(bq, table, view_id, report_id):
                 bigquery.SchemaField("isContentOutdated", "BOOLEAN"),
                 bigquery.SchemaField("topKw", "STRING"),
                 bigquery.SchemaField("vol", "INTEGER"),
+                bigquery.SchemaField("hasVolume", "BOOLEAN"),
                 bigquery.SchemaField("clusterInKw", "BOOLEAN"),
                 bigquery.SchemaField("clusterInTitle", "BOOLEAN"),
                 bigquery.SchemaField("wordCount", "INTEGER"),
