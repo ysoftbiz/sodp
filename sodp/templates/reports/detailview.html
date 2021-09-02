@@ -89,37 +89,37 @@
               <td>{{ entry.topKw }}</td>
               <td>
                 {% if entry.publishDate %}{%if entry.isContentOutdated %}
-                <span class="red">{% translate "Yes" %}</span>{% else %}<span class="green">{% translate "No" %}</span>{% endif %}{% else %}
-                <span class="red">{% translate "URL not found" %}</span>{% endif %}
+                <div class="red"><span>{% translate "Yes" %}</span></div>{% else %}<div class="green"><span>{% translate "No" %}</span></div>{% endif %}{% else %}
+                <div class="red"><span>{% translate "URL not found" %}</span></div>{% endif %}
               </td>
               <td>
-                {% if entry.clusterInKw or entry.clusterInTitle %}<span class="green">{% translate "Yes" %}</span>{% else %}
-                <span class="red">{% translate "No" %}</span>{% endif %}</td>
+                {% if entry.clusterInKw or entry.clusterInTitle %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
+                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}</td>
               <td>
-                {% if entry.hasVolume %}<span class="green">{% translate "Yes" %}</span>{% else %}
-                <span class="red">{% translate "No" %}</span>{% endif %}</td>
+                {% if entry.hasVolume %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
+                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}</td>
               <td>
-                {% if entry.wordCount %}{%if entry.inDepthContent %}<span class="green">{% translate "Yes" %}</span>{% else %}
-                <span class="red">{% translate "No" %}</span>{% endif %}{% else %}
-                <span class="red">{% translate "URL not found" %}</span>{% endif %}
+                {% if entry.wordCount %}{%if entry.inDepthContent %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
+                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}{% else %}
+                <div class="red"><span>{% translate "URL not found" %}</span></div>{% endif %}
               </td>
               <td>
-                {% if entry.meaningfulSeoTraffic %}<span class="green">{% translate "Yes" %}</span>{% else %}
-                <span class="red">{% translate "No" %}</span>{% endif %}
+                {% if entry.meaningfulSeoTraffic %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
+                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}
               </td>
               <td>
-                {% if entry.meaningfulNonSeoTraffic %}<span class="green">{% translate "Yes" %}</span>{% else %}
-                <span class="red">{% translate "No" %}</span>{% endif %}
+                {% if entry.meaningfulNonSeoTraffic %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
+                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}
               </td>
               <td>
-                {% if entry.backlinks %}{%if entry.sufficientBacklinks %}<span class="green">{% translate "Yes" %}</span>{% else %}
-                <span class="red">{% translate "No" %}</span>{% endif %}{% else %}
-                <span class="red">{% translate "No backlinks" %}</span>{% endif %}
+                {% if entry.backlinks %}{%if entry.sufficientBacklinks %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
+                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}{% else %}
+                <div class="red"><span>{% translate "No backlinks" %}</span></div>{% endif %}
               </td>
 
               <td>
-                {%if entry.decay < threshold_decay %}<span class="yes">{% translate "No" %}</span>{% else %}
-                <span class="red">{% translate "Yes" %}</span>{% endif %}
+                {%if entry.decay < threshold_decay %}<span class="green">{% translate "No" %}</span>{% else %}
+                <div class="red"><span>{% translate "Yes" %}</span></div>{% endif %}
               </td>
               <td>{{ entry.recomendationText }}</td>
             </tr>

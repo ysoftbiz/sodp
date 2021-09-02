@@ -365,6 +365,10 @@ table.dataTable {
 	width: 95% !important;
 }
 
+#detaillist > tbody > tr > td {
+	padding: 0 !important;
+}
+
 .btn_complete,
 .btn_pending,
 .btn_process,
@@ -583,7 +587,10 @@ table.dataTable tbody td {
 }
 
 .ranking_table {
-	width: 100%;
+	width: 60%;
+	height: 38em;
+	min-width: auto;
+	margin-bottom: 0;
 }
 
 .section {
@@ -594,8 +601,10 @@ table.dataTable tbody td {
 }
 
 .pie {
+	width: 40%;
 	margin: 0;
 	margin-right: 2em;
+	min-width: auto;
 }
 
 .form_title{
@@ -2527,11 +2536,20 @@ flex: 0 0 568px;
 	-ms-flex: 1;
 	flex: 1;
 	text-align: left;
+    }
 }
 
+@media only screen and (max-width: 1440px) {
+	.ranking_table {
+		height: 22em;
+	}
 }
 
 @media only screen and (min-width: 768px) and (max-width: 1024px) {
+
+	.ranking_table {
+		height: 20em;
+	}
 
 	.navbar-nav {
 		padding: 0 0.5rem;
@@ -2548,10 +2566,10 @@ flex: 0 0 568px;
 @media only screen and (min-width: 1025px) {
 
 
-.flex-inner .f-image {
-    -webkit-box-flex: 0;
-    -ms-flex: 0 0 500px;
-    flex: 0 0 500px;
+	.flex-inner .f-image {
+		-webkit-box-flex: 0;
+		-ms-flex: 0 0 500px;
+		flex: 0 0 500px;
 	}
 
 	.yd_ft_cst .f-image {
@@ -2564,9 +2582,10 @@ flex: 0 0 568px;
 
 
 @media only screen and (min-width: 240px)and (max-width: 420px) {
-.form input {
-    padding: 0 75px 0 20px;
-}
+
+	.form input {
+		padding: 0 75px 0 20px;
+	}
  .submit-button {
     margin-left: 0;
     margin-top: 10px;
@@ -2612,11 +2631,11 @@ flex: 0 0 568px;
 	}
 
 	.form input {
-	  padding: 0 75px 0 20px;
+	  	padding: 0 75px 0 20px;
 	}
 
- .submit-button {
-	  margin-left: 0;
+    .submit-button {
+	  	margin-left: 0;
 		margin-top: 10px;
 	}
 
@@ -2625,11 +2644,11 @@ flex: 0 0 568px;
 	    bottom: -30%;
 	}
 
-        .yd_cta_box #response {
-            position: absolute;
-	   left: 5%;
-	   bottom: -50%;
-       }
+    .yd_cta_box #response {
+    	position: absolute;
+	    left: 5%;
+		bottom: -50%;
+    }
 
 	.yd_cta_box #chimp-email-error {
 		left: 15%;
@@ -2665,11 +2684,11 @@ flex: 0 0 568px;
 }
 
 .bot:hover {
-	  -webkit-transition: 0.5s;
-	  transition: 0.5s;
-	  background-color:#682d63;
-	  color: #fff;
-  }
+	-webkit-transition: 0.5s;
+	transition: 0.5s;
+	background-color:#682d63;
+	color: #fff;
+}
 
 .socialaccount_providers{
 	list-style: none;
@@ -2854,11 +2873,24 @@ flex: 0 0 568px;
   color: #23D3D3;
 }
 
+.green,
+.red {
+	padding: .5em;
+	text-align: center;
+}
+
 .green {
 	background-color: #ccff99;
+	border: 1px solid #8b47470d;
 }
+
 .red {
 	background-color: #ffcc99;
+	border: 1px solid #478b560d;
+}
+
+#detaillist > tbody > tr > td:nth-child(12) {
+	text-align: center;
 }
 
 @media only screen and (max-width: 768px) {
