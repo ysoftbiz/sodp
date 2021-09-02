@@ -410,6 +410,9 @@ async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate
     async with Aiogoogle(user_creds=credentials, client_creds=credentials) as aiogoogle:
         searchconsole = await aiogoogle.discover('searchconsole', 'v1')
         time.sleep(0.1)
+
+        if topurl.endswith("/"):
+            topurl = topurl[:-1]
         req = searchconsole.searchanalytics.query(json=searchrequest, siteUrl=topurl)
         searchdata = await aiogoogle.as_user(req)
 
