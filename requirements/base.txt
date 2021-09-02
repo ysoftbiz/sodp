@@ -45,3 +45,4 @@ nltk
 aiohttp
 fuzzywuzzy
 python-Levenshtein
+aiogoogle
