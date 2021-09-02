@@ -373,7 +373,7 @@ async def getTopKeywordsBatch(credentials, topurl, batch, startDate, endDate):
 
         # if we cannot access, keyword is null
         if not domaintoparse:
-            return {}
+            return {}, {}
 
     tasks = []
     keyword_results = {}
@@ -392,7 +392,6 @@ async def getTopKeywordsBatch(credentials, topurl, batch, startDate, endDate):
 
 # gets keywords from google
 async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate):
-    time.sleep(0.1)
     searchrequest = {
         'startDate': startDate.strftime("%Y-%m-%d"),     # Get today's date (while loop)
         'endDate': endDate.strftime("%Y-%m-%d"),       # Get today's date (while loop)
@@ -410,6 +409,7 @@ async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate
     
     async with Aiogoogle(user_creds=credentials, client_creds=credentials) as aiogoogle:
         searchconsole = await aiogoogle.discover('searchconsole', 'v1')
+        time.sleep(0.1)
         req = searchconsole.searchanalytics.query(json=searchrequest, siteUrl=topurl)
         searchdata = await aiogoogle.as_user(req)
 
