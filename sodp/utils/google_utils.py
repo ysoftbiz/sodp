@@ -391,8 +391,8 @@ async def getTopKeywordsBatch(credentials, topurl, batch, startDate, endDate):
     return keyword_results, all_keywords
 
 # gets keywords from google
-async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate):
-
+async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate):time.
+    time.sleep(0.05)
     searchrequest = {
         'startDate': startDate.strftime("%Y-%m-%d"),     # Get today's date (while loop)
         'endDate': endDate.strftime("%Y-%m-%d"),       # Get today's date (while loop)
