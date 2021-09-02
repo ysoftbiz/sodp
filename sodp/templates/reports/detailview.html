@@ -118,7 +118,7 @@
               </td>
 
               <td>
-                {%if entry.decay < threshold_decay %}<span class="green">{% translate "No" %}</span>{% else %}
+                {%if entry.decay < threshold_decay %}<div class="green"><span>{% translate "No" %}</span></div>{% else %}
                 <div class="red"><span>{% translate "Yes" %}</span></div>{% endif %}
               </td>
               <td>{{ entry.recomendationText }}</td>
