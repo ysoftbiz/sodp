@@ -588,7 +588,7 @@ table.dataTable tbody td {
 
 .ranking_table {
 	width: 60%;
-	height: 38em;
+	height: 22em;
 	min-width: auto;
 	margin-bottom: 0;
 }
@@ -2539,6 +2539,12 @@ flex: 0 0 568px;
     }
 }
 
+@media only screen and (min-width: 2560px) {
+	.ranking_table {
+		height: 38em;
+	}
+}
+
 @media only screen and (max-width: 1440px) {
 	.ranking_table {
 		height: 22em;
@@ -2873,10 +2879,15 @@ flex: 0 0 568px;
   color: #23D3D3;
 }
 
+#detaillist > tbody > tr > td:nth-child(3) {
+	padding: 0 .5em !important;
+}
+
 .green,
 .red {
-	padding: .5em;
+	padding: 1em;
 	text-align: center;
+	font-size: .86em;
 }
 
 .green {
