@@ -208,7 +208,19 @@ def processReport(pk):
             if credentials:
                 # get keywords from google
                 loop = asyncio.get_event_loop()
-                google_keywords = loop.run_until_complete(dataforseo.getKeywords(objview.url, batch))
+                google_keywords, all_keywords = loop.run_until_complete(google_utils.getTopKeywordsBatch(credentials, objview.url, batch, obj.dateFrom, obj.dateTo))
+
+                # get volume for keywords
+                dataforseo_volume_keywords = dataforseo.getVolume(all_keywords)
+                
+                # now extract volume for each url
+                volume_keywords = {}
+                for url, keywords in google_keywords.items():
+                    volume_keywords[url] = 0
+                    # get top kw and get volume
+                    if len(keywords)>0:
+                        volume = dataforseo_volume_keywords.get(keywords[0], 0)
+                        volume_keywords[url] = volume
                 
                 # get all ahrefs queries
                 loop = asyncio.get_event_loop()
@@ -293,17 +305,10 @@ def processReport(pk):
                     else:
                         days = 999999
 
-                    top_keywords = google_keywords.get(url, None)
-                    url_keywords = None
-                    url_volume = 0
-
-                    if top_keywords:
-                        url_keywords = ",".join(top_keywords["keywords"])
-                        url_volume = top_keywords["volume"]
-
                     # check if keywords or title belong to cluster
+                    url_keywords = google_keywords.get(url, None)
                     if url_keywords:
-                        clusterInKw = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], url_keywords.split(","))
+                        clusterInKw = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], url_keywords)
                     else:
                         clusterInKw = False
 
@@ -314,8 +319,8 @@ def processReport(pk):
 
                     pd_entry = {"url": url, "title": title, "publishDate": publishDate,
                         "isContentOutdated": (days >= int(obj.thresholds["AGE"])),
-                        "topKw": url_keywords,
-                        "vol": int(url_volume), "hasVolume": int(url_volume) >= int(obj.thresholds["VOLUME"]), 
+                        "topKw": ",".join(url_keywords), "vol": volume_keywords[url],
+                        "hasVolume": volume_keywords[url] >= int(obj.thresholds["VOLUME"]), 
                         "clusterInKw": clusterInKw, "clusterInTitle": clusterInTitle, "wordCount": int(words),
                         "inDepthContent": int(words) >= int(obj.thresholds["WORD COUNT"]),
                         "seoTraffic": avgTraffic,
