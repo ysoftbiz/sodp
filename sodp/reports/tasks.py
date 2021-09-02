@@ -104,28 +104,32 @@ def calculateContentDecay(firstViews, lastViews, thresholds):
 
 # calculate dashboard content and return in a dict
 def calculateDashboard(project, report_pk, entries):
-    dataframe = pd.DataFrame.from_dict(entries)
+    if len(entries)>0:
+        dataframe = pd.DataFrame.from_dict(entries)
 
-    dataframe = dataframe.sort_values(by=['seoTraffic'], ascending=False)
-    # retrieve top 5 urls from dataframe
-    topurls = dataframe.head(5)
+        dataframe = dataframe.sort_values(by=['seoTraffic'], ascending=False)
+        # retrieve top 5 urls from dataframe
+        topurls = dataframe.head(5)
 
-    data = {}
-    data['urls'] = []
-    for top in topurls.itertuples():
-        # retrieve timeline
-        timeline = google_utils.getStatsFromURL(project, report_pk, top.url)
-        data['urls'].append((top.url, timeline.to_dict(orient='records')))
+        data = {}
+        data['urls'] = []
+        for top in topurls.itertuples():
+            # retrieve timeline
+            timeline = google_utils.getStatsFromURL(project, report_pk, top.url)
+            data['urls'].append((top.url, timeline.to_dict(orient='records')))
 
-    # second, division by report
-    s=dataframe.recomendationCode.value_counts(normalize=True,sort=False).mul(100) # mul(100) is == *100
-    s.index.name,s.name='recomendationCode','percentage_' #setting the name of index and series
-    grouped = s.to_frame()
-    data['percentage'] = grouped.to_dict()
+        # second, division by report
+        s=dataframe.recomendationCode.value_counts(normalize=True,sort=False).mul(100) # mul(100) is == *100
+        s.index.name,s.name='recomendationCode','percentage_' #setting the name of index and series
+        grouped = s.to_frame()
+        data['percentage'] = grouped.to_dict()
 
-    # third, top urls
-    data['top'] = topurls.to_dict(orient='records')
-    return data
+        # third, top urls
+        data['top'] = topurls.to_dict(orient='records')
+        return data
+    else:
+        data = {"urls":[], "percentage": {}, "top": {}}
+        return data
 
 @shared_task(name="sodp.reports.tasks.processReport", time_limit=3600, soft_time_limit=3600)
 def processReport(pk):
