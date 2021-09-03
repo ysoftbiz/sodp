@@ -8,6 +8,7 @@ from aiohttp.client_exceptions import ContentTypeError
 import aiofiles
 from aiofiles import os as async_os
 import async_timeout
+import time
 
 from ..models import Response
 from .abc import AbstractSession
@@ -153,6 +154,7 @@ class AiohttpSession(ClientSession, AbstractSession):
         # ----------------- /send sequence ------------------#
 
         async def schedule_tasks():
+            time.sleep(0.1)
             if full_res is True:
                 tasks = [
                     asyncio.ensure_future(get_response(request)) for request in requests
