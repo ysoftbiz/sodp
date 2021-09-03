@@ -154,7 +154,6 @@ class AiohttpSession(ClientSession, AbstractSession):
         # ----------------- /send sequence ------------------#
 
         async def schedule_tasks():
-            time.sleep(0.1)
             if full_res is True:
                 tasks = [
                     asyncio.ensure_future(get_response(request)) for request in requests

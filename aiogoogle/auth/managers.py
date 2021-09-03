@@ -171,7 +171,8 @@ class Oauth2Manager:
     async def __aenter__(self):
         self.active_session = await self.session_factory( connector=aiohttp.TCPConnector(
                     verify_ssl=False,
-                    limit=1, #or use_dns_cache=False
+                    limit=5,
+                    limit_per_host=5, #or use_dns_cache=False
                 ),).__aenter__()
         return self
 
@@ -183,7 +184,8 @@ class Oauth2Manager:
         if self.active_session is None:
             async with self.session_factory( connector=aiohttp.TCPConnector(
                     verify_ssl=False,
-                    limit=1, #or use_dns_cache=False
+                    limit=5, #or use_dns_cache=False
+                    limit_per_host=5,
                 ),) as sess:
                 res = await sess.send(req)
         else:
@@ -1224,7 +1226,8 @@ class ServiceAccountManager:
 
         async with self.session_factory( connector=aiohttp.TCPConnector(
                     verify_ssl=False,
-                    limit=1, #or use_dns_cache=False
+                    limit=5, #or use_dns_cache=False
+                    limit_per_host=5,
                 ),) as sess:
             json_res = await sess.send(req)
             self._access_token = json_res['access_token']
@@ -1264,7 +1267,8 @@ class ServiceAccountManager:
             # 2. Ping GCE's metadata server to check if we're in GCE env or not
             async with self.session_factory( connector=aiohttp.TCPConnector(
                     verify_ssl=False,
-                    limit=1, #or use_dns_cache=False
+                    limit=5, #or use_dns_cache=False
+                    limit_per_host=5,
                 ),) as sess:
                 try:
                     metadata_server_ping_response = await sess.send(Request(
@@ -1319,7 +1323,8 @@ class ServiceAccountManager:
 
         async with self.session_factory( connector=aiohttp.TCPConnector(
                     verify_ssl=False,
-                    limit=1, #or use_dns_cache=False
+                    limit=5, #or use_dns_cache=False
+                    limit_per_host=5,
                 ),) as sess:
             json_res = await sess.send(Request(
                 method='POST',

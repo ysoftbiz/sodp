@@ -381,6 +381,7 @@ async def getTopKeywordsBatch(credentials, topurl, batch, startDate, endDate):
     for url in batch:
         task = asyncio.ensure_future(extractKeywordsFromGoogle(aiocreds, domaintoparse, url, startDate, endDate))
         tasks.append(task)
+        await asyncio.sleep(0.2)
 
     all_keywords = []
     responses = await asyncio.gather(*tasks)
@@ -410,7 +411,6 @@ async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate
     
     async with Aiogoogle(user_creds=credentials, client_creds=credentials) as aiogoogle:
         searchconsole = await aiogoogle.discover('searchconsole', 'v1')
-        time.sleep(0.1)
 
         # replace all entries in string
         req = searchconsole.searchanalytics.query(json=searchrequest, siteUrl=topurl)
