@@ -15,6 +15,8 @@ try:
     import ujson as json
 except:  # noqa: E722  bare-except
     import json
+
+import aiohttp
 from google.auth import jwt
 from google.oauth2 import service_account
 from google.auth.environment_vars import GCE_METADATA_IP
@@ -167,7 +169,10 @@ class Oauth2Manager:
             raise
 
     async def __aenter__(self):
-        self.active_session = await self.session_factory().__aenter__()
+        self.active_session = await self.session_factory( connector=aiohttp.TCPConnector(
+                    verify_ssl=False,
+                    limit=1, #or use_dns_cache=False
+                ),).__aenter__()
         return self
 
     async def __aexit__(self, *args, **kwargs):
@@ -176,7 +181,10 @@ class Oauth2Manager:
 
     async def _send_request(self, req):
         if self.active_session is None:
-            async with self.session_factory() as sess:
+            async with self.session_factory( connector=aiohttp.TCPConnector(
+                    verify_ssl=False,
+                    limit=1, #or use_dns_cache=False
+                ),) as sess:
                 res = await sess.send(req)
         else:
             res = await self.active_session.send(req)
@@ -1214,7 +1222,10 @@ class ServiceAccountManager:
                 scopes = ",".join(scopes)
             req._add_query_param({'scopes': scopes})
 
-        async with self.session_factory() as sess:
+        async with self.session_factory( connector=aiohttp.TCPConnector(
+                    verify_ssl=False,
+                    limit=1, #or use_dns_cache=False
+                ),) as sess:
             json_res = await sess.send(req)
             self._access_token = json_res['access_token']
             self._expires_at = _get_expires_at(json_res['expires_in'])
@@ -1251,7 +1262,10 @@ class ServiceAccountManager:
             self._set_creds_from_environ(creds_location)
         else:
             # 2. Ping GCE's metadata server to check if we're in GCE env or not
-            async with self.session_factory() as sess:
+            async with self.session_factory( connector=aiohttp.TCPConnector(
+                    verify_ssl=False,
+                    limit=1, #or use_dns_cache=False
+                ),) as sess:
                 try:
                     metadata_server_ping_response = await sess.send(Request(
                         method="GET",
@@ -1303,7 +1317,10 @@ class ServiceAccountManager:
             additional_claims=additional_claims
         )
 
-        async with self.session_factory() as sess:
+        async with self.session_factory( connector=aiohttp.TCPConnector(
+                    verify_ssl=False,
+                    limit=1, #or use_dns_cache=False
+                ),) as sess:
             json_res = await sess.send(Request(
                 method='POST',
                 url=self.creds['token_uri'],
