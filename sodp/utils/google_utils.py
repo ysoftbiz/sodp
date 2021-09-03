@@ -413,7 +413,6 @@ async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate
         time.sleep(0.1)
 
         # replace all entries in string
-        topurl = topurl.replace("/", "%2F")
         req = searchconsole.searchanalytics.query(json=searchrequest, siteUrl=topurl)
         searchdata = await aiogoogle.as_user(req)
 
