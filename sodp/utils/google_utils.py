@@ -12,7 +12,7 @@ import time
 
 from apiclient.discovery import build
 from urllib.parse import urlparse
-from urllib.parse import quote
+
 from pprint import pprint
 
 from collections import Counter
@@ -412,7 +412,8 @@ async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate
         searchconsole = await aiogoogle.discover('searchconsole', 'v1')
         time.sleep(0.1)
 
-        topurl = quote(topurl, safe='')
+        # replace all entries in string
+        topurl = topurl.replace("/", "%2F")
         req = searchconsole.searchanalytics.query(json=searchrequest, siteUrl=topurl)
         searchdata = await aiogoogle.as_user(req)
 
