@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from http.client import HTTPSConnection
 from base64 import b64encode
@@ -9,8 +11,8 @@ from sodp.utils import nlp
 from time import sleep
 from urllib.parse import urlparse
 
-KEYWORDS_NUMBER=25
 TOP_KEYWORDS=5
+MAX_KEYWORDS=1000
 
 from http.client import HTTPSConnection
 from base64 import b64encode
@@ -34,6 +36,8 @@ class RestClient:
             connection.request(method, path, headers=headers, body=data)
             response = connection.getresponse()
             return loads(response.read().decode())
+        except Exception as e:
+            logging.exception(e)
         finally:
             connection.close()
 
@@ -71,5 +75,60 @@ def getVolume(keywords):
                 volume = volume_data["search_volume"]
 
                 volume_keywords[keyword] = volume
-    
+    else:
+        logging.error("dataforseo - getVolume - response: %s" % str(response))
     return volume_keywords
+
+def getKeywords(domain, urls):
+    keywords_per_url = {}
+    domain = urlparse(domain).netloc
+    all_keywords = []
+
+    post_data = [{
+        "target": domain,
+        "filters": [
+            [
+                "keyword_data.keyword_info.search_volume", "<>", 0
+            ], "and",
+            [
+                "ranked_serp_element.serp_item.relative_url", "in", urls,
+            ]
+        ],
+        "limit": MAX_KEYWORDS,
+        "load_rank_absolute": True,
+        "order_by": [
+            "keyword_data.keyword_info.search_volume,desc"
+        ]
+    }]
+
+    client = RestClient(settings.DATAFORSEO_EMAIL, settings.DATAFORSEO_PASSWORD)
+    response = client.post("/v3/dataforseo_labs/ranked_keywords/live", post_data)
+    if response["status_code"] == 20000:
+        results = response["tasks"][0]["result"]
+        if results:
+            items = results[0]["items"]
+            if items:
+                final_keywords = []
+
+                # get all keywords
+                for keyword_info in items:
+                    url = keyword_info["ranked_serp_element"]["serp_item"]["relative_url"]
+                    if url not in keywords_per_url:
+                        keywords_per_url[url] = []
+
+                    keyword_words = keyword_info["keyword_data"]["keyword"]
+                    keywords = nlp.getKeywords(keyword_words)
+                    keywords_per_url[url].extend(keywords)
+
+                # count popular
+                for url, keywords in keywords_per_url.items():
+                    counter = Counter(keywords)
+                    most_common = counter.most_common(TOP_KEYWORDS)
+                    topkw = [seq[0] for seq in most_common]
+                    keywords_per_url[url] = topkw
+
+                    all_keywords.extend(topkw)
+    else:
+        logging.error("dataforseo - getKeywords - response: %s" % str(response))
+
+    return keywords_per_url, all_keywords

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from aiogoogle import Aiogoogle
 import httplib2
 import google.oauth2.credentials
@@ -56,31 +57,34 @@ def getScopes():
         'openid'        
     ]
 def generateGoogleURL(request):
+    try:
+        # Use the client_secret.json file to identify the application requesting
+        # authorization. The client ID (from that file) and access scopes are required.
+        flow = google_auth_oauthlib.flow.Flow.from_client_config(
+            client_config=getGoogleConfig(request),
+            scopes=getScopes())
 
-    # Use the client_secret.json file to identify the application requesting
-    # authorization. The client ID (from that file) and access scopes are required.
-    flow = google_auth_oauthlib.flow.Flow.from_client_config(
-        client_config=getGoogleConfig(request),
-        scopes=getScopes())
+        # Indicate where the API server will redirect the user after the user completes
+        # the authorization flow. The redirect URI is required. The value must exactly
+        # match one of the authorized redirect URIs for the OAuth 2.0 client, which you
+        # configured in the API Console. If this value doesn't match an authorized URI,
+        # you will get a 'redirect_uri_mismatch' error.
+        flow.redirect_uri = request.build_absolute_uri('/')+"users/~googlecredentials/"
 
-    # Indicate where the API server will redirect the user after the user completes
-    # the authorization flow. The redirect URI is required. The value must exactly
-    # match one of the authorized redirect URIs for the OAuth 2.0 client, which you
-    # configured in the API Console. If this value doesn't match an authorized URI,
-    # you will get a 'redirect_uri_mismatch' error.
-    flow.redirect_uri = request.build_absolute_uri('/')+"users/~googlecredentials/"
+        # Generate URL for request to Google's OAuth 2.0 server.
+        # Use kwargs to set optional request parameters.
+        authorization_url, state = flow.authorization_url(
+            # Enable offline access so that you can refresh an access token without
+            # re-prompting the user for permission. Recommended for web server apps.
+            access_type='offline',
+            prompt='consent',
+            # Enable incremental authorization. Recommended as a best practice.
+            include_granted_scopes='true')
 
-    # Generate URL for request to Google's OAuth 2.0 server.
-    # Use kwargs to set optional request parameters.
-    authorization_url, state = flow.authorization_url(
-        # Enable offline access so that you can refresh an access token without
-        # re-prompting the user for permission. Recommended for web server apps.
-        access_type='offline',
-        prompt='consent',
-        # Enable incremental authorization. Recommended as a best practice.
-        include_granted_scopes='true')
-
-    return authorization_url    
+        return authorization_url    
+    except Exception as e:
+        logging.exception(str(e))
+        return None
 
 def getUserCredentials(request):
     os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -95,6 +99,7 @@ def getUserCredentials(request):
         credentials = flow.credentials
         return credentials
     except Exception as e:
+        logging.exception(str(e))
         return False
 
 def getOfflineCredentials(auth_token, refresh_token):
@@ -110,6 +115,7 @@ def getOfflineCredentials(auth_token, refresh_token):
             revoke_uri=GOOGLE_REVOKE_URI)
         return credentials       
     except Exception as e:
+        logging.exception(str(e))
         return False        
 
 # get all the projects that the user has with that credentials
@@ -121,8 +127,12 @@ def getProjectsFromCredentials(credentials):
             "3": { "name": "Account 2 - Project 1", "url": "http://www.ysoft.biz"},
         }
     else:
-        analytics = build('analytics', 'v3', credentials=credentials)
-        accounts = analytics.management().accounts().list().execute()
+        try:
+            analytics = build('analytics', 'v3', credentials=credentials)
+            accounts = analytics.management().accounts().list().execute()
+        except Exception as e:
+            logging.exception(str(e))
+            return None
 
         projects = {}
         if accounts.get('items'):
@@ -158,7 +168,8 @@ def createTable(bq, table, view_id, report_id):
 
             time.sleep(GOOGLE_WAIT_TIME)
         except Exception as e:
-            print(str(e))
+            logging.exception(str(e))
+            return None
     except NotFound:
         # does not exist, create it
         try:
@@ -177,8 +188,9 @@ def createTable(bq, table, view_id, report_id):
 
             table = bigquery.Table(table_id, schema=schema)
             table = bq.create_table(table)  # Make an API request.
-        except:
-            pass
+        except Exception as e:
+            logging.exception(str(e))
+            return None
 
     return table_id
 
@@ -201,7 +213,8 @@ def createTableReport(bq, table, view_id, report_id):
 
             time.sleep(GOOGLE_WAIT_TIME)
         except Exception as e:
-            print(str(e))
+            logging.exception(str(e))
+            return None
     except NotFound:
         # does not exist, create it
         try:
@@ -230,8 +243,9 @@ def createTableReport(bq, table, view_id, report_id):
 
             table = bigquery.Table(table_id, schema=schema)
             table = bq.create_table(table)  # Make an API request.
-        except:
-            pass
+        except Exception as e:
+            logging.exception(str(e))
+            return None
 
     return table_id
 
@@ -239,11 +253,14 @@ def createTableReport(bq, table, view_id, report_id):
 def insertBigTable(bq, table_id, entries):
     try:
         errors = bq.insert_rows_json(table_id, entries,  row_ids=[None] * len(entries))
-        if (errors):
-            print(errors)
+        if errors:
+            loging.error(str(errors))
+            return False
     except Exception as e:
-        print(str(e))
+        logging.exception(str(e))
         return False
+
+    return True
 
 def insertUrlsTable(bq, view_id, report_id, urls):
     # create table inside dataset
@@ -263,7 +280,8 @@ def insertUrlsTable(bq, view_id, report_id, urls):
 
             time.sleep(GOOGLE_WAIT_TIME)
         except Exception as e:
-            print(str(e))
+            logging.exception(str(e))
+            return False
     except NotFound:
         try:
             schema = [
@@ -275,16 +293,18 @@ def insertUrlsTable(bq, view_id, report_id, urls):
 
             table = bigquery.Table(table_id, schema=schema)
             table = bq.create_table(table)  # Make an API request.
-        except:
-            pass
+        except Exception as e:
+            logging.exception(str(e))
+            return False
 
     # now insert the values
     try:
         errors = bq.insert_rows_json(table_id, urls,  row_ids=[None] * len(urls))
         if errors:
-            print(errors)
+            logging.error(str(errors))
+            return False
     except Exception as e:
-        print(str(e))
+        logging.exception(str(e))
         return False
 
     return True
@@ -307,20 +327,24 @@ def getDateFromGA(datestr, period):
 
 # returns a list of all urls sorted by views
 def getAllUrls(credentials, view_id, report_id, url, startDate, endDate):
-    analytics = build('analyticsreporting', 'v4', credentials=credentials)
+    try:
+        analytics = build('analyticsreporting', 'v4', credentials=credentials)
 
-    data = analytics.reports().batchGet(
-    body={
-        'reportRequests': [
-        {
-        'viewId': view_id,
-        'dateRanges': [{'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}],
-        'metrics':  [{'expression': exp} for exp in ["ga:pageViews"]],
-        'dimensions': [{'name': name} for name in ["ga:pagePath"]],
-        'orderBys': [{"fieldName":"ga:pageViews", "sortOrder": "DESCENDING"}],
-        'pageSize': MAX_RESULTS
-        }]
-    }).execute()
+        data = analytics.reports().batchGet(
+        body={
+            'reportRequests': [
+            {
+            'viewId': view_id,
+            'dateRanges': [{'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}],
+            'metrics':  [{'expression': exp} for exp in ["ga:pageViews"]],
+            'dimensions': [{'name': name} for name in ["ga:pagePath"]],
+            'orderBys': [{"fieldName":"ga:pageViews", "sortOrder": "DESCENDING"}],
+            'pageSize': MAX_RESULTS
+            }]
+        }).execute()
+    except Exception as e:
+        logging.exception(str(e))
+        return []
 
     urls = []
     for report in data.get('reports', []):
@@ -345,10 +369,13 @@ def extractKeywords(searchdata):
         final_keywords.extend(keywords)
 
     # count popular
-    counter = Counter(final_keywords)
-    most_common = counter.most_common(5)
+    if len(final_keywords>0):
+        counter = Counter(final_keywords)
+        most_common = counter.most_common(5)
 
-    return [seq[0] for seq in most_common]
+        return [seq[0] for seq in most_common]
+    else:
+        return []
 
 # extract keywords in batch
 async def getTopKeywordsBatch(credentials, topurl, batch, startDate, endDate):
@@ -422,7 +449,11 @@ async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate
 
 # returns a dump of the desired stats for the specific credentials and view
 def getStatsFromView(credentials, view_id, topurl, urls, startDate, endDate, period):
-    analytics = build('analyticsreporting', 'v4', credentials=credentials)
+    try:
+        analytics = build('analyticsreporting', 'v4', credentials=credentials)
+    except Exception as e:
+        logging.exception(str(e))
+        return {}
 
     # retrieve date interval: 6-12 months grouped monthly, 3-6 months grouped weekly, <3 months grouped daily
     dimensions = list(DIMS)
@@ -455,7 +486,12 @@ def getStatsFromView(credentials, view_id, topurl, urls, startDate, endDate, per
 
         }]
     }
-    data = analytics.reports().batchGet(body=request_body).execute()
+
+    try:
+        data = analytics.reports().batchGet(body=request_body).execute()
+    except Exception as e:
+        logging.exception(str(e))
+        return {}
 
     # get the latest entry for each page path/organic traffic
     entries = {}
@@ -500,17 +536,22 @@ def fillViews(projects, user):
 
 # authentication with big query
 def authenticateBigQuery():
-    # load json config and write to temporary file
-    tfile = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-    tfile.write(settings.GOOGLE_JSON)
-    tfile.flush()
-    credentials = service_account.Credentials.from_service_account_file(
-        tfile.name, scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
+    try:
+        # load json config and write to temporary file
+        tfile = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        tfile.write(settings.GOOGLE_JSON)
+        tfile.flush()
+        credentials = service_account.Credentials.from_service_account_file(
+            tfile.name, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+    except Exception as e:
+        logging.exception(str(e))
+        return False
 
     try:
         client = bigquery.Client(credentials=credentials, project=credentials.project_id,)
     except Exception as e:
+        logging.exception(str(e))
         return False
     return client
     
@@ -536,6 +577,8 @@ def getStoredStats(view_id, report_id):
             )
         )
         return dataframe
+    else:
+        logging.error("Google stored stats - Error authenticating")
 
     return False
 
@@ -551,17 +594,21 @@ def getStatsFromURL(view_id, report_id, url):
         WHERE segment='Organic Traffic' AND page_path='%s' ORDER BY `date`         
         """ % (table_id, url)
 
-        dataframe = (
-            google_big.query(query_string)
-            .result()
-            .to_dataframe(
-                # Optionally, explicitly request to use the BigQuery Storage API. As of
-                # google-cloud-bigquery version 1.26.0 and above, the BigQuery Storage
-                # API is used by default.
-                create_bqstorage_client=True,
+        try:
+            dataframe = (
+                google_big.query(query_string)
+                .result()
+                .to_dataframe(
+                    # Optionally, explicitly request to use the BigQuery Storage API. As of
+                    # google-cloud-bigquery version 1.26.0 and above, the BigQuery Storage
+                    # API is used by default.
+                    create_bqstorage_client=True,
+                )
             )
-        )
-        return dataframe
+            return dataframe
+        except Exception as e:
+            logging.exception(str(e))
+            return None
 
     return False
 
@@ -587,5 +634,8 @@ def getReportStats(view_id, report_id):
             )
         )
         return dataframe
+    else:
+        logging.error("Google report stats - Error authenticating")
+        return None
 
     return False

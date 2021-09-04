@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import os
 import pandas as pd
 
@@ -40,7 +41,9 @@ CHUNK_SIZE=700 #max we can handle per batch
  
 def setErrorStatus(report, error_code):
     report.status = "error"
+    report.processingEndDate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     report.errorDescription = error_code
+    report.save(update_fields=["status", "processingEndDate", "errorDescription"])
 
 def setStatusComplete(report, dashboard):
     report.status = 'complete'
@@ -53,15 +56,17 @@ def sendReportCompletedEmail(report, url):
     message = get_template("emails/reportCompleted.html").render({
         'url': url
     })
-    mail = EmailMessage(
-        _("SODP - Report completed"),
-        message,
-        settings.EMAIL_FROM,
-        to=[report.user.email]
-    )
-    mail.content_subtype = "html"
-    mail.send()
-
+    try:
+        mail = EmailMessage(
+            _("SODP - Report completed"),
+            message,
+            settings.EMAIL_FROM,
+            to=[report.user.email]
+        )
+        mail.content_subtype = "html"
+        mail.send()
+    except Exception as e:
+        logging.Exception("error sending email: %s" % str(e))
 
 
 # calculate recomendation based on row data and tresholds
@@ -128,6 +133,7 @@ def calculateDashboard(project, report_pk, entries):
         data['top'] = topurls.to_dict(orient='records')
         return data
     else:
+        logging.error("Calculate dashboard - no entries in report")
         data = {"urls":[], "percentage": {}, "top": {}}
         return data
 
@@ -145,7 +151,11 @@ def processReport(pk):
             return False
         
         # authenticate to big query
-        google_big = google_utils.authenticateBigQuery()
+        try:
+            google_big = google_utils.authenticateBigQuery()
+        except Exception as e:
+            logging.exception(str(e))
+            setErrorStatus(obj, "WRONG_BIGQUERY")
 
         # retrieve url sitemap
         urlsSitemap = []
@@ -173,7 +183,7 @@ def processReport(pk):
         try:
             credentials = google_utils.getOfflineCredentials(obj.user.google_api_token, obj.user.google_refresh_token)
         except Exception as e:
-            print(str(e))
+            logging.exception(str(e))
             setErrorStatus(obj, "WRONG_ANALYTICS")
             return False
 
@@ -181,6 +191,9 @@ def processReport(pk):
         if len(urlsSitemap)<=0:
             if credentials:
                 urlsSitemap = google_utils.getAllUrls(credentials, objview.project, pk, objview.url, obj.dateFrom, obj.dateTo)
+            else:
+                setErrorStatus(obj, "WRONG_ANALYTICS")
+                return False
 
         # iterate over all rows in sitemap and get google stats from it
         google_traffic = {}
@@ -196,10 +209,16 @@ def processReport(pk):
 
         # generate unique urls
         urlsSitemap = list(set(urlsSitemap))
-
+        if len(urlsSitemap)<=0:
+            setErrorStatus(obj, "NO_URLS")
+            return False
+        
         # create table if it does not exist, and truncate their values
         table_id = google_utils.createTable(google_big, "stats", objview.project, pk)
         table_report_id = google_utils.createTableReport(google_big, "report", objview.project, pk)
+        if not table_id or not table_report_id:
+            setErrorStatus(obj, "NO_BIGQUERY_TABLES")
+            return False
 
         # divide the dataframe in chunks, to fit the google max size
         final = [urlsSitemap[i * CHUNK_SIZE:(i + 1) * CHUNK_SIZE] for i in range((len(urlsSitemap) + CHUNK_SIZE - 1) // CHUNK_SIZE )] 
@@ -210,9 +229,9 @@ def processReport(pk):
         for batch in final:
             # get stats for the expected google view id
             if credentials:
-                # get keywords from google
-                loop = asyncio.get_event_loop()
-                google_keywords, all_keywords = loop.run_until_complete(google_utils.getTopKeywordsBatch(credentials, objview.url, batch, obj.dateFrom, obj.dateTo))
+                # get keywords
+                #google_keywords, all_keywords = loop.run_until_complete(google_utils.getTopKeywordsBatch(credentials, objview.url, batch, obj.dateFrom, obj.dateTo))
+                google_keywords, all_keywords = dataforseo.getKeywords(objview.url, batch)
 
                 # get volume for keywords
                 dataforseo_volume_keywords = dataforseo.getVolume(all_keywords)
@@ -239,7 +258,10 @@ def processReport(pk):
                 for url, entries in entries.items():
                     # insert table data
                     if len(entries)>0:
-                        google_utils.insertBigTable(google_big, table_id, entries)
+                        result = google_utils.insertBigTable(google_big, table_id, entries)
+                        if not result:
+                            setErrorStatus(obj, "ERROR_INSERT_BIGTABLE")
+                            return False
 
                     # iterate over all entries
                     firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews = 0, 0, 0, 0
@@ -313,8 +335,10 @@ def processReport(pk):
                     url_keywords = google_keywords.get(url, None)
                     if url_keywords:
                         clusterInKw = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], url_keywords)
+                        keyword_str = ",".join(url_keywords)
                     else:
                         clusterInKw = False
+                        keyword_str = ""
 
                     if title:
                         clusterInTitle = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], nlp.getKeywords(title))
@@ -323,8 +347,8 @@ def processReport(pk):
 
                     pd_entry = {"url": url, "title": title, "publishDate": publishDate,
                         "isContentOutdated": (days >= int(obj.thresholds["AGE"])),
-                        "topKw": ",".join(url_keywords), "vol": volume_keywords[url],
-                        "hasVolume": volume_keywords[url] >= int(obj.thresholds["VOLUME"]), 
+                        "topKw": keyword_str, "vol": volume_keywords.get(url, 0),
+                        "hasVolume": volume_keywords.get(url, 0) >= int(obj.thresholds["VOLUME"]), 
                         "clusterInKw": clusterInKw, "clusterInTitle": clusterInTitle, "wordCount": int(words),
                         "inDepthContent": int(words) >= int(obj.thresholds["WORD COUNT"]),
                         "seoTraffic": avgTraffic,
@@ -338,8 +362,15 @@ def processReport(pk):
                     pd_entries.append(pd_entry)
 
         # insert into table
-        google_utils.insertUrlsTable(google_big, objview.project, pk, organic_urls)
-        google_utils.insertBigTable(google_big, table_report_id, pd_entries)
+        result = google_utils.insertUrlsTable(google_big, objview.project, pk, organic_urls)
+        if not result:
+            setErrorStatus(obj, "ERROR_INSERT_BIGTABLE")
+            return False
+
+        result = google_utils.insertBigTable(google_big, table_report_id, pd_entries)
+        if not result:
+            setErrorStatus(obj, "ERROR_INSERT_BIGTABLE")
+            return False
 
         # calculate dashboard entries
         dashboard = calculateDashboard(objview.project, pk, pd_entries)
