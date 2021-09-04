@@ -345,18 +345,19 @@ def processReport(pk):
                     else:
                         clusterInTitle = False
 
+                    # volume keywords
                     pd_entry = {"url": url, "title": title, "publishDate": publishDate,
-                        "isContentOutdated": (days >= int(obj.thresholds["AGE"])),
+                        "isContentOutdated": (int(days) >= int(obj.thresholds["AGE"])),
                         "topKw": keyword_str, "vol": volume_keywords.get(url, 0),
-                        "hasVolume": volume_keywords.get(url, 0) >= int(obj.thresholds["VOLUME"]), 
+                        "hasVolume": int(volume_keywords.get(url, 0)) >= int(obj.thresholds["VOLUME"]), 
                         "clusterInKw": clusterInKw, "clusterInTitle": clusterInTitle, "wordCount": int(words),
                         "inDepthContent": int(words) >= int(obj.thresholds["WORD COUNT"]),
                         "seoTraffic": avgTraffic,
-                        "meaningfulSeoTraffic": (avgTraffic >= float(obj.thresholds["ORGANIC TRAFFIC"])/periodNumber),
+                        "meaningfulSeoTraffic": (float(avgTraffic) >= float(obj.thresholds["ORGANIC TRAFFIC"])/periodNumber),
                         "nonSeoTraffic": nonAvgTraffic,
-                        "meaningfulNonSeoTraffic": (nonAvgTraffic >= float(obj.thresholds["TRAFFIC"])/periodNumber),
+                        "meaningfulNonSeoTraffic": (float(nonAvgTraffic) >= float(obj.thresholds["TRAFFIC"])/periodNumber),
                         "backLinks": backlinks,
-                        "sufficientBacklinks": (backlinks >= float(obj.thresholds["BACKLINKS"])),
+                        "sufficientBacklinks": (int(backlinks) >= float(obj.thresholds["BACKLINKS"])),
                         "decay": round(decay, 4),
                         "recomendationCode": recomendation_code, "recomendationText": recomendation_text }
                     pd_entries.append(pd_entry)
