@@ -87,7 +87,30 @@ $('#modChart').on('shown.bs.modal',function(event){
 var ctx = document.getElementById('canvas').getContext('2d');
     
     var chart = new Chart(ctx, {        
-        type: 'line',
+        type: 'line',    
+        options: {
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        console.log(tooltipItem);
+                      return tooltipItem.yLabel.toLocaleString();
+                    }
+                }
+            },
+            scales: {
+            yAxes: [
+                {
+                    ticks: {
+                        callback: function(label, index, labels) {
+                            return label.toLocaleString();
+                        }
+                    },
+                }
+            ]
+            },            
+
+        },
+
         data: {
             labels: [],
             datasets: [
@@ -113,6 +136,7 @@ var ctx = document.getElementById('canvas').getContext('2d');
                     data: [],
                     spanGaps: false,                
                 data: [],
+                
 
                 // Change the stepped mode to explore different stepped chart options
                 // false: no stepping
@@ -123,7 +147,7 @@ var ctx = document.getElementById('canvas').getContext('2d');
                 stepped: true,
                 }
             ]
-        }
+        },
     },{});
 </script>
 {% endblock inline_javascript %}

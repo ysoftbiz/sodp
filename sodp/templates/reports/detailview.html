@@ -168,7 +168,7 @@
               <td>{{ entry.wordCount|intcomma }}</td>
               <td>{{ entry.meaningfulSeoTraffic }}</td>
               <td>{{ entry.meaningfulNonSeoTraffic }}</td>
-              <td>{{ entry.backLinks }}</td>
+              <td>{{ entry.backLinks|intcomma }}</td>
               <td>
                 {%if entry.decay < threshold_decay %}<span class="green">{% translate "No" %}</span>{% else %}
                 <span class="red">{% translate "Yes" %}</span>{% endif %}
@@ -307,6 +307,29 @@ var ctx = document.getElementById('canvas').getContext('2d');
     
     var chart = new Chart(ctx, {        
         type: 'line',
+        options: {
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        console.log(tooltipItem);
+                      return tooltipItem.yLabel.toLocaleString();
+                    }
+                }
+            },
+            scales: {
+            yAxes: [
+                {
+                    ticks: {
+                        callback: function(label, index, labels) {
+                            return label.toLocaleString();
+                        }
+                    },
+                }
+            ]
+            },            
+
+        },
+
         data: {
             labels: [],
             datasets: [

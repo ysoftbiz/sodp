@@ -83,6 +83,24 @@ function ajax_chart(chart, piechart, rankingchart, url) {
               mode: 'index',
               intersect: false,
             },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                      return tooltipItem.yLabel.toLocaleString();
+                    }
+                }
+            },
+            scales: {
+            yAxes: [
+                {
+                    ticks: {
+                        callback: function(label, index, labels) {
+                            return label.toLocaleString();
+                        }
+                    },
+                }
+            ]
+            },            
             stacked: false,
             plugins: {
               title: {
@@ -107,6 +125,20 @@ function ajax_chart(chart, piechart, rankingchart, url) {
               mode: 'index',
               intersect: false,
             },
+            tooltips: {
+                callbacks: {
+                  label: function(tooltipItem, data) {
+                        let total = 0;
+                        const currentValue = data.datasets[0].data[tooltipItem.index];
+                        const percentage = currentValue.toFixed(2)+"%";
+                        return percentage;
+                    },
+                    title: tooltipItems => {
+                        return tooltipItems[0].label;
+                    }                  
+                }
+            },
+
             plugins: {
               title: {
                 display: true,
