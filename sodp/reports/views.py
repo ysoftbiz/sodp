@@ -40,9 +40,7 @@ class ReportListView(generic.ListView, LoginRequiredMixin):
     template_name = 'reports/reportslist.html'
 
     def get_queryset(self):
-        return report.objects.filter(user=self.request.user)
-
-
+        return report.objects.filter(user=self.request.user).order_by('-creationDate')
     
 report_list_view = ReportListView.as_view()
 
@@ -295,7 +293,6 @@ class DashboardAjaxView(LoginRequiredMixin, View):
         # retrieve the url
         urldata = []
         for item in stats['top']:
-            print(item)
             urldata.append((item['url'], item['seoTraffic'], item['backLinks'], RECOMENDATIONS.get(item['recomendationCode'], '')))
 
         return JsonResponse({"linedata": data, "piedata": piedata, "urldata": urldata}, status=200, safe=False)

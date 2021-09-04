@@ -2900,6 +2900,10 @@ flex: 0 0 568px;
 	border: 1px solid #478b560d;
 }
 
+.nowrap {
+	white-space: nowrap;
+}
+
 #detaillist > tbody > tr > td:nth-child(12) {
 	text-align: center;
 }

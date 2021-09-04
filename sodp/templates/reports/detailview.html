@@ -91,7 +91,7 @@
               <td>
                 {% if entry.publishDate %}{%if entry.isContentOutdated %}
                 <div class="red"><span>{% translate "Yes" %}</span></div>{% else %}<div class="green"><span>{% translate "No" %}</span></div>{% endif %}{% else %}
-                <div class="red"><span>{% translate "URL not found" %}</span></div>{% endif %}
+                <div class="red nowrap"><span>{% translate "URL not found" %}</span></div>{% endif %}
               </td>
               <td>
                 {% if entry.clusterInKw or entry.clusterInTitle %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
@@ -102,7 +102,7 @@
               <td>
                 {% if entry.wordCount %}{%if entry.inDepthContent %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
                 <div class="red"><span>{% translate "No" %}</span></div>{% endif %}{% else %}
-                <div class="red"><span>{% translate "URL not found" %}</span></div>{% endif %}
+                <div class="red nowrap"><span>{% translate "URL not found" %}</span></div>{% endif %}
               </td>
               <td>
                 {% if entry.meaningfulSeoTraffic %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
@@ -115,7 +115,7 @@
               <td>
                 {% if entry.backlinks %}{%if entry.sufficientBacklinks %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
                 <div class="red"><span>{% translate "No" %}</span></div>{% endif %}{% else %}
-                <div class="red"><span>{% translate "No backlinks" %}</span></div>{% endif %}
+                <div class="red nowrap"><span>{% translate "No backlinks" %}</span></div>{% endif %}
               </td>
 
               <td>
@@ -264,7 +264,8 @@
               paging: true,
               ordering: true,
               searching: true,
-              info: false
+              info: false,
+              aaSorting: [],
             } );
 
         var atable = $('#analysistable').DataTable( {
