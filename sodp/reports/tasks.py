@@ -345,11 +345,15 @@ def processReport(pk):
                     else:
                         clusterInTitle = False
 
+                    if volume_keywords.get(url, 0) is None:
+                        volkw = 0
+                    else:
+                        volkw = volume_keywords.get(url, 0)
                     # volume keywords
                     pd_entry = {"url": url, "title": title, "publishDate": publishDate,
                         "isContentOutdated": (int(days) >= int(obj.thresholds["AGE"])),
-                        "topKw": keyword_str, "vol": volume_keywords.get(url, 0),
-                        "hasVolume": int(volume_keywords.get(url, 0)) >= int(obj.thresholds["VOLUME"]), 
+                        "topKw": keyword_str, "vol": volkw,
+                        "hasVolume": volkw >= int(obj.thresholds["VOLUME"]), 
                         "clusterInKw": clusterInKw, "clusterInTitle": clusterInTitle, "wordCount": int(words),
                         "inDepthContent": int(words) >= int(obj.thresholds["WORD COUNT"]),
                         "seoTraffic": avgTraffic,
