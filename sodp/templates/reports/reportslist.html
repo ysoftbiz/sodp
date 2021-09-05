@@ -14,9 +14,13 @@
 {% endblock %}
 
 {% block content %}
+{% if no_credentials %}
+<div class="alert-error">{%trans "No valid Google credentials or active projects, please refresh credentials" %}</div><br />
+{% else %}
 <div>
  <a href="/reports/reportscreate" class="btn-action btn_report" onclick="openCreateModal(event); return false;">{% trans "Create new report" %}</a>
 </div>
+{% endif %}
 {% if object_list.count == 0 %}
   <p>{% trans "There are no reports yet" %}</p>
 {% else %}

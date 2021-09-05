@@ -200,8 +200,6 @@ def processReport(pk):
         google_organic_traffic = {}
         backlinks = {}
 
-        organic_urls = []
-
         # create a sitemap with all urls
         urlsSitemap = [ x for x in urlsSitemap if x not in bannedUrls]
         urlsSitemap = filter(lambda x: not x.endswith(SUFFIXES), urlsSitemap)
@@ -230,7 +228,6 @@ def processReport(pk):
             # get stats for the expected google view id
             if credentials:
                 # get keywords
-                #google_keywords, all_keywords = loop.run_until_complete(google_utils.getTopKeywordsBatch(credentials, objview.url, batch, obj.dateFrom, obj.dateTo))
                 google_keywords, all_keywords = dataforseo.getKeywords(objview.url, batch)
 
                 # get volume for keywords
@@ -252,119 +249,119 @@ def processReport(pk):
                 entries = google_utils.getStatsFromView(credentials, objview.project, objview.url, batch, obj.dateFrom, obj.dateTo, period)
 
                 # iterate over all urls and generate data
-                seoTraffic , nonSeoTraffic = 0, 0
-                seoTrafficNum , nonSeoTrafficNum = 0, 0
-
-                for url, entries in entries.items():
+                for url, itementries in entries.items():
+                    seoTraffic , nonSeoTraffic = 0, 0
+                    seoTrafficNum , nonSeoTrafficNum = 0, 0
+                    
                     # insert table data
-                    if len(entries)>0:
-                        result = google_utils.insertBigTable(google_big, table_id, entries)
-                        if not result:
-                            setErrorStatus(obj, "ERROR_INSERT_BIGTABLE")
-                            return False
+                    if len(itementries)>0:
+                        result = google_utils.insertBigTable(google_big, table_id, itementries)
+                        #if not result:
+                        #    setErrorStatus(obj, "ERROR_INSERT_BIGTABLE")
+                        #    return False
 
-                    # iterate over all entries
-                    firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews = 0, 0, 0, 0
-                    firstOrganic, firstNormal = True, True
-                    for entry in entries:
-                        if entry["segment"] == "All Users":
-                            if firstNormal:
-                                firstNormal = False
-                                firstPageViews = float(entry["pageViews"])
-                            lastPageViews = float(entry["pageViews"])
-                            nonSeoTraffic += float(entry["pageViews"])
-                            nonSeoTrafficNum += 1
+                        # iterate over all entries
+                        firstPageViews, firstOrganicViews, lastPageViews, lastOrganicViews = 0, 0, 0, 0
+                        firstOrganic, firstNormal = True, True
+                        for entry in itementries:
+                            if entry["segment"] == "All Users":
+                                if firstNormal:
+                                    firstNormal = False
+                                    firstPageViews = float(entry["pageViews"])
+                                lastPageViews = float(entry["pageViews"])
+                                nonSeoTraffic += float(entry["pageViews"])
+                                nonSeoTrafficNum += 1
+                            else:
+                                if firstOrganic:
+                                    firstOrganic = False
+                                    firstOrganicViews = float(entry["pageViews"])
+                                lastOrganicViews = float(entry["pageViews"])
+                                seoTraffic += float(entry["pageViews"])
+                                seoTrafficNum += 1
+
+                        # calculate decay
+                        decay = calculateContentDecay(float(firstOrganicViews), float(lastOrganicViews), obj.thresholds)
+
+                        # add to urls
+                        organic_urls.append({"page_path": url, "startViews": int(firstOrganicViews), "endViews": int(lastOrganicViews), "decay": round(decay, 5)})
+
+                        info = ahrefs_infos.get(url, {})
+                        backlinks = info.get('dofollow', 0)
+                        publishDate = info.get('first_seen', None)
+                        if publishDate:
+                            publishDate = publishDate[0:10] # just date
+                        if publishDate is not None and len(publishDate)<=0:
+                            publishDate = None
+
+                        pageinfo = ahrefs_pages.get(url, {})
+                        title = pageinfo.get('title', '')
+                        words = pageinfo.get('words', 0)
+
+                        # get period number
+                        if period == "ga:yearmonth":
+                            periodNumber = 1
+                        elif period == "ga:yearweek":
+                            periodNumber = 4
                         else:
-                            if firstOrganic:
-                                firstOrganic = False
-                                firstOrganicViews = float(entry["pageViews"])
-                            lastOrganicViews = float(entry["pageViews"])
-                            seoTraffic += float(entry["pageViews"])
-                            seoTrafficNum += 1
+                            periodNumber = 30
 
-                    # calculate decay
-                    decay = calculateContentDecay(float(firstOrganicViews), float(lastOrganicViews), obj.thresholds)
+                        # finally execute the calculation
+                        recomendation_code = calculateRecomendation(lastPageViews, lastOrganicViews, backlinks, obj.thresholds, periodNumber)
+                        recomendation_text = RECOMENDATION_TEXTS[recomendation_code]
 
-                    # add to urls
-                    organic_urls.append({"page_path": url, "startViews": int(firstOrganicViews), "endViews": int(lastOrganicViews), "decay": round(decay, 5)})
+                        # create entry in dataframe
+                        if seoTrafficNum == 0:
+                            avgTraffic = 0
+                        else:
+                            avgTraffic = round((float(seoTraffic)/float(seoTrafficNum)), 4)
 
-                    info = ahrefs_infos.get(url, {})
-                    backlinks = info.get('dofollow', 0)
-                    publishDate = info.get('first_seen', None)
-                    if publishDate:
-                        publishDate = publishDate[0:10] # just date
-                    if publishDate is not None and len(publishDate)<=0:
-                        publishDate = None
+                        if nonSeoTrafficNum == 0:
+                            nonAvgTraffic = 0
+                        else:
+                            nonAvgTraffic = round((float(nonSeoTraffic)/float(nonSeoTrafficNum)), 4)
 
-                    pageinfo = ahrefs_pages.get(url, {})
-                    title = pageinfo.get('title', '')
-                    words = pageinfo.get('words', 0)
+                        # date difference
+                        if (publishDate):
+                            today = date.today()
+                            diffdate = today - datetime.strptime(publishDate, "%Y-%m-%d").date()
+                            days = diffdate.days
+                        else:
+                            days = 999999
 
-                    # get period number
-                    if period == "ga:yearmonth":
-                        periodNumber = 1
-                    elif period == "ga:yearweek":
-                        periodNumber = 4
-                    else:
-                        periodNumber = 30
+                        # check if keywords or title belong to cluster
+                        url_keywords = google_keywords.get(url, None)
+                        if url_keywords:
+                            clusterInKw = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], url_keywords)
+                            keyword_str = ",".join(url_keywords)
+                        else:
+                            clusterInKw = False
+                            keyword_str = ""
 
-                    # finally execute the calculation
-                    recomendation_code = calculateRecomendation(lastPageViews, lastOrganicViews, backlinks, obj.thresholds, periodNumber)
-                    recomendation_text = RECOMENDATION_TEXTS[recomendation_code]
+                        if title:
+                            clusterInTitle = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], nlp.getKeywords(title))
+                        else:
+                            clusterInTitle = False
 
-                    # create entry in dataframe
-                    if seoTrafficNum == 0:
-                        avgTraffic = 0
-                    else:
-                        avgTraffic = round((float(seoTraffic)/float(seoTrafficNum)), 4)
-
-                    if nonSeoTrafficNum == 0:
-                        nonAvgTraffic = 0
-                    else:
-                        nonAvgTraffic = round((float(nonSeoTraffic)/float(nonSeoTrafficNum)), 4)
-
-                    # date difference
-                    if (publishDate):
-                        today = date.today()
-                        diffdate = today - datetime.strptime(publishDate, "%Y-%m-%d").date()
-                        days = diffdate.days
-                    else:
-                        days = 999999
-
-                    # check if keywords or title belong to cluster
-                    url_keywords = google_keywords.get(url, None)
-                    if url_keywords:
-                        clusterInKw = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], url_keywords)
-                        keyword_str = ",".join(url_keywords)
-                    else:
-                        clusterInKw = False
-                        keyword_str = ""
-
-                    if title:
-                        clusterInTitle = nlp.belongsToCluster(obj.thresholds["CLUSTERS"], nlp.getKeywords(title))
-                    else:
-                        clusterInTitle = False
-
-                    if volume_keywords.get(url, 0) is None:
-                        volkw = 0
-                    else:
-                        volkw = volume_keywords.get(url, 0)
-                    # volume keywords
-                    pd_entry = {"url": url, "title": title, "publishDate": publishDate,
-                        "isContentOutdated": (int(days) >= int(obj.thresholds["AGE"])),
-                        "topKw": keyword_str, "vol": volkw,
-                        "hasVolume": volkw >= int(obj.thresholds["VOLUME"]), 
-                        "clusterInKw": clusterInKw, "clusterInTitle": clusterInTitle, "wordCount": int(words),
-                        "inDepthContent": int(words) >= int(obj.thresholds["WORD COUNT"]),
-                        "seoTraffic": avgTraffic,
-                        "meaningfulSeoTraffic": (float(avgTraffic) >= float(obj.thresholds["ORGANIC TRAFFIC"])/periodNumber),
-                        "nonSeoTraffic": nonAvgTraffic,
-                        "meaningfulNonSeoTraffic": (float(nonAvgTraffic) >= float(obj.thresholds["TRAFFIC"])/periodNumber),
-                        "backLinks": backlinks,
-                        "sufficientBacklinks": (int(backlinks) >= float(obj.thresholds["BACKLINKS"])),
-                        "decay": round(decay, 4),
-                        "recomendationCode": recomendation_code, "recomendationText": recomendation_text }
-                    pd_entries.append(pd_entry)
+                        if volume_keywords.get(url, 0) is None:
+                            volkw = 0
+                        else:
+                            volkw = volume_keywords.get(url, 0)
+                        # volume keywords
+                        pd_entry = {"url": url, "title": title, "publishDate": publishDate,
+                            "isContentOutdated": (int(days) >= int(obj.thresholds["AGE"])),
+                            "topKw": keyword_str, "vol": volkw,
+                            "hasVolume": volkw >= int(obj.thresholds["VOLUME"]), 
+                            "clusterInKw": clusterInKw, "clusterInTitle": clusterInTitle, "wordCount": int(words),
+                            "inDepthContent": int(words) >= int(obj.thresholds["WORD COUNT"]),
+                            "seoTraffic": avgTraffic,
+                            "meaningfulSeoTraffic": (float(avgTraffic) >= float(obj.thresholds["ORGANIC TRAFFIC"])/periodNumber),
+                            "nonSeoTraffic": nonAvgTraffic,
+                            "meaningfulNonSeoTraffic": (float(nonAvgTraffic) >= float(obj.thresholds["TRAFFIC"])/periodNumber),
+                            "backLinks": backlinks,
+                            "sufficientBacklinks": (int(backlinks) >= float(obj.thresholds["BACKLINKS"])),
+                            "decay": round(decay, 4),
+                            "recomendationCode": recomendation_code, "recomendationText": recomendation_text }
+                        pd_entries.append(pd_entry)
 
         # insert into table
         result = google_utils.insertUrlsTable(google_big, objview.project, pk, organic_urls)

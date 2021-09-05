@@ -16,7 +16,7 @@
 
 {% block content %}
 
-{% if object == request.user %}
+{% if reports|length > 0 %}
 <div>
   <p><label>{% trans "Latest 5 reports" %}:</label> <select id="latestReports">
     {% for report in reports %}
@@ -41,6 +41,8 @@
 </div>
 </div>
 
+{% else %}
+<div>{% trans "No reports to show" %}</div>
 {% endif %}
 
 {% endblock content %}
@@ -161,8 +163,8 @@ function ajax_chart(chart, piechart, rankingchart, url) {
         info: false,
         columns: [
             { title: "URL" , width: "45%"},
-            { title: "Organic sessions" , className: "dt-body-right"},
-            { title: "Backlinks" , className: "dt-body-right"},
+            { title: "Organic sessions" , className: "dt-body-right", render: $.fn.dataTable.render.number(',', '.', 2, '')},
+            { title: "Backlinks" , className: "dt-body-right", render: $.fn.dataTable.render.number(',', '.', 0, '')},
             { title: "Recomendation" , width: "20%"},
         ]
       } );

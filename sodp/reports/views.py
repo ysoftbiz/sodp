@@ -41,6 +41,22 @@ class ReportListView(generic.ListView, LoginRequiredMixin):
 
     def get_queryset(self):
         return report.objects.filter(user=self.request.user).order_by('-creationDate')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['no_credentials'] = True
+        try:
+            if self.request.user.google_api_token and self.request.user.google_refresh_token:
+                credentials = google_utils.getOfflineCredentials(self.request.user.google_api_token, self.request.user.google_refresh_token)
+                if credentials:
+                    # try to use them
+                    projects = google_utils.getProjectsFromCredentials(credentials)
+                    if projects:
+                        context['no_credentials'] = False
+        except Exception as e:
+            pass
+
+        return context
     
 report_list_view = ReportListView.as_view()
 
@@ -157,7 +173,7 @@ class ReportDetailView(generic.DetailView, LoginRequiredMixin):
         if obj.project:
             # retrieve view
             view_obj = viewmodel.objects.get(id=obj.project, user=self.request.user)
-            if view_obj:
+            if view_obj and obj.status == "complete":
                 # retrieve stats from google big query
                 stats = google_utils.getReportStats(view_obj.project, obj.pk)
                 context["stats"] = stats

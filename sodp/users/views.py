@@ -82,7 +82,16 @@ class UserUpdateCredentialsView(LoginRequiredMixin, SuccessMessageMixin, UpdateV
 
     def get_context_data(self, **kwargs):
         ctx = super(UserUpdateCredentialsView, self).get_context_data(**kwargs)
-        ctx['show_google_login'] = not self.request.user.google_api_token or not self.request.user.google_refresh_token
+        ctx['show_google_login'] = True
+
+        if self.request.user.google_api_token and self.request.user.google_refresh_token:
+            credentials = google_utils.getOfflineCredentials(self.request.user.google_api_token, self.request.user.google_refresh_token)
+            if credentials:
+                # try to use them
+                projects = google_utils.getProjectsFromCredentials(credentials)
+                if projects:
+                    ctx['show_google_login'] = False
+
         if ctx['show_google_login']:
             ctx['google_auth_url'] = google_utils.generateGoogleURL(self.request)
         else:
@@ -120,7 +129,7 @@ class  UserGoogleCredentialsView(LoginRequiredMixin, View):
 
                 return redirect(request.build_absolute_uri('/')+"users/~/")                    
 
-        return HttpResponse(status=500)        
+        return HttpResponse(status=500) 
 
 user_google_credentials_view = UserGoogleCredentialsView.as_view()
 
