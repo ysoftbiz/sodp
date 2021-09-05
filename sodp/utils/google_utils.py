@@ -475,7 +475,7 @@ def getStatsFromView(credentials, view_id, topurl, urls, startDate, endDate, per
         'dimensions': [{'name': name} for name in dimensions],
         'segments':  [{"segmentId": segment} for segment in SEGMENTS],   # organic traffic
         'orderBys': [{"fieldName":"ga:pagePath", "sortOrder":"ASCENDING"}, {"fieldName":period, "sortOrder": "ASCENDING"}],
-        'pageSize': MAX_RESULTS,
+        'pageSize': MAX_PAGES,
         'dimensionFilterClauses': [
             {
                 'filters': [
