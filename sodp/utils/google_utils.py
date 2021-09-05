@@ -139,10 +139,14 @@ def getProjectsFromCredentials(credentials):
             for item in accounts.get('items'):
                 account_id = item["id"]
                 
-                # now lets retrieve all the views
-                profiles = analytics.management().profiles().list(accountId=account_id,
-                                                        webPropertyId='~all'
-                                                        ).execute()
+                try:
+                    # now lets retrieve all the views
+                    profiles = analytics.management().profiles().list(accountId=account_id,
+                                                            webPropertyId='~all'
+                                                            ).execute()
+                except Exception as e:
+                    logging.exception(str(e))
+                    return None
 
                 for profile in profiles.get('items'):
                     projects[profile["id"]] = { "name": item["name"]+" - "+profile["name"], "url": profile["websiteUrl"] }
