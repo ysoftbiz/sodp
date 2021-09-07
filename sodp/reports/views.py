@@ -202,6 +202,16 @@ class AjaxView(View, LoginRequiredMixin):
         length = request.GET.get('length', PAGE_LENGTH)
         draw = request.GET.get('draw', 1)
         search = request.GET.get('search[value]', None)
+        orderColumn = request.GET.get('order[0][column]', None)
+        orderDir = request.GET.get('order[0][dir]', None)
+
+        orderColumns = [None, 'url', 'topKw', 'publishDate', 'clusterInKw', 'vol', 'wordCount',
+        'seoTraffic', 'nonSeoTraffic', 'backLinks', 'decay', 'recomendationCode']
+
+        if orderColumn:
+            finalColumn = orderColumns[int(orderColumn)]
+        else:
+            finalColumn = None
         
         data = {}
         try:
@@ -210,8 +220,10 @@ class AjaxView(View, LoginRequiredMixin):
                 # retrieve view
                 view_obj = viewmodel.objects.get(id=obj.project, user=self.request.user)
                 if view_obj and obj.status == "complete":
+
                     # retrieve stats from google big query
-                    stats, totalRecords, totalRecordsFiltered = google_utils.getReportStats(view_obj.project, obj.pk, start, length, search)
+                    stats, totalRecords, totalRecordsFiltered = google_utils.getReportStats(view_obj.project, obj.pk, start,
+                        length, search, finalColumn, orderDir)
                     return JsonResponse({"draw": draw, "recordsTotal": int(totalRecords), "recordsFiltered": int(totalRecordsFiltered),
                     "data": json.loads(stats)}, status=200, safe=False)                                    
         except Exception as e:

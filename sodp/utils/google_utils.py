@@ -617,7 +617,7 @@ def getStatsFromURL(view_id, report_id, url):
     return False
 
 # gets a dump of all the report stats for that table
-def getReportStats(view_id, report_id, start, limit, search):
+def getReportStats(view_id, report_id, start, limit, search, orderColumn, orderDirection):
     search = quote_plus(search)
     google_big = authenticateBigQuery()
     if google_big:
@@ -649,12 +649,17 @@ def getReportStats(view_id, report_id, start, limit, search):
         else:
             totalTableFiltered = 0
 
+        if not orderColumn:
+            orderColumn = "seoTraffic"
+        if not orderDirection:
+            orderDirection = "desc"
+
         query_string = """
         SELECT url, title, publishDate, isContentOutdated, topKw, vol, hasVolume, clusterInKw, clusterInTitle,
         wordCount, inDepthContent, seoTraffic, meaningfulSeoTraffic, nonSeoTraffic, meaningfulNonSeoTraffic,
         backlinks, sufficientBacklinks, decay, recomendationCode, recomendationText,
-         ROW_NUMBER() OVER() as DT_RowId FROM %s %s ORDER BY seoTraffic DESC         
-        """ % (table_id, query_arguments)
+         ROW_NUMBER() OVER() as DT_RowId FROM %s %s ORDER BY %s %s         
+        """ % (table_id, query_arguments, orderColumn, orderDirection)
 
         query_job = google_big.query(query_string)
         results = query_job.result()
