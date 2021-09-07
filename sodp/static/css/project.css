@@ -543,7 +543,7 @@ table.dataTable thead .sorting {
 table.dataTable thead th,
 table.dataTable thead td {
 	border: none !important;
-	white-space: nowrap;
+	white-space: normal;
 }
 
 table.dataTable tbody th,

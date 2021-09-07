@@ -34,7 +34,7 @@ METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances'
 SEGMENTS = ['gaid::-1','gaid::-5']
 MAX_RESULTS = 100000
 MAX_SEARCH_RESULTS = 50
-MAX_PAGES = 5000
+MAX_PAGES = 25000
 GOOGLE_WAIT_TIME = 180
 
 def getGoogleConfig(request):
@@ -617,29 +617,48 @@ def getStatsFromURL(view_id, report_id, url):
     return False
 
 # gets a dump of all the report stats for that table
-def getReportStats(view_id, report_id):
+def getReportStats(view_id, report_id, start, limit):
     google_big = authenticateBigQuery()
     if google_big:
         # Download query results
         table_id = "%s.sodp.%s_%s_%d" % (google_big.project, "report", view_id, report_id)
 
+        # first get all entries of the table
+        query_string = "select count(*) as total from %s" % table_id
+        total_results = google_big.query(query_string).result().to_dataframe(
+            create_bqstorage_client=True)
+
+        if not total_results.empty:
+            totalTable = total_results["total"].iloc[0]
+        else:
+            totalTable = 0
+
+        # now get all entries of the table filtered
+        query_string = "select count(*) as total from %s" % table_id
+        total_results = google_big.query(query_string).result().to_dataframe(
+            create_bqstorage_client=True)
+
+        if not total_results.empty:
+            totalTableFiltered = total_results["total"].iloc[0]
+        else:
+            totalTableFiltered = 0
+
         query_string = """
-        SELECT * FROM %s ORDER BY seoTraffic DESC         
+        SELECT url, title, publishDate, isContentOutdated, topKw, vol, hasVolume, clusterInKw, clusterInTitle,
+        wordCount, inDepthContent, seoTraffic, meaningfulSeoTraffic, nonSeoTraffic, meaningfulNonSeoTraffic,
+        backlinks, sufficientBacklinks, decay, recomendationCode, recomendationText,
+         ROW_NUMBER() OVER() as DT_RowId FROM %s ORDER BY seoTraffic DESC         
         """ % (table_id)
 
-        dataframe = (
-            google_big.query(query_string)
-            .result()
-            .to_dataframe(
-                # Optionally, explicitly request to use the BigQuery Storage API. As of
-                # google-cloud-bigquery version 1.26.0 and above, the BigQuery Storage
-                # API is used by default.
-                create_bqstorage_client=True,
-            )
-        )
-        return dataframe
+        query_job = google_big.query(query_string)
+        results = query_job.result()
+        destination = query_job.destination
+
+        rows = google_big.list_rows(destination, start_index=int(start), max_results=int(limit)).to_dataframe(
+            create_bqstorage_client=True).to_json(orient="records")
+        return rows, totalTable, totalTableFiltered
     else:
         logging.error("Google report stats - Error authenticating")
-        return None
+        return []
 
-    return False
+    return []

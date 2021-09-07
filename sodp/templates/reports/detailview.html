@@ -82,51 +82,7 @@
             <th scope="col" class="tophead">{% trans "RECOMENDATION" %}</th>
           </tr>
         </thead>
-        <tbody>
-          {% for entry in stats.itertuples %}
-          <tr>
-              <td><input type="checkbox" data-attr="{{ entry.url }}" name="prune[]" /> </td>
-              <td>{{ entry.url }}</td>
-              <td>{{ entry.topKw }}</td>
-              <td>
-                {% if entry.publishDate %}{%if entry.isContentOutdated %}
-                <div class="red"><span>{% translate "Yes" %}</span></div>{% else %}<div class="green"><span>{% translate "No" %}</span></div>{% endif %}{% else %}
-                <div class="red nowrap"><span>{% translate "URL not found" %}</span></div>{% endif %}
-              </td>
-              <td>
-                {% if entry.clusterInKw or entry.clusterInTitle %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
-                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}</td>
-              <td>
-                {% if entry.hasVolume %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
-                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}</td>
-              <td>
-                {% if entry.wordCount %}{%if entry.inDepthContent %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
-                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}{% else %}
-                <div class="red nowrap"><span>{% translate "URL not found" %}</span></div>{% endif %}
-              </td>
-              <td>
-                {% if entry.meaningfulSeoTraffic %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
-                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}
-              </td>
-              <td>
-                {% if entry.meaningfulNonSeoTraffic %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
-                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}
-              </td>
-              <td>
-                {% if entry.backlinks %}{%if entry.sufficientBacklinks %}<div class="green"><span>{% translate "Yes" %}</span></div>{% else %}
-                <div class="red"><span>{% translate "No" %}</span></div>{% endif %}{% else %}
-                <div class="red nowrap"><span>{% translate "No backlinks" %}</span></div>{% endif %}
-              </td>
-
-              <td>
-                {%if entry.decay < threshold_decay %}<div class="green"><span>{% translate "No" %}</span></div>{% else %}
-                <div class="red"><span>{% translate "Yes" %}</span></div>{% endif %}
-              </td>
-              <td>{{ entry.recomendationText }}</td>
-            </tr>
-        {% endfor %}
-    
-        </tbody>
+        <tbody></tbody>
       </table>  
 
     </div>
@@ -150,33 +106,7 @@
             <th scope="col" class="tophead">{% trans "View decay chart" %}</th>
           </tr>
         </thead>
-
-        <tbody>
-          {% for entry in stats.itertuples %}
-          <tr>
-              <td>{{ entry.url }}</td>
-              <td>{{ entry.title }}</td>
-              <td>{{ entry.publishDate }}</td>
-              <td>{{ entry.topKw }}</td>
-              <td>{{ entry.vol|intcomma }}</td>
-              <td>
-                {% if entry.clusterInKw %}<span class="green">{% translate "Yes" %}</span>{% else %}
-                  <span class="red">{% translate "No" %}</span>{% endif %}</td>
-              <td>
-                {% if entry.clusterInTitle %}<span class="green">{% translate "Yes" %}</span>{% else %}
-                <span class="red">{% translate "No" %}</span>{% endif %}</td>  
-              <td>{{ entry.wordCount|intcomma }}</td>
-              <td>{{ entry.meaningfulSeoTraffic }}</td>
-              <td>{{ entry.meaningfulNonSeoTraffic }}</td>
-              <td>{{ entry.backLinks|intcomma }}</td>
-              <td>
-                {%if entry.decay < threshold_decay %}<span class="green">{% translate "No" %}</span>{% else %}
-                <span class="red">{% translate "Yes" %}</span>{% endif %}
-              </td>
-              <td><a href="#" data-id="{{ entry.url }}" data-toggle="modal" data-target="#decayModal">{% trans "View chart" %}</a></td>
-            </tr>
-        {% endfor %}
-
+        <tbody></tbody>
       </table>
     </div>
 
@@ -236,62 +166,180 @@
 
     var myids = [];
 
-    function filterTable(copy) {
-      var atable = $('#analysistable').DataTable();
-      const filtered = copy.filter((item, index) => myids.includes(index));
+    function processCheckedRow(obj) {
+        var tableRow = $(obj).closest('tr');
 
-      atable.clear();
-      atable.rows.add(filtered).draw();
+        rowData = $('#detaillist').DataTable().row(tableRow).data();
+        var atable = $('#analysistable').DataTable();
 
-    }
+        if($(obj).is(":checked")) {        
+          atable.row.add(rowData).draw();
+        } else {
+          atable.row(rowData).rows( function ( idx, data, node ) {
+            return data['url'] === rowData['url'];
+          } )
+          .remove()
+          .draw();
+        }
+      };  
+
     
     $(document).ready(function () {
-      $("input[name='prune[]']").change(function() {
-        var tableIndex = $(this).closest('tr').index();
-        if(this.checked) {
-          // append to index
-          myids.push(tableIndex);
-        }
-        else {
-          myids = myids.filter(item => item !== tableIndex)
-        }
-
-        filterTable(copy);
-      });  
 
       $('#detaillist').DataTable( {
-        autoWidth: false,
+              autoWidth: false,
+              ajax: "/reports/ajax/{{ id }}/",
+              processing: true,
+              serverSide: true,              
               paging: true,
               ordering: true,
               searching: true,
               info: false,
               aaSorting: [],
+              columns: [
+                { "data": "DT_RowId", "orderable": false, "render": function ( data, type, row, meta ) { return '<input type="checkbox" data-attr="'+data+'" name="prune[]" onChange="processCheckedRow(this);" />';}},
+                { "data": "url"},
+                { "data": "topKw"},
+                { "data": "publishDate", "render": function ( data, type, row, meta ) {
+                  if (data) { 
+                    if (row["isContentOutdated"]) { 
+                      return '<div class="red"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="green"><span>No</span></div>';
+                    }
+                  } else {
+                    return '<div class="red nowrap"><span>URL not found</span></div>';
+                  }
+                
+                }},
+                { "data": "clusterInKw", "render": function ( data, type, row, meta ) {
+                    if (row["clusterInKw"] || row["clusterInTitle"]) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "hasVolume", "render": function ( data, type, row, meta ) {
+                    if (data) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "wordCount", "render": function ( data, type, row, meta ) {
+                  if (data) { 
+                    if (row["inDepthContent"]) { 
+                      return '<div class="red"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="green"><span>No</span></div>';
+                    }
+                  } else {
+                    return '<div class="red nowrap"><span>URL not found</span></div>';
+                  }
+                
+                }},
+                { "data": "meaningfulSeoTraffic", "render": function ( data, type, row, meta ) {
+                    if (data) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "meaningfulNonSeoTraffic", "render": function ( data, type, row, meta ) {
+                    if (data) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "sufficientBacklinks", "render": function ( data, type, row, meta ) {
+                    if (data) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "decay", "render": function ( data, type, row, meta ) {
+                    if (data < {{ threshold_decay }}) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "recomendationText"}
+            ]
             } );
 
         var atable = $('#analysistable').DataTable( {
           paging: false,
-          ordering: true,
+          ordering: false,
           searching: false,
-          info: false
-        } );
+          autoWidth: false,
+          columns: [
+                { "data": "url"},
+                { "data": "title"},
+                { "data": "publishDate", "render": function ( data, type, row, meta ) {
+                  const dateObject = new Date(data);
+                  return dateObject.toLocaleDateString();
+                }},
+                { "data": "topKw" },
+                { "data": "vol", "render": function ( data, type, row, meta ) { return data.toLocaleString(); } },
+                { "data": "clusterInKw", "render": function ( data, type, row, meta ) {
+                    if (data) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "clusterInTitle", "render": function ( data, type, row, meta ) {
+                    if (data) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "wordCount", "render": function ( data, type, row, meta ) { return data.toLocaleString(); } },
+                { "data": "meaningfulSeoTraffic", "render": function ( data, type, row, meta ) {
+                    if (data) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "meaningfulNonSeoTraffic", "render": function ( data, type, row, meta ) {
+                    if (data) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "backlinks", "render": function ( data, type, row, meta ) { return data.toLocaleString(); } },
+                { "data": "decay", "render": function ( data, type, row, meta ) {
+                    if (data < {{ threshold_decay }}) { 
+                      return '<div class="green"><span>Yes</span></div>';
+                    } else {
+                      return '<div class="red"><span>No</span></div>';
+                    }
+                }},
+                { "data": "url", "render": function ( data, type, row, meta ) { return '<a href="#" data-attr="'+data+'" data-toggle="modal" data-target="#decayModal">{% trans "View chart" %}</a>';}},
 
-        // Filter existing rows
-        var copy = atable.data();
-        filterTable(copy);
+            ]
+
+        } );
 
     });
 
 $('#decayModal').on('shown.bs.modal',function(event){
     var link = $(event.relatedTarget);
     // get title
-    var title = link.attr('data-id');
+    var title = link.attr('data-attr');
     $("#linechart-title").html(title);
     // get labels
     var labels = [];
     // Chart initialisieren
     var modal = $(this);
 
-    ajax_chart(chart, "/reports/stats/{{ id }}?url="+encodeURI(link.attr('data-id')));
+    ajax_chart(chart, "/reports/stats/{{ id }}?url="+encodeURI(link.attr('data-attr')));
 
 }).on('hidden.bs.modal',function(event){
     // reset chart
@@ -311,7 +359,6 @@ var ctx = document.getElementById('canvas').getContext('2d');
             tooltips: {
                 callbacks: {
                     label: function(tooltipItem, data) {
-                        console.log(tooltipItem);
                       return tooltipItem.yLabel.toLocaleString();
                     }
                 }

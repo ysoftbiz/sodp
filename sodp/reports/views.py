@@ -33,6 +33,7 @@ from django.core.exceptions import ValidationError
 from sodp.views.models import view
 
 RECOMENDATIONS = {"100": _("Manually review"), "200": _("Leave as is"), "301": _("Redirect or update"), "404": _("Delete")}
+PAGE_LENGTH = 10
 
 class ReportListView(generic.ListView, LoginRequiredMixin):
     model = report
@@ -170,13 +171,6 @@ class ReportDetailView(generic.DetailView, LoginRequiredMixin):
 
         # now retrieve data from bigquery
         context["stats"] = []
-        if obj.project:
-            # retrieve view
-            view_obj = viewmodel.objects.get(id=obj.project, user=self.request.user)
-            if view_obj and obj.status == "complete":
-                # retrieve stats from google big query
-                stats = google_utils.getReportStats(view_obj.project, obj.pk)
-                context["stats"] = stats
 
         return context
         
@@ -203,21 +197,24 @@ class ReportFrameView(generic.DetailView, LoginRequiredMixin):
 class AjaxView(View, LoginRequiredMixin):
     def get(self, request, **kwargs):
         pk = kwargs['pk']
+
+        start = request.GET.get('start', 0)
+        length = request.GET.get('length', PAGE_LENGTH)
+        draw = request.GET.get('draw', 1)
         
-        data = []
+        data = {}
         try:
             obj = report.objects.get(pk=kwargs['pk'], user=self.request.user)
-            if obj.path:
-                # open from aws storage
-                report_path = "reports/{user_id}/{report_name}".format(user_id=self.request.user.pk, report_name=obj.path)
-                if (default_storage.exists(report_path)):
-                    # read object
-                    with default_storage.open(report_path) as handle:
-                        df = pd.read_excel(handle, sheet_name=0) 
-                        if not df.empty:
-                            data = pandas_utils.convert_excel_to_json(df)
-                            return JsonResponse({"data": data}, status=200, safe=False)                                    
+            if obj.project:
+                # retrieve view
+                view_obj = viewmodel.objects.get(id=obj.project, user=self.request.user)
+                if view_obj and obj.status == "complete":
+                    # retrieve stats from google big query
+                    stats, totalRecords, totalRecordsFiltered = google_utils.getReportStats(view_obj.project, obj.pk, start, length)
+                    return JsonResponse({"draw": draw, "recordsTotal": int(totalRecords), "recordsFiltered": int(totalRecordsFiltered),
+                    "data": json.loads(stats)}, status=200, safe=False)                                    
         except Exception as e:
+            print(str(e))
             pass
 
         return JsonResponse(data, status=500, safe=False)        
