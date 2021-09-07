@@ -12,7 +12,7 @@ import tempfile
 import time
 
 from apiclient.discovery import build
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote_plus
 
 from pprint import pprint
 
@@ -617,7 +617,8 @@ def getStatsFromURL(view_id, report_id, url):
     return False
 
 # gets a dump of all the report stats for that table
-def getReportStats(view_id, report_id, start, limit):
+def getReportStats(view_id, report_id, start, limit, search):
+    search = quote_plus(search)
     google_big = authenticateBigQuery()
     if google_big:
         # Download query results
@@ -635,7 +636,12 @@ def getReportStats(view_id, report_id, start, limit):
 
         # now get all entries of the table filtered
         query_string = "select count(*) as total from %s" % table_id
-        total_results = google_big.query(query_string).result().to_dataframe(
+        if search:
+            query_arguments = " where url like '%%%s%%' or topkw like '%%%s%%' or title like '%%%s%%'" % (search, search, search);
+        else:
+            query_arguments = " "
+
+        total_results = google_big.query("%s%s" % (query_string, query_arguments)).result().to_dataframe(
             create_bqstorage_client=True)
 
         if not total_results.empty:
@@ -647,8 +653,8 @@ def getReportStats(view_id, report_id, start, limit):
         SELECT url, title, publishDate, isContentOutdated, topKw, vol, hasVolume, clusterInKw, clusterInTitle,
         wordCount, inDepthContent, seoTraffic, meaningfulSeoTraffic, nonSeoTraffic, meaningfulNonSeoTraffic,
         backlinks, sufficientBacklinks, decay, recomendationCode, recomendationText,
-         ROW_NUMBER() OVER() as DT_RowId FROM %s ORDER BY seoTraffic DESC         
-        """ % (table_id)
+         ROW_NUMBER() OVER() as DT_RowId FROM %s %s ORDER BY seoTraffic DESC         
+        """ % (table_id, query_arguments)
 
         query_job = google_big.query(query_string)
         results = query_job.result()

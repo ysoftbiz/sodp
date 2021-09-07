@@ -201,6 +201,7 @@ class AjaxView(View, LoginRequiredMixin):
         start = request.GET.get('start', 0)
         length = request.GET.get('length', PAGE_LENGTH)
         draw = request.GET.get('draw', 1)
+        search = request.GET.get('search[value]', None)
         
         data = {}
         try:
@@ -210,7 +211,7 @@ class AjaxView(View, LoginRequiredMixin):
                 view_obj = viewmodel.objects.get(id=obj.project, user=self.request.user)
                 if view_obj and obj.status == "complete":
                     # retrieve stats from google big query
-                    stats, totalRecords, totalRecordsFiltered = google_utils.getReportStats(view_obj.project, obj.pk, start, length)
+                    stats, totalRecords, totalRecordsFiltered = google_utils.getReportStats(view_obj.project, obj.pk, start, length, search)
                     return JsonResponse({"draw": draw, "recordsTotal": int(totalRecords), "recordsFiltered": int(totalRecordsFiltered),
                     "data": json.loads(stats)}, status=200, safe=False)                                    
         except Exception as e:
