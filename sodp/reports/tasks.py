@@ -38,7 +38,7 @@ RECOMENDATION_TEXTS = {
 }
 
 CHUNK_SIZE=700 #max we can handle per batch
- 
+
 def setErrorStatus(report, error_code):
     report.status = "error"
     report.processingEndDate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -66,7 +66,7 @@ def sendReportCompletedEmail(report, url):
         mail.content_subtype = "html"
         mail.send()
     except Exception as e:
-        logging.Exception("error sending email: %s" % str(e))
+        logging.exception("error sending email: %s" % str(e))
 
 
 # calculate recomendation based on row data and tresholds
@@ -149,7 +149,7 @@ def processReport(pk):
             obj.save(update_fields=["status"])
         else:
             return False
-        
+
         # authenticate to big query
         try:
             google_big = google_utils.authenticateBigQuery()
@@ -210,7 +210,7 @@ def processReport(pk):
         if len(urlsSitemap)<=0:
             setErrorStatus(obj, "NO_URLS")
             return False
-        
+
         # create table if it does not exist, and truncate their values
         table_id = google_utils.createTable(google_big, "stats", objview.project, pk)
         table_report_id = google_utils.createTableReport(google_big, "report", objview.project, pk)
@@ -219,7 +219,7 @@ def processReport(pk):
             return False
 
         # divide the dataframe in chunks, to fit the google max size
-        final = [urlsSitemap[i * CHUNK_SIZE:(i + 1) * CHUNK_SIZE] for i in range((len(urlsSitemap) + CHUNK_SIZE - 1) // CHUNK_SIZE )] 
+        final = [urlsSitemap[i * CHUNK_SIZE:(i + 1) * CHUNK_SIZE] for i in range((len(urlsSitemap) + CHUNK_SIZE - 1) // CHUNK_SIZE )]
         organic_urls = []
         pd_entries = []
         keywords_for_volume = []
@@ -232,7 +232,7 @@ def processReport(pk):
 
                 # get volume for keywords
                 dataforseo_volume_keywords = dataforseo.getVolume(all_keywords)
-                
+
                 # now extract volume for each url
                 volume_keywords = {}
                 for url, keywords in google_keywords.items():
@@ -241,7 +241,7 @@ def processReport(pk):
                     if len(keywords)>0:
                         volume = dataforseo_volume_keywords.get(keywords[0], 0)
                         volume_keywords[url] = volume
-                
+
                 # get all ahrefs queries
                 loop = asyncio.get_event_loop()
                 ahrefs_infos, ahrefs_pages = loop.run_until_complete(ahrefs.getAhrefsUrls(settings.AHREFS_TOKEN, objview.url, batch))
@@ -252,7 +252,7 @@ def processReport(pk):
                 for url, itementries in entries.items():
                     seoTraffic , nonSeoTraffic = 0, 0
                     seoTrafficNum , nonSeoTrafficNum = 0, 0
-                    
+
                     # insert table data
                     if len(itementries)>0:
                         result = google_utils.insertBigTable(google_big, table_id, itementries)
@@ -350,7 +350,7 @@ def processReport(pk):
                         pd_entry = {"url": url, "title": title, "publishDate": publishDate,
                             "isContentOutdated": (int(days) >= int(obj.thresholds["AGE"])),
                             "topKw": keyword_str, "vol": volkw,
-                            "hasVolume": volkw >= int(obj.thresholds["VOLUME"]), 
+                            "hasVolume": volkw >= int(obj.thresholds["VOLUME"]),
                             "clusterInKw": clusterInKw, "clusterInTitle": clusterInTitle, "wordCount": int(words),
                             "inDepthContent": int(words) >= int(obj.thresholds["WORD COUNT"]),
                             "seoTraffic": avgTraffic,
@@ -376,12 +376,10 @@ def processReport(pk):
 
         # calculate dashboard entries
         dashboard = calculateDashboard(objview.project, pk, pd_entries)
-            
-        sendReportCompletedEmail(obj, url)
-
         # update as completed with path
         setStatusComplete(obj, json.dumps(dashboard, cls=DjangoJSONEncoder))
-           
+
+        sendReportCompletedEmail(obj, url)
     else:
         print("Report not pending")
         return False
