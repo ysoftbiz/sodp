@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from time import sleep
 
 BASE_URL = "https://apiv2.ahrefs.com?"
-LIMIT=10000
+LIMIT=1
 
 async def fetchAhrefsUrl(url, session):
     async with session.get(url) as response:
