@@ -44,7 +44,7 @@
             <td>{{report.dateFrom}}</td>
             <td>{{report.dateTo}}</td>
             <td>{{report.creationDate}}</td>
-            <td><span class="btn_{{report.status}}">{{report.status}}</span></td>
+            <td><span class="btn_{{report.status}}">{% if report.status == "process" %}Processing{% else %}{{ report.status }}{% endif %}</span></td>
             <td>{% if report.status != "pending" %}
               <a href = "{% url 'reports:detailview' report.pk %}">{% trans "View" %}</a>{% endif %}</td>
           </tr>

@@ -169,6 +169,13 @@ class ReportDetailView(generic.DetailView, LoginRequiredMixin):
             context['thresholds'] = {}
             context['threshold_decay'] = 0
 
+        # now retrieve url
+        context['url'] = ''
+        if obj.project:
+            # retrieve view
+            view_obj = viewmodel.objects.get(id=obj.project, user=self.request.user)
+            context['url'] = view_obj.url
+
         # now retrieve data from bigquery
         context["stats"] = []
 
@@ -317,8 +324,13 @@ class DashboardAjaxView(LoginRequiredMixin, View):
             piedata["datasets"][0]["data"].append(round(value, 2))
 
         # retrieve the url
+        url = '';
+        view_obj = viewmodel.objects.get(id=report_obj.project, user=self.request.user)
+        if view_obj:
+            url = view_obj.url
+
         urldata = []
         for item in stats['top']:
-            urldata.append((item['url'], item['seoTraffic'], item['backLinks'], RECOMENDATIONS.get(item['recomendationCode'], '')))
+            urldata.append((item['url'], item['seoTraffic'], item['backLinks'], RECOMENDATIONS.get(item['recomendationCode'], ''), url))
 
         return JsonResponse({"linedata": data, "piedata": piedata, "urldata": urldata}, status=200, safe=False)

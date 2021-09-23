@@ -23,6 +23,8 @@
     <option value="{{ report.pk }}">{{ report.viewName }} - {{ report.dateFrom }} / {{ report.dateTo }}</option>
     {% endfor %}
   </select>
+
+  <button class="btn btn-info btn-sm" onClick="goToDetail();return false;" style="font-size:0.9em;">&gt;&gt; {% trans "View detail" %}</button>
 </div>
 
 <div>
@@ -51,6 +53,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
 <script src="/static/js/chartjs-plugin-colorschemes.min.js"></script>
 <script type="text/javascript">
+function goToDetail() {
+  window.location = ("/reports/")+$("#latestReports").val();
+  return false;
+}
+
 function ajax_chart(chart, piechart, rankingchart, url) {
         var data = {};
 
@@ -162,7 +169,10 @@ function ajax_chart(chart, piechart, rankingchart, url) {
         searching: false,
         info: false,
         columns: [
-            { title: "URL" , width: "45%"},
+            { title: "URL" , width: "45%", "render": function(data, type, row, meta){
+                data = '<a href="' + row[4] + data + '" target="_blank">' + data + '</a>';
+                return data;
+            }},
             { title: "Organic sessions" , className: "dt-body-right", render: $.fn.dataTable.render.number(',', '.', 2, '')},
             { title: "Backlinks" , className: "dt-body-right", render: $.fn.dataTable.render.number(',', '.', 0, '')},
             { title: "Recomendation" , width: "20%"},

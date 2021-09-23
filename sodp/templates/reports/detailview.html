@@ -199,7 +199,10 @@
               aaSorting: [],
               columns: [
                 { "data": "DT_RowId", "orderable": false, "render": function ( data, type, row, meta ) { return '<input type="checkbox" data-attr="'+data+'" name="prune[]" onChange="processCheckedRow(this);" />';}},
-                { "data": "url"},
+                { "data": "url", "render": function(data, type, row, meta){
+                data = '<a href="{{ url }}' + data + '" target="_blank">' + data + '</a>';
+                return data;
+            }},
                 { "data": "topKw"},
                 { "data": "publishDate", "render": function ( data, type, row, meta ) {
                   if (data) { 
@@ -277,7 +280,10 @@
           searching: false,
           autoWidth: false,
           columns: [
-                { "data": "url"},
+                { "data": "url", "render": function(data, type, row, meta){
+                data = '<a href="{{ url }}' + data + '" target="_blank">' + data + '</a>';
+                return data;
+            }},
                 { "data": "title"},
                 { "data": "publishDate", "render": function ( data, type, row, meta ) {
                   const dateObject = new Date(data);
