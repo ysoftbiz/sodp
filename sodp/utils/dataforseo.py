@@ -86,6 +86,7 @@ def getKeywords(domain, urls):
 
     post_data = [{
         "target": domain,
+        "language_code": "en",
         "filters": [
             [
                 "keyword_data.keyword_info.search_volume", "<>", 0

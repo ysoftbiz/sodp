@@ -114,7 +114,7 @@ function ajax_chart(chart, piechart, rankingchart, url) {
             plugins: {
               title: {
                 display: true,
-                text: '{% trans "Organic sessions per URL" %}'
+                text: '{% trans "Users per URL" %}'
               },
               colorschemes: {
                 scheme: 'tableau.Tableau20'
@@ -173,7 +173,7 @@ function ajax_chart(chart, piechart, rankingchart, url) {
                 data = '<a href="' + row[4] + data + '" target="_blank">' + data + '</a>';
                 return data;
             }},
-            { title: "Organic sessions" , className: "dt-body-right", render: $.fn.dataTable.render.number(',', '.', 2, '')},
+            { title: "Users" , className: "dt-body-right", render: $.fn.dataTable.render.number(',', '.', 2, '')},
             { title: "Backlinks" , className: "dt-body-right", render: $.fn.dataTable.render.number(',', '.', 0, '')},
             { title: "Recomendation" , width: "20%"},
         ]

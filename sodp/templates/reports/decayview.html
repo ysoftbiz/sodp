@@ -12,8 +12,8 @@
     <table class="table table-striped table-bordered dt-responsive compact nowrap dataTable no-footer">
         <thead>
             <td>{% trans "URL" %}</td>
-            <td>{% trans "Initial organic sessions" %}</td>
-            <td>{% trans "Final organic sessions" %}</td>
+            <td>{% trans "Initial users" %}</td>
+            <td>{% trans "Final users" %}</td>
             <td>{% trans "Decay" %}</td>
             <td></td>
         </thead>
@@ -115,7 +115,7 @@ var ctx = document.getElementById('canvas').getContext('2d');
             labels: [],
             datasets: [
                 {
-                label: '{% trans "Organic sessions" %}',
+                label: '{% trans "Users" %}',
                 fill: false,
                 lineTension: 0.1,
                     backgroundColor: "rgba(75,192,192,0.4)",

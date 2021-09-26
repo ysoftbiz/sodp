@@ -137,7 +137,7 @@ def calculateDashboard(project, report_pk, entries):
         data = {"urls":[], "percentage": {}, "top": {}}
         return data
 
-@shared_task(name="sodp.reports.tasks.processReport", time_limit=3600, soft_time_limit=3600)
+@shared_task(name="sodp.reports.tasks.processReport", time_limit=7200, soft_time_limit=7200)
 def processReport(pk):
     # get report data with that PK
     obj = report.objects.get(pk=pk)
@@ -204,6 +204,7 @@ def processReport(pk):
         urlsSitemap = [ x for x in urlsSitemap if x not in bannedUrls]
         urlsSitemap = filter(lambda x: not x.endswith(SUFFIXES), urlsSitemap)
         urlsSitemap = list(map(lambda x: urlparse(x).path , urlsSitemap))
+        print("before url")
 
         # generate unique urls
         urlsSitemap = list(set(urlsSitemap))
@@ -223,14 +224,17 @@ def processReport(pk):
         organic_urls = []
         pd_entries = []
         keywords_for_volume = []
+        print("before batch")
 
         for batch in final:
             # get stats for the expected google view id
             if credentials:
                 # get keywords
+                print("before get keywords")
                 google_keywords, all_keywords = dataforseo.getKeywords(objview.url, batch)
 
                 # get volume for keywords
+                print("before get volume")
                 dataforseo_volume_keywords = dataforseo.getVolume(all_keywords)
 
                 # now extract volume for each url
@@ -243,13 +247,17 @@ def processReport(pk):
                         volume_keywords[url] = volume
 
                 # get all ahrefs queries
+                print("before ahrefs")
                 loop = asyncio.get_event_loop()
                 ahrefs_infos, ahrefs_pages = loop.run_until_complete(ahrefs.getAhrefsUrls(settings.AHREFS_TOKEN, objview.url, batch))
 
+                print("before stats")
                 entries = google_utils.getStatsFromView(credentials, objview.project, objview.url, batch, obj.dateFrom, obj.dateTo, period)
 
                 # iterate over all urls and generate data
                 for url, itementries in entries.items():
+                    print("in url")
+
                     seoTraffic , nonSeoTraffic = 0, 0
                     seoTrafficNum , nonSeoTrafficNum = 0, 0
 

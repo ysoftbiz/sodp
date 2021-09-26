@@ -30,7 +30,7 @@ from sodp.views.models import view as modelview
 from sodp.utils import nlp
 
 DIMS = ['ga:pagePath', 'ga:segment']
-METRICS = ['ga:pageViews', 'ga:uniquePageViews', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
+METRICS = ['ga:users', 'ga:newUsers', 'ga:timeOnPage', 'ga:entrances', 'ga:bounceRate', 'ga:exitRate', 'ga:pageValue']
 SEGMENTS = ['gaid::-1','gaid::-5']
 MAX_RESULTS = 100000
 MAX_SEARCH_RESULTS = 50
@@ -340,9 +340,9 @@ def getAllUrls(credentials, view_id, report_id, url, startDate, endDate):
             {
             'viewId': view_id,
             'dateRanges': [{'startDate': startDate.strftime("%Y-%m-%d"), 'endDate': endDate.strftime("%Y-%m-%d")}],
-            'metrics':  [{'expression': exp} for exp in ["ga:pageViews"]],
+            'metrics':  [{'expression': exp} for exp in ["ga:users"]],
             'dimensions': [{'name': name} for name in ["ga:pagePath"]],
-            'orderBys': [{"fieldName":"ga:pageViews", "sortOrder": "DESCENDING"}],
+            'orderBys': [{"fieldName":"ga:users", "sortOrder": "DESCENDING"}],
             'pageSize': MAX_RESULTS
             }]
         }).execute()
