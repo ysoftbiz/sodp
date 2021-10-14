@@ -224,6 +224,9 @@ def processReport(pk):
         pd_entries = []
         keywords_for_volume = []
 
+        # get all ahrefs queries
+        ahrefs_infos = ahrefs.getAhrefsUrls(settings.AHREFS_TOKEN, objview.url)
+
         for batch in final:
             # get stats for the expected google view id
             if credentials:
@@ -241,10 +244,6 @@ def processReport(pk):
                     if len(keywords)>0:
                         volume = dataforseo_volume_keywords.get(keywords[0], 0)
                         volume_keywords[url] = volume
-
-                # get all ahrefs queries
-                loop = asyncio.get_event_loop()
-                ahrefs_infos, ahrefs_pages = loop.run_until_complete(ahrefs.getAhrefsUrls(settings.AHREFS_TOKEN, objview.url, batch))
 
                 entries = google_utils.getStatsFromView(credentials, objview.project, objview.url, batch, obj.dateFrom, obj.dateTo, period)
 
@@ -293,9 +292,8 @@ def processReport(pk):
                         if publishDate is not None and len(publishDate)<=0:
                             publishDate = None
 
-                        pageinfo = ahrefs_pages.get(url, {})
-                        title = pageinfo.get('title', '')
-                        words = pageinfo.get('words', 0)
+                        pageinfo = info.get('title', '')
+                        words = info.get('size', '')
 
                         # get period number
                         if period == "ga:yearmonth":

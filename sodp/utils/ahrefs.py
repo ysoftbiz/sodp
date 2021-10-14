@@ -8,60 +8,24 @@ from urllib.parse import urlparse
 from time import sleep
 
 BASE_URL = "https://apiv2.ahrefs.com?"
-LIMIT=1
+LIMIT=15000
 
-async def fetchAhrefsUrl(url, session):
-    async with session.get(url) as response:
-        return await response.read()
-
-def getAhrefsInfo(token, domain, url):
-    fullurl = "%s%s" % (urlparse(domain).netloc, url)
-    ahrefs_url = "{base_url}token={token}&target={fullurl}&output=json&from=pages_extended&mode=exact".format(base_url=BASE_URL,
-        token=token, fullurl=fullurl)
+def getAhrefsInfo(token, domain):
+    ahrefs_url = "{base_url}token={token}&target={domain}&output=json&from=pages_extended&mode=domain&limit={LIMIT}&where=http_code%3D200&order_by=ahrefs_rank:desc".format(base_url=BASE_URL,
+        token=token, domain=domain)
     return ahrefs_url
 
-def getAhrefsPageInfo(token, domain, url):
-    fullurl = "%s%s" % (urlparse(domain).netloc, url)
+async def getAhrefsUrls(token, domain):
+    info = getAhrefsInfo(token, domain)
+    resp = requests.get(url=info)
+    if resp:
+        data = resp.json()
 
-    ahrefs_url = "{base_url}token={token}&target={fullurl}&output=json&from=pages_info&mode=exact".format(base_url=BASE_URL,
-        token=token, fullurl=fullurl, limit=LIMIT)
-    return ahrefs_url
+        pages = data.get('pages', [])
+        if len(pages)>0:
+            url = pages[0].get("url", None)
+            if url:
+                url = urlparse(url).path
+                ahrefs_results[url] = pages[0]
 
-async def getAhrefsUrls(token, domain, urls):
-    tasks, tasks_pages = [], []
-    ahrefs_results, ahrefs_results_pages = {}, {}
-    async with ClientSession() as session:
-        for url in urls:
-            sleep(0.005)
-            # queue ahrefs queries
-            info = getAhrefsInfo(token, domain, url)
-            page = getAhrefsPageInfo(token, domain, url)
-            task = asyncio.ensure_future(fetchAhrefsUrl(info, session))
-            tasks.append(task)
-
-            task = asyncio.ensure_future(fetchAhrefsUrl(page, session))
-            tasks_pages.append(task)
-
-        responses = await asyncio.gather(*tasks)
-        for response in responses:
-            data = json.loads(response.decode('utf-8'))
-
-            pages = data.get('pages', [])
-            if len(pages)>0:
-                url = pages[0].get("url", None)
-                if url:
-                    url = urlparse(url).path
-                    ahrefs_results[url] = pages[0]
-
-        responses = await asyncio.gather(*tasks_pages)
-        for response in responses:
-            data = json.loads(response.decode('utf-8'))
-
-            pages = data.get('pages', [])
-            if len(pages)>0:
-                url = pages[0].get("url", None)
-                if url:
-                    url = urlparse(url).path
-                    ahrefs_results_pages[url] = pages[0]
-
-    return ahrefs_results, ahrefs_results_pages
+    return ahrefs_results
