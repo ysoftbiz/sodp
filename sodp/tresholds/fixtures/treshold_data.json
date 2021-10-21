@@ -21,7 +21,7 @@
         "model": "tresholds.treshold",
         "pk": 3,
         "fields": {
-            "title": "WORD COUNT",
+            "title": "PAGE SIZE",
             "question": "Does the page have thin content?",
             "default_value": "150"
         }

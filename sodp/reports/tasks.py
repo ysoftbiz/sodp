@@ -151,7 +151,6 @@ def processReport(pk):
             return False
 
         # authenticate to big query
-        print("in report")
         try:
             google_big = google_utils.authenticateBigQuery()
         except Exception as e:
@@ -170,7 +169,6 @@ def processReport(pk):
         # get domain from view
         objview = viewmodel.objects.get(id=obj.project)
         domain = urlparse(objview.url).netloc
-        print("domain")
 
         # calculate period
         diff_months = (obj.dateTo.year - obj.dateFrom.year) * 12 + obj.dateTo.month - obj.dateFrom.month
@@ -214,13 +212,11 @@ def processReport(pk):
             return False
 
         # create table if it does not exist, and truncate their values
-        print(urlsSitemap)
         table_id = google_utils.createTable(google_big, "stats", objview.project, pk)
         table_report_id = google_utils.createTableReport(google_big, "report", objview.project, pk)
         if not table_id or not table_report_id:
             setErrorStatus(obj, "NO_BIGQUERY_TABLES")
             return False
-        print("after create")
 
         # divide the dataframe in chunks, to fit the google max size
         final = [urlsSitemap[i * CHUNK_SIZE:(i + 1) * CHUNK_SIZE] for i in range((len(urlsSitemap) + CHUNK_SIZE - 1) // CHUNK_SIZE )]
@@ -229,7 +225,6 @@ def processReport(pk):
         keywords_for_volume = []
 
         # get all ahrefs queries
-        print("before ahrefs")
         ahrefs_infos = ahrefs.getAhrefsUrls(settings.AHREFS_TOKEN, objview.url)
 
         for batch in final:
@@ -297,8 +292,8 @@ def processReport(pk):
                         if publishDate is not None and len(publishDate)<=0:
                             publishDate = None
 
-                        pageinfo = info.get('title', '')
-                        words = info.get('size', '')
+                        title = info.get('title', '')
+                        words = info.get('size', 0)
 
                         # get period number
                         if period == "ga:yearmonth":
