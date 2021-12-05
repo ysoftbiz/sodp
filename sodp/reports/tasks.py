@@ -225,26 +225,25 @@ def processReport(pk):
         keywords_for_volume = []
 
         # get all ahrefs queries
-        ahrefs_infos = ahrefs.getAhrefsUrls(settings.AHREFS_TOKEN, objview.url)
+        ahrefs_infos = ahrefs.getAhrefsUrls(settings.AHREFS_TOKEN, objview.url, len(urlsSitemap))
+
+        # get keywords
+        google_keywords, all_keywords = google_utils.getTopKeywords(credentials, objview.url, obj.dateFrom, obj.dateTo)
+
+        # get volume for keywords
+        dataforseo_volume_keywords = dataforseo.getVolume(all_keywords)
+        # now extract volume for each url
+        volume_keywords = {}
+        for url, keywords in google_keywords.items():
+            volume_keywords[url] = 0
+            # get top kw and get volume
+            if len(keywords)>0:
+                volume = dataforseo_volume_keywords.get(keywords[0], 0)
+                volume_keywords[url] = volume
 
         for batch in final:
             # get stats for the expected google view id
             if credentials:
-                # get keywords
-                google_keywords, all_keywords = dataforseo.getKeywords(objview.url, batch)
-
-                # get volume for keywords
-                dataforseo_volume_keywords = dataforseo.getVolume(all_keywords)
-
-                # now extract volume for each url
-                volume_keywords = {}
-                for url, keywords in google_keywords.items():
-                    volume_keywords[url] = 0
-                    # get top kw and get volume
-                    if len(keywords)>0:
-                        volume = dataforseo_volume_keywords.get(keywords[0], 0)
-                        volume_keywords[url] = volume
-
                 entries = google_utils.getStatsFromView(credentials, objview.project, objview.url, batch, obj.dateFrom, obj.dateTo, period)
 
                 # iterate over all urls and generate data
@@ -285,7 +284,7 @@ def processReport(pk):
                         organic_urls.append({"page_path": url, "startViews": int(firstOrganicViews), "endViews": int(lastOrganicViews), "decay": round(decay, 5)})
 
                         info = ahrefs_infos.get(url, {})
-                        backlinks = info.get('dofollow', 0)
+                        backlinks = info.get('refdomains', 0)
                         publishDate = info.get('first_seen', None)
                         if publishDate:
                             publishDate = publishDate[0:10] # just date

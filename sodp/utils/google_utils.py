@@ -365,91 +365,51 @@ def getAllUrls(credentials, view_id, report_id, url, startDate, endDate):
 
 # given search data results, extract keywords from it
 def extractKeywords(searchdata):
-    final_keywords = []
+    final_keywords = {}
+    all_keywords = []
     for row in searchdata.get('rows', []):
         keys = row.get('keys', [])
+        url = urlparse(keys[0]).path
         searchquery = keys[1]
         keywords = nlp.getKeywords(searchquery)
-        final_keywords.extend(keywords)
 
-    # count popular
-    if len(final_keywords>0):
-        counter = Counter(final_keywords)
+        counter = Counter(keywords)
         most_common = counter.most_common(5)
 
-        return [seq[0] for seq in most_common]
-    else:
-        return []
+        final_keywords[url] = [seq[0] for seq in most_common]
+        all_keywords.extend(final_keywords[url])
 
-# extract keywords in batch
-async def getTopKeywordsBatch(credentials, topurl, batch, startDate, endDate):
-    # get the search console requests for urls
-    aiocreds = json.loads(credentials.to_json())
-    aiocreds["expires_at"] = None
-    aiocreds["token_type"] = "Bearer"
-    
-    async with Aiogoogle(user_creds=aiocreds, client_creds=aiocreds) as aiogoogle:
-        searchconsole = await aiogoogle.discover('searchconsole', 'v1')
+    return final_keywords, list(set(all_keywords))
 
-        # first get the list of authorized sites, to check if ours is on the list
-        domainurl = urlparse(topurl).netloc
-        domainurl = domainurl.replace("www.", "")
-        req = searchconsole.sites.list()
-        sites = await aiogoogle.as_user(req)
-        domaintoparse = None
+# extract keywords from google search
+def getTopKeywords(credentials, domaintoparse, startDate, endDate):
+    try:
+        searchconsole = build('searchconsole', 'v1', credentials=credentials)
+    except Exception as e:
+        logging.exception(str(e))
+        return {}
 
-        for val in sites['siteEntry']:
-            if domainurl in val['siteUrl']:
-                domaintoparse = val['siteUrl']
-                break
-
-        # if we cannot access, keyword is null
-        if not domaintoparse:
-            return {}, {}
-
-    tasks = []
-    keyword_results = {}
-    for url in batch:
-        task = asyncio.ensure_future(extractKeywordsFromGoogle(aiocreds, domaintoparse, url, startDate, endDate))
-        tasks.append(task)
-        await asyncio.sleep(0.2)
-
-    all_keywords = []
-    responses = await asyncio.gather(*tasks)
-    for response in responses:
-        keyword_results[response[0]] = response[1]
-        individual_keywords = response[1]
-        all_keywords.extend(individual_keywords)
-
-    return keyword_results, all_keywords
-
-# gets keywords from google
-async def extractKeywordsFromGoogle(credentials, topurl, url, startDate, endDate):
     searchrequest = {
         'startDate': startDate.strftime("%Y-%m-%d"),     # Get today's date (while loop)
         'endDate': endDate.strftime("%Y-%m-%d"),       # Get today's date (while loop)
-        'dimensions': ['PAGE', 'QUERY'],  # Extract This information
-        'dimensionFilterGroups': [{
-            'filters': [{
-                'dimension': 'PAGE',              
-                'operator': 'CONTAINS',           #contains, equals, notEquals, notContains
-                'expression': url
-            }]
-        }],
-        "aggregationType": "BY_PAGE",
-        'rowLimit': MAX_SEARCH_RESULTS                    # Set number of rows to extract at once (max 25k)
+        'dimensions': ['page', 'query'],  # Extract This information
+        "aggregationType": "by_page",
     }
-    
-    async with Aiogoogle(user_creds=credentials, client_creds=credentials) as aiogoogle:
-        searchconsole = await aiogoogle.discover('searchconsole', 'v1')
 
-        # replace all entries in string
-        req = searchconsole.searchanalytics.query(json=searchrequest, siteUrl=topurl)
-        searchdata = await aiogoogle.as_user(req)
+    final_domain=urlparse(domaintoparse).netloc
+    try:
+        searchdata = searchconsole.searchanalytics().query(siteUrl=domaintoparse, body=searchrequest).execute()
+    except Exception as e:
+        # try with sc-domain
+        try:
+            searchdata = searchconsole.searchanalytics().query(siteUrl="sc-domain:%s" % final_domain, body=searchrequest).execute()
+        except Exception as e:
+            logging.exception(str(e))
+            return {}
 
-        # extract keywords from search data
-        keywords = extractKeywords(searchdata)
-        return url, keywords
+    # extract keywords from search data
+    keywords = extractKeywords(searchdata)
+    return keywords
 
 # returns a dump of the desired stats for the specific credentials and view
 def getStatsFromView(credentials, view_id, topurl, urls, startDate, endDate, period):
